@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Results | Yash Jangid</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="achievements.html">Achievements</a>
+            <a href="muns.html">MUNs</a>
+            <a href="results.html" class="active">Results</a>
+            <a href="secret.html">Secret Vault</a>
+        </div>
+    </nav>
+
+    <section class="content-section">
+        <h2>Live Results Directory</h2>
+        
+        <!-- DHS MUN 2026 -->
+        <div class="card">
+            <h3>DHS MUN 2026</h3>
+            <table id="dhs-table">
+                <thead>
+                    <tr>
+                        <th>Subject/Event</th>
+                        <th>Score</th>
+                        <th>Grade</th>
+                    </tr>
+                </thead>
+                <tbody id="dhs-body">
+                    <!-- Firebase Data Loads Here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- VSIS MUN 2026 -->
+        <div class="card" style="margin-top: 20px;">
+            <h3>VSIS MUN 2026</h3>
+            <table id="vsis-table">
+                <thead>
+                    <tr>
+                        <th>Subject/Event</th>
+                        <th>Score</th>
+                        <th>Grade</th>
+                    </tr>
+                </thead>
+                <tbody id="vsis-body">
+                    <!-- Firebase Data Loads Here -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Firebase Realtime Database Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8",
+            authDomain: "yash-jangid.firebaseapp.com",
+            projectId: "yash-jangid",
+            storageBucket: "yash-jangid.firebasestorage.app",
+            messagingSenderId: "413356747209",
+            appId: "1:413356747209:web:5b7332a06e3865f6e5a018",
+            measurementId: "G-BR856TNGE8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Load DHS MUN 2026 Data
+        const dhsRef = collection(db, "dhsmun2026");
+        onSnapshot(dhsRef, (snapshot) => {
+            const tableBody1 = document.getElementById("dhs-body");
+            tableBody1.innerHTML = ""; 
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                tableBody1.innerHTML += `<tr><td>${data.subject}</td><td>${data.score}</td><td>${data.grade}</td></tr>`;
+            });
+        });
+
+        // Load VSIS MUN 2026 Data
+        const vsisRef = collection(db, "vsismun2026");
+        onSnapshot(vsisRef, (snapshot) => {
+            const tableBody2 = document.getElementById("vsis-body");
+            tableBody2.innerHTML = ""; 
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                tableBody2.innerHTML += `<tr><td>${data.subject}</td><td>${data.score}</td><td>${data.grade}</td></tr>`;
+            });
+        });
+    </script>
+</body>
+</html>
