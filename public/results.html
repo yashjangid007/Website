@@ -51,9 +51,22 @@
                 return;
             }
 
-            eventsSnapshot.forEach((eventDoc) => {
-                const data = eventDoc.data();
-                
+            let eventsArray = [];
+            eventsSnapshot.forEach((doc) => {
+                eventsArray.push({ id: doc.id, ...doc.data() });
+            });
+
+            // Robust sorting: respects manual orderIndex arrangement with fallbacks
+            eventsArray.sort((a, b) => {
+                const orderA = a.orderIndex !== undefined ? a.orderIndex : 0;
+                const orderB = b.orderIndex !== undefined ? b.orderIndex : 0;
+                if (orderA !== orderB) {
+                    return orderA - orderB;
+                }
+                return a.id.localeCompare(b.id);
+            });
+
+            eventsArray.forEach((data) => {
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.style.marginTop = '20px';
@@ -61,16 +74,11 @@
                 let html = `<h3>${data.displayName}</h3>`;
                 
                 if (data.excelData && data.excelData.length > 0) {
-                    // FIREBASE FIX: Unpack the safe objects back into arrays for the HTML table
                     const headers = data.excelData[0].rowData;
                     const rows = data.excelData.slice(1);
                     
                     html += `<div style="overflow-x: auto;"><table><thead><tr>`;
-                    
-                    headers.forEach(headerText => { 
-                        html += `<th>${headerText}</th>`; 
-                    });
-                    
+                    headers.forEach(headerText => { html += `<th>${headerText}</th>`; });
                     html += `</tr></thead><tbody>`;
                     
                     rows.forEach(rowObj => {
