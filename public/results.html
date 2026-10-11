@@ -60,25 +60,24 @@
                 
                 let html = `<h3>${data.displayName}</h3>`;
                 
-                // If Excel data exists, dynamically build the exact table
                 if (data.excelData && data.excelData.length > 0) {
-                    const headers = data.excelData[0];
+                    // FIREBASE FIX: Unpack the safe objects back into arrays for the HTML table
+                    const headers = data.excelData[0].rowData;
                     const rows = data.excelData.slice(1);
                     
                     html += `<div style="overflow-x: auto;"><table><thead><tr>`;
                     
-                    // Generate Headers exactly as they appear in Excel
                     headers.forEach(headerText => { 
                         html += `<th>${headerText}</th>`; 
                     });
                     
                     html += `</tr></thead><tbody>`;
                     
-                    // Generate Rows
-                    rows.forEach(row => {
+                    rows.forEach(rowObj => {
                         html += `<tr>`;
+                        const rowData = rowObj.rowData;
                         for (let i = 0; i < headers.length; i++) {
-                            html += `<td>${row[i] !== undefined ? row[i] : ''}</td>`;
+                            html += `<td>${rowData[i] !== undefined ? rowData[i] : ''}</td>`;
                         }
                         html += `</tr>`;
                     });
