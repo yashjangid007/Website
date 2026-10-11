@@ -19,43 +19,11 @@
 
     <section class="content-section">
         <h2>Live Results Directory</h2>
-        
-        <!-- DHS MUN 2026 -->
-        <div class="card">
-            <h3>DHS MUN 2026</h3>
-            <table id="dhs-table">
-                <thead>
-                    <tr>
-                        <th>Subject/Event</th>
-                        <th>Score</th>
-                        <th>Grade</th>
-                    </tr>
-                </thead>
-                <tbody id="dhs-body">
-                    <!-- Firebase Data Loads Here -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- VSIS MUN 2026 -->
-        <div class="card" style="margin-top: 20px;">
-            <h3>VSIS MUN 2026</h3>
-            <table id="vsis-table">
-                <thead>
-                    <tr>
-                        <th>Subject/Event</th>
-                        <th>Score</th>
-                        <th>Grade</th>
-                    </tr>
-                </thead>
-                <tbody id="vsis-body">
-                    <!-- Firebase Data Loads Here -->
-                </tbody>
-            </table>
+        <div id="dynamic-results-container">
+            <p>Loading live data...</p>
         </div>
     </section>
 
-    <!-- Firebase Realtime Database Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -73,25 +41,54 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Load DHS MUN 2026 Data
-        const dhsRef = collection(db, "dhsmun2026");
-        onSnapshot(dhsRef, (snapshot) => {
-            const tableBody1 = document.getElementById("dhs-body");
-            tableBody1.innerHTML = ""; 
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                tableBody1.innerHTML += `<tr><td>${data.subject}</td><td>${data.score}</td><td>${data.grade}</td></tr>`;
-            });
-        });
+        const eventsRef = collection(db, "mun_events");
+        onSnapshot(eventsRef, (eventsSnapshot) => {
+            const container = document.getElementById("dynamic-results-container");
+            container.innerHTML = ""; 
 
-        // Load VSIS MUN 2026 Data
-        const vsisRef = collection(db, "vsismun2026");
-        onSnapshot(vsisRef, (snapshot) => {
-            const tableBody2 = document.getElementById("vsis-body");
-            tableBody2.innerHTML = ""; 
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                tableBody2.innerHTML += `<tr><td>${data.subject}</td><td>${data.score}</td><td>${data.grade}</td></tr>`;
+            if (eventsSnapshot.empty) {
+                container.innerHTML = "<p>No results have been uploaded yet.</p>";
+                return;
+            }
+
+            eventsSnapshot.forEach((eventDoc) => {
+                const data = eventDoc.data();
+                
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.marginTop = '20px';
+                
+                let html = `<h3>${data.displayName}</h3>`;
+                
+                // If Excel data exists, dynamically build the exact table
+                if (data.excelData && data.excelData.length > 0) {
+                    const headers = data.excelData[0];
+                    const rows = data.excelData.slice(1);
+                    
+                    html += `<div style="overflow-x: auto;"><table><thead><tr>`;
+                    
+                    // Generate Headers exactly as they appear in Excel
+                    headers.forEach(headerText => { 
+                        html += `<th>${headerText}</th>`; 
+                    });
+                    
+                    html += `</tr></thead><tbody>`;
+                    
+                    // Generate Rows
+                    rows.forEach(row => {
+                        html += `<tr>`;
+                        for (let i = 0; i < headers.length; i++) {
+                            html += `<td>${row[i] !== undefined ? row[i] : ''}</td>`;
+                        }
+                        html += `</tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                } else {
+                    html += `<p style="color: #666; font-style: italic;">No Excel data uploaded yet.</p>`;
+                }
+
+                card.innerHTML = html;
+                container.appendChild(card);
             });
         });
     </script>
