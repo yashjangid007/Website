@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Real Family | Yash Jangid</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 250px; padding: 15px 20px; background-color: #333; color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 0.95rem; animation: slideIn 0.4s ease forwards; opacity: 0; transform: translateX(100%); }
+        .toast.success { background-color: #2ecc71; border-left: 5px solid #27ae60; }
+        .toast.error { background-color: #e74c3c; border-left: 5px solid #c0392b; }
+        .toast.info { background-color: #3498db; border-left: 5px solid #2980b9; }
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+    </style>
+</head>
+<body>
+    <div id="toast-container"></div>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="cv.html">MUN CV</a>
+            <a href="lors.html">LORs</a>
+            <a href="achievements.html">Achievements</a>
+            <a href="muns.html">MUNs</a>
+            <a href="graphics.html">Graphics</a>
+            <a href="results.html">Results</a>
+            <a href="family.html" class="active">My Real Family</a>
+            <a href="secret.html">Secret Vault</a>
+        </div>
+    </nav>
+
+    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+        <span class="lightbox-close">&times;</span><img id="lightbox-img" src="" alt="Fullscreen view">
+    </div>
+
+    <section class="content-section">
+        <div id="login-screen" class="card">
+            <h2>Family Vault Authentication</h2>
+            <p style="color: var(--text-muted); margin-bottom: 25px;">Provide clearance credentials to view private media.</p>
+            <input type="email" id="email" placeholder="Authorized Email">
+            <input type="password" id="password" placeholder="Passphrase">
+            <button id="login-btn" style="width: 100%; margin-bottom: 10px;">Authenticate</button>
+        </div>
+
+        <div id="family-content" style="display: none;">
+            <div style="text-align: center;"><h1 style="font-size: 3rem; margin-bottom: 10px;">My Real Family</h1><p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 40px; font-weight: 500;">The people and moments that matter most.</p></div>
+            <div id="gallery-container" class="gallery-grid"><p style="text-align: center; width: 100%; color: var(--text-muted);">Synchronizing media...</p></div>
+            <div style="text-align: center; margin-top: 50px;"><button id="logout-btn" class="danger">Secure & Lock Album</button></div>
+        </div>
+    </section>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
+        const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app);
+        const loginScreen = document.getElementById('login-screen'), familyContent = document.getElementById('family-content');
+
+        window.showToast = function(msg, type = 'info') { const container = document.getElementById('toast-container'); const t = document.createElement('div'); t.className = `toast ${type}`; t.innerText = msg; container.appendChild(t); setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3500); };
+        window.openLightbox = function(url) { document.getElementById('lightbox-img').src = url; document.getElementById('lightbox').style.display = 'flex'; };
+        window.closeLightbox = function() { document.getElementById('lightbox').style.display = 'none'; };
+
+        function loadFamilyData() {
+            onSnapshot(collection(db, "family"), (snapshot) => {
+                const container = document.getElementById("gallery-container"); container.innerHTML = ""; let images = []; snapshot.forEach((doc) => { images.push({ id: doc.id, ...doc.data() }); }); images.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+                if(images.length === 0) { container.innerHTML = "<p style='text-align:center; width:100%; color: var(--text-muted);'>No memories uploaded yet.</p>"; return; }
+                images.forEach((img) => { container.innerHTML += `<div class="graphic-card"><img src="${img.url}" alt="${img.caption}" onclick="window.openLightbox('${img.url}')">${img.caption ? `<div class="caption">${img.caption}</div>` : ''}</div>`; });
+            });
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) { const docSnap = await getDoc(doc(db, "vault_access", user.email)); if (docSnap.exists() && (docSnap.data().approved === true || docSnap.data().approved === "true")) { loginScreen.style.display = 'none'; familyContent.style.display = 'block'; loadFamilyData(); } }
+        });
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const e = document.getElementById('email').value.trim().toLowerCase(), p = document.getElementById('password').value;
+            signInWithEmailAndPassword(auth, e, p).then(async () => { const docSnap = await getDoc(doc(db, "vault_access", e)); if (docSnap.exists() && (docSnap.data().approved === true || docSnap.data().approved === "true")) { loginScreen.style.display = 'none'; familyContent.style.display = 'block'; showToast("Authentication confirmed.", "success"); loadFamilyData(); } else { signOut(auth); showToast("Access Denied. Clearance pending.", "error"); } }).catch(() => showToast("Invalid credentials.", "error"));
+        });
+        document.getElementById('logout-btn').addEventListener('click', () => { signOut(auth).then(() => { location.reload(); }); });
+    </script>
+</body>
+</html>
