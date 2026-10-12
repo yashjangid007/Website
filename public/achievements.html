@@ -31,36 +31,24 @@
         
         <div class="card achievements-card">
             <h3 style="color: var(--accent-gold); margin-bottom: 10px; font-size: 1.3rem;">Skills & Certifications</h3>
-            <div id="dyn-ach-skills">
+            <div>
                 <ul><li>Trinity Grade 4 Electric Keyboard.</li><li>Data Science & Gametech – IIT Madras.</li><li>Skills: Strategic Planning, Research & Analysis, Multi Tasking & Determined, Time Management, Diplomacy, Music & Graphics, Illustration Design, Social Media Optimization.</li></ul>
             </div>
         </div>
 
         <div class="card achievements-card">
             <h3 style="color: var(--accent-gold); margin-bottom: 10px; font-size: 1.3rem;">Experience – School Work</h3>
-            <div id="dyn-ach-school">
+            <div>
                 <ul><li>STEM Project CBSE Meet (2023–24) & STEM Project Inter-School 1st Prize (2025–26).</li><li>Editorial Team Student Member & Inter-School Magazine Cover Making (2024–27).</li><li>Annual Day, Teacher's Day, Farewell, Exellencia 2.0 (DANCE Audio, SKIT Audio, ORCHESTRA Audio) (2023–27).</li><li>Ganesh Chaturthi Dance Audio & Fun Fiesta Stall Graphics & Decor (2024–25).</li><li>Cyber Fraud Detection Skit + Awareness & MPS Kalwar Brochure (2025–26).</li><li>Arduino Coding for Inter-School & Inter-House PPTs Verification (2026–27).</li><li>ECMS Magazine Editorial Team (2026–27).</li></ul>
             </div>
         </div>
 
         <div class="card achievements-card">
             <h3 style="color: var(--accent-gold); margin-bottom: 10px; font-size: 1.3rem;">Experience - Outside</h3>
-            <div id="dyn-ach-outside">
+            <div>
                 <ul><li>Harvard MUN Graphics Applicant (2026-27).</li><li>TISF: Aawaaz 2.0 & Jaipur Edition 3.0 (Logos, Plac Cards, Core Sec Trophies, Banners, LOR, Marketing Brochures, Certificates) (2025-27).</li><li>Aurellia Soul Studio Jaipur Logo, Brochure + PPT (2026-27).</li><li>Raising Voices Logo & Brochure (2026-27).</li><li>Equilibirum MUN Founder Post & Certificate (2026-27).</li></ul>
             </div>
         </div>
     </section>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
-        const db = getFirestore(initializeApp(firebaseConfig));
-
-        onSnapshot(doc(db, "site_content", "ach_skills"), (docSnap) => { if (docSnap.exists() && docSnap.data().text && docSnap.data().text.trim() !== "") document.getElementById('dyn-ach-skills').innerHTML = docSnap.data().text; });
-        onSnapshot(doc(db, "site_content", "ach_school"), (docSnap) => { if (docSnap.exists() && docSnap.data().text && docSnap.data().text.trim() !== "") document.getElementById('dyn-ach-school').innerHTML = docSnap.data().text; });
-        onSnapshot(doc(db, "site_content", "ach_outside"), (docSnap) => { if (docSnap.exists() && docSnap.data().text && docSnap.data().text.trim() !== "") document.getElementById('dyn-ach-outside').innerHTML = docSnap.data().text; });
-    </script>
 </body>
 </html>

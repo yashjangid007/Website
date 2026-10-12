@@ -39,14 +39,13 @@
         </p>
 
         <div class="dashboard-layout">
-            <!-- The Card class ensures the hover effect works perfectly -->
             <div class="card dashboard-card">
                 <h2 style="text-align: center; margin-bottom: 20px; font-size: 2rem;">About Me</h2>
-                <div id="dyn-home-about-v2" style="text-align: justify; font-size: 0.95rem; line-height: 1.7; margin-bottom: 30px; color: var(--text-main);">
+                <div style="text-align: justify; font-size: 0.95rem; line-height: 1.7; margin-bottom: 30px; color: var(--text-main);">
                     <p>12th-grade PCM student and Head Boy of Maheshwari Public School, Kalwar Road. I am highly active in the Jaipur MUN Circuit with a proven track record of versatile leadership and diplomatic engagement.</p>
                 </div>
                 <h3 style="color: var(--accent-gold); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Core Competencies</h3>
-                <div id="dyn-home-competencies-v2">
+                <div>
                     <ul class="competencies-list">
                         <li><strong>Leadership & Extracurriculars:</strong> Selected for an exclusive educational delegation to meet the Vice President of India; active in academic and cultural research projects.</li>
                         <li><strong>Diplomacy & Leadership:</strong> Extensive participation in MUNs, securing recognitions including Best Delegate, High Commendation, and Honorable Mention.</li>
@@ -74,13 +73,10 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
         const db = getFirestore(initializeApp(firebaseConfig));
-
-        onSnapshot(doc(db, "site_content", "home_about_v2"), (docSnap) => { if (docSnap.exists() && docSnap.data().text && docSnap.data().text.trim() !== "") document.getElementById('dyn-home-about-v2').innerHTML = docSnap.data().text; });
-        onSnapshot(doc(db, "site_content", "home_competencies_v2"), (docSnap) => { if (docSnap.exists() && docSnap.data().text && docSnap.data().text.trim() !== "") document.getElementById('dyn-home-competencies-v2').innerHTML = docSnap.data().text; });
 
         document.getElementById('send-message-btn').addEventListener('click', async () => {
             const n = document.getElementById('contact-name').value.trim(), e = document.getElementById('contact-email').value.trim(), m = document.getElementById('contact-message').value.trim(), s = document.getElementById('form-status');
