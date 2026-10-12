@@ -27,13 +27,19 @@
 
     <section class="content-section">
         <h2 style="font-size: 2.5rem; margin-bottom: 30px;">Model United Nations Experience</h2>
-        <div id="dyn-muns-main">
-            <div class="card mun-card"><h3 style="color: var(--accent-gold); margin-bottom: 10px; font-size: 1.3rem;">Secretariat Posts</h3>
+        
+        <div class="card mun-card">
+            <h3 style="color: var(--accent-gold); margin-bottom: 10px; font-size: 1.3rem;">Secretariat Posts & Executive Board</h3>
+            <div id="dyn-mun-sec">
                 <ul><li>Head of Conference Affairs - Aawaaz 2.0.</li><li>Core Member - Indian Summit Foundation.</li><li>Core Member - Raising Voices.</li></ul>
                 <h3 style="color: var(--accent-gold); margin-top: 25px; margin-bottom: 10px; font-size: 1.3rem;">Experience - Executive Board</h3>
                 <ul><li>MPS Youth Parliament - Speaker.</li><li>MPS Mock Sabha - Student Chair.</li><li>DHS MUN - AIPPM Scribe.</li><li>VSIS MUN - UNSC Vice Chair.</li><li>St. Anselm Chomu MUN - UNGA Vice Chair.</li><li>Equilibrium Commune - UNSC Chair.</li></ul>
             </div>
-            <div class="card mun-card"><h3 style="color: var(--accent-gold); margin-bottom: 10px; font-size: 1.3rem;">Experience - Delegate</h3>
+        </div>
+
+        <div class="card mun-card">
+            <h3 style="color: var(--accent-gold); margin-bottom: 10px; font-size: 1.3rem;">Experience - Delegate</h3>
+            <div id="dyn-mun-del">
                 <ul><li>Modern School MUN (UNHRC) - Best Del.</li><li>All Indian Youth Summit (UNSC) - HighCom.</li><li>Kalakriti (G20+1 Symposium) - HighCom.</li><li>November Edition TIS (UNSC) - SpecMen.</li><li>Prayaas MUN (G50) - SpecMen.</li><li>JECRC Diplomacy Summit (UNSC) - Spec Men.</li><li>Prime Youth Summit (UNSC) - SpecMen.</li><li>Elegante MUN (UNGA) - Verbal.</li><li>Jaipur Summit (UNGA) - Verbal.</li><li>Yuva Samvaad (UNSC) - Verbal.</li></ul>
             </div>
         </div>
@@ -46,7 +52,8 @@
         const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
         const db = getFirestore(initializeApp(firebaseConfig));
 
-        onSnapshot(doc(db, "site_content", "muns_main"), (docSnap) => { if (docSnap.exists() && docSnap.data().text && docSnap.data().text.trim() !== "") document.getElementById('dyn-muns-main').innerHTML = docSnap.data().text; });
+        onSnapshot(doc(db, "site_content", "mun_sec"), (docSnap) => { if (docSnap.exists() && docSnap.data().text && docSnap.data().text.trim() !== "") document.getElementById('dyn-mun-sec').innerHTML = docSnap.data().text; });
+        onSnapshot(doc(db, "site_content", "mun_del"), (docSnap) => { if (docSnap.exists() && docSnap.data().text && docSnap.data().text.trim() !== "") document.getElementById('dyn-mun-del').innerHTML = docSnap.data().text; });
     </script>
 </body>
 </html>

@@ -8,9 +8,7 @@
     <style>
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { min-width: 250px; padding: 15px 20px; background-color: #333; color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 0.95rem; animation: slideIn 0.4s ease forwards; opacity: 0; transform: translateX(100%); }
-        .toast.success { background-color: #2ecc71; border-left: 5px solid #27ae60; }
         .toast.error { background-color: #e74c3c; border-left: 5px solid #c0392b; }
-        .toast.info { background-color: #3498db; border-left: 5px solid #2980b9; }
         @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
     </style>
 </head>
@@ -35,33 +33,45 @@
     </div>
 
     <section class="content-section">
-        <div id="login-screen" class="card">
-            <h2>Family Vault Authentication</h2>
-            <p style="color: var(--text-muted); margin-bottom: 25px;">Provide clearance credentials to view private media.</p>
-            <input type="email" id="email" placeholder="Authorized Email">
-            <input type="password" id="password" placeholder="Passphrase">
-            <button id="login-btn" style="width: 100%; margin-bottom: 10px;">Authenticate</button>
+        
+        <!-- HARDCODED 6-DIGIT PASSCODE LOCK -->
+        <div id="login-screen" class="card" style="max-width: 400px; margin: 0 auto; text-align: center;">
+            <h2 style="font-size: 2rem;">Family Vault</h2>
+            <p style="color: var(--text-muted); margin-bottom: 25px;">Enter 6-digit access code.</p>
+            <input type="password" id="family-passcode" placeholder="------" maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 10px; width: 100%; margin-bottom: 15px;">
+            <button id="login-btn" style="width: 100%;">Unlock Album</button>
         </div>
 
         <div id="family-content" style="display: none;">
             <div style="text-align: center;"><h1 style="font-size: 3rem; margin-bottom: 10px;">My Real Family</h1><p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 40px; font-weight: 500;">The people and moments that matter most.</p></div>
             <div id="gallery-container" class="gallery-grid"><p style="text-align: center; width: 100%; color: var(--text-muted);">Synchronizing media...</p></div>
-            <div style="text-align: center; margin-top: 50px;"><button id="logout-btn" class="danger">Secure & Lock Album</button></div>
+            <div style="text-align: center; margin-top: 50px;"><button onclick="location.reload()" class="danger">Secure & Lock Album</button></div>
         </div>
     </section>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
-        const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app);
-        const loginScreen = document.getElementById('login-screen'), familyContent = document.getElementById('family-content');
+        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        window.showToast = function(msg, type = 'info') { const container = document.getElementById('toast-container'); const t = document.createElement('div'); t.className = `toast ${type}`; t.innerText = msg; container.appendChild(t); setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3500); };
         window.openLightbox = function(url) { document.getElementById('lightbox-img').src = url; document.getElementById('lightbox').style.display = 'flex'; };
         window.closeLightbox = function() { document.getElementById('lightbox').style.display = 'none'; };
+
+        // THE 272930 PASSCODE LOGIC
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const code = document.getElementById('family-passcode').value;
+            if (code === '272930') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('family-content').style.display = 'block';
+                loadFamilyData();
+            } else {
+                const container = document.getElementById('toast-container');
+                const t = document.createElement('div'); t.className = `toast error`; t.innerText = "Invalid Passcode";
+                container.appendChild(t); setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
+            }
+        });
 
         function loadFamilyData() {
             onSnapshot(collection(db, "family"), (snapshot) => {
@@ -70,15 +80,6 @@
                 images.forEach((img) => { container.innerHTML += `<div class="graphic-card"><img src="${img.url}" alt="${img.caption}" onclick="window.openLightbox('${img.url}')">${img.caption ? `<div class="caption">${img.caption}</div>` : ''}</div>`; });
             });
         }
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) { const docSnap = await getDoc(doc(db, "vault_access", user.email)); if (docSnap.exists() && (docSnap.data().approved === true || docSnap.data().approved === "true")) { loginScreen.style.display = 'none'; familyContent.style.display = 'block'; loadFamilyData(); } }
-        });
-        document.getElementById('login-btn').addEventListener('click', () => {
-            const e = document.getElementById('email').value.trim().toLowerCase(), p = document.getElementById('password').value;
-            signInWithEmailAndPassword(auth, e, p).then(async () => { const docSnap = await getDoc(doc(db, "vault_access", e)); if (docSnap.exists() && (docSnap.data().approved === true || docSnap.data().approved === "true")) { loginScreen.style.display = 'none'; familyContent.style.display = 'block'; showToast("Authentication confirmed.", "success"); loadFamilyData(); } else { signOut(auth); showToast("Access Denied. Clearance pending.", "error"); } }).catch(() => showToast("Invalid credentials.", "error"));
-        });
-        document.getElementById('logout-btn').addEventListener('click', () => { signOut(auth).then(() => { location.reload(); }); });
     </script>
 </body>
 </html>
