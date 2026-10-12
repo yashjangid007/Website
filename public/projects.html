@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects & Architecture | Yash Jangid</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- PapaParse for CSV reading -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="cv.html">MUN CV</a>
+            <a href="lors.html">LORs</a>
+            <a href="achievements.html">Achievements</a>
+            <a href="muns.html">MUNs</a>
+            <a href="projects.html" class="active">Projects</a>
+            <a href="graphics.html">Graphics</a>
+            <a href="results.html">Results</a>
+            <a href="family.html">My Real Family</a>
+            <a href="secret.html">Secret Vault</a>
+        </div>
+    </nav>
+
+    <section class="content-section">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h1 style="font-size: 3rem; margin-bottom: 10px;">System Architecture</h1>
+            <p style="color: var(--text-muted); font-size: 1.1rem; font-weight: 500;">
+                Live implementation of "Yash Jangid Project Class 12th Board Vr2.7.py" translated to Web Stack.
+            </p>
+        </div>
+
+        <div class="idle-container">
+            <div class="idle-titlebar">
+                <span>IDLE Shell 3.13.7</span>
+                <div class="idle-controls">
+                    <button class="idle-btn">&minus;</button>
+                    <button class="idle-btn">&#9723;</button>
+                    <button class="idle-btn close">&#10005;</button>
+                </div>
+            </div>
+            <div class="idle-menubar">
+                <span>File</span><span>Edit</span><span>Shell</span><span>Debug</span><span>Options</span><span>Window</span><span>Help</span>
+            </div>
+            
+            <!-- Removed the bad onclick attribute here -->
+            <div class="idle-terminal" id="terminal">
+                <div>Python 3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:15:11) [MSC v.1944 64 bit (AMD64)] on win32</div>
+                <div>Enter "help" below or click "Help" above for more information.</div>
+                
+                <div id="output-history"></div>
+                
+                <div class="idle-input-wrapper">
+                    <span class="idle-prompt">&gt;&gt;&gt;</span>
+                    <input type="text" id="cmd-input" class="idle-input" autocomplete="off" autofocus>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        const inputField = document.getElementById('cmd-input');
+        const outputHistory = document.getElementById('output-history');
+        let chartInstance = null;
+
+        // SMART CLICK DETECTOR: Focuses the typing input ONLY if you click the background, not the dropdowns!
+        document.getElementById('terminal').addEventListener('click', function(e) {
+            if (!e.target.closest('.sys-panel') && e.target.id !== 'cmd-input') {
+                inputField.focus();
+            }
+        });
+
+        inputField.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const cmd = inputField.value.trim();
+                printLine(`<span class="idle-prompt">&gt;&gt;&gt;</span> ${cmd}`);
+                inputField.value = '';
+                processCommand(cmd);
+            }
+        });
+
+        function printLine(html) {
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            outputHistory.appendChild(div);
+            document.getElementById('terminal').scrollTop = document.getElementById('terminal').scrollHeight;
+        }
+
+        function processCommand(cmd) {
+            if (cmd === 'help') {
+                printLine(`Type <span style="color:var(--accent-gold)">run()</span> to launch Contract System Vr2.7 Web Edition.`);
+                printLine(`Type <span style="color:var(--accent-gold)">view_source()</span> to print raw Python code.`);
+                printLine(`Type <span style="color:var(--accent-gold)">clear</span> to reset terminal.`);
+            } 
+            else if (cmd === 'clear') {
+                outputHistory.innerHTML = '';
+            }
+            else if (cmd === 'view_source()') {
+                printLine(`<div class="idle-code-block">import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+print("=== Contract System Vr2.7===")
+# ... Project Data Loaded ...
+# View GitHub repository for full 150-line pandas & matplotlib source.</div>`);
+            }
+            else if (cmd === 'run()') {
+                printLine(`<span style="color: #4CAF50;">=== Contract System Vr2.7 Web Active ===</span>`);
+                loadAppUI();
+            }
+            else if (cmd !== '') {
+                printLine(`Traceback (most recent call last):<br>  File "&lt;pyshell#0&gt;", line 1, in &lt;module&gt;<br>NameError: name '${cmd}' is not defined`);
+            }
+        }
+
+        function loadAppUI() {
+            const uiHTML = `
+                <div class="sys-panel" id="app-panel">
+                    <p style="margin-bottom: 5px;"><strong>[Data Initializer]</strong> Select a CSV dataset to mount:</p>
+                    <input type="file" id="csv-upload" accept=".csv">
+                    <div id="plot-controls" style="display:none;">
+                        <p style="margin-top:10px; margin-bottom: 10px; color:var(--accent-gold);">Dataset Mounted Successfully. Initialize Plot Menu:</p>
+                        <select id="x-axis"><option value="">-- X Axis (Categories) --</option></select>
+                        <select id="y-axis"><option value="">-- Y Axis (Values) --</option></select>
+                        <select id="chart-type">
+                            <option value="bar">Bar Chart</option>
+                            <option value="line">Line Chart</option>
+                        </select>
+                        <button id="plot-btn" style="width:100%; margin-top:5px; background-color:#3498db; color:white;">Render Visualization</button>
+                    </div>
+                    <canvas id="chart-canvas" style="margin-top:20px; max-height: 400px; display:none; background:#fff; border-radius:6px; padding: 10px;"></canvas>
+                </div>
+            `;
+            printLine(uiHTML);
+
+            const fileInput = document.getElementById('csv-upload');
+            let parsedData = [];
+            let headers = [];
+
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if(file) {
+                    printLine(`[System] Reading ${file.name}...`);
+                    Papa.parse(file, {
+                        header: true, dynamicTyping: true, skipEmptyLines: true,
+                        complete: function(results) {
+                            parsedData = results.data; headers = results.meta.fields;
+                            document.getElementById('plot-controls').style.display = 'block';
+                            const xSel = document.getElementById('x-axis');
+                            const ySel = document.getElementById('y-axis');
+                            headers.forEach(h => {
+                                xSel.innerHTML += `<option value="${h}">${h}</option>`;
+                                ySel.innerHTML += `<option value="${h}">${h}</option>`;
+                            });
+                            printLine(`[System] CSV Parsed. Found ${parsedData.length} records. Ready to plot.`);
+                        }
+                    });
+                }
+            });
+
+            document.getElementById('plot-btn').addEventListener('click', function() {
+                const xCol = document.getElementById('x-axis').value;
+                const yCol = document.getElementById('y-axis').value;
+                const type = document.getElementById('chart-type').value;
+
+                if(!xCol || !yCol) { printLine(`<span style="color:#e74c3c;">[Error] Must select X and Y columns.</span>`); return; }
+
+                const xData = parsedData.map(row => row[xCol]);
+                const yData = parsedData.map(row => row[yCol]);
+
+                document.getElementById('chart-canvas').style.display = 'block';
+                const ctx = document.getElementById('chart-canvas').getContext('2d');
+                if(chartInstance) chartInstance.destroy();
+
+                chartInstance = new Chart(ctx, {
+                    type: type,
+                    data: {
+                        labels: xData,
+                        datasets: [{
+                            label: `${yCol} vs ${xCol}`,
+                            data: yData,
+                            backgroundColor: 'rgba(212, 175, 55, 0.7)',
+                            borderColor: 'rgba(212, 175, 55, 1)',
+                            borderWidth: 2,
+                            tension: 0.3
+                        }]
+                    },
+                    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+                });
+                printLine(`[System] Chart generated successfully.`);
+            });
+        }
+    </script>
+</body>
+</html>

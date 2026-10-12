@@ -39,91 +39,86 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Playfair Display', serif; color: var(--ac
 
 .content-section { max-width: 1200px; margin: 50px auto; padding: 0 20px; }
 
-.profile-pic {
-    width: 260px; height: 280px; object-fit: cover; border-radius: 16px; 
-    border: 2px solid var(--accent-gold); box-shadow: 0 8px 25px rgba(0,0,0,0.5), 0 0 15px rgba(212,175,55,0.15);
-    display: block; margin: 0 auto 30px auto; transition: transform 0.4s ease;
-}
+.profile-pic { width: 260px; height: 280px; object-fit: cover; border-radius: 16px; border: 2px solid var(--accent-gold); box-shadow: 0 8px 25px rgba(0,0,0,0.5), 0 0 15px rgba(212,175,55,0.15); display: block; margin: 0 auto 30px auto; transition: transform 0.4s ease; }
 .profile-pic:hover { transform: scale(1.03); }
 
 #login-screen { max-width: 450px; width: 100%; margin: 0 auto; text-align: center; }
 #login-screen input { width: 100%; max-width: 100%; margin-bottom: 15px; }
 
-.card {
-    background: var(--glass-bg) !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border) !important; border-radius: 12px !important;
-    padding: 35px !important; margin-bottom: 30px !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
-    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-}
+.card { background: var(--glass-bg) !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border) !important; border-radius: 12px !important; padding: 35px !important; margin-bottom: 30px !important; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important; transition: transform 0.3s ease, box-shadow 0.3s ease !important; }
 
-.vault-nav {
-    display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px;
-    border-bottom: 2px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; justify-content: center;
-}
-.vault-tab-btn {
-    background: rgba(255, 255, 255, 0.05) !important; color: var(--text-muted) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: none !important;
-}
-.vault-tab-btn.active {
-    background: var(--accent-gold) !important; color: #000 !important;
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4) !important;
-}
+.vault-nav { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; justify-content: center; }
+.vault-tab-btn { background: rgba(255, 255, 255, 0.05) !important; color: var(--text-muted) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: none !important; }
+.vault-tab-btn.active { background: var(--accent-gold) !important; color: #000 !important; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4) !important; }
 .vault-panel { display: none; width: 100%; }
 .vault-panel.active { display: block; animation: fadeIn 0.4s ease; }
 
-input[type="text"], input[type="email"], input[type="password"], select, input[type="file"], textarea {
-    background: rgba(255, 255, 255, 0.05) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    color: #ffffff !important; border-radius: 6px !important; padding: 12px 15px !important; font-family: 'Inter', sans-serif !important; transition: all 0.3s ease !important;
-}
+input[type="text"], input[type="email"], input[type="password"], select, input[type="file"], textarea { background: rgba(255, 255, 255, 0.05) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; color: #ffffff !important; border-radius: 6px !important; padding: 12px 15px !important; font-family: 'Inter', sans-serif !important; transition: all 0.3s ease !important; }
 input::placeholder, textarea::placeholder { color: #888 !important; }
 input:focus, select:focus, textarea:focus { border-color: var(--accent-gold) !important; outline: none !important; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2) !important; }
 select option { background: var(--secondary-bg); color: white; }
 
-/* Fixed Buttons (Ignores Quill Editor) */
-button:not([class^="ql-"]) {
+/* FIX 1: Ignore .idle-btn and Quill buttons in global styling */
+button:not([class^="ql-"]):not(.idle-btn) { 
     font-family: 'Inter', sans-serif !important; background: var(--accent-gold) !important; color: #111 !important; 
-    border: none !important; padding: 12px 24px !important; font-weight: 600 !important; border-radius: 6px !important; cursor: pointer !important;
-    transition: all 0.3s ease !important; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem;
+    border: none !important; padding: 12px 24px !important; font-weight: 600 !important; border-radius: 6px !important; cursor: pointer !important; 
+    transition: all 0.3s ease !important; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem; 
 }
-button:not([class^="ql-"]):hover { background: var(--accent-gold-hover) !important; transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4) !important; }
-button:not([class^="ql-"]):active { transform: scale(0.98) !important; }
+button:not([class^="ql-"]):not(.idle-btn):hover { background: var(--accent-gold-hover) !important; transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4) !important; }
+button:not([class^="ql-"]):not(.idle-btn):active { transform: scale(0.98) !important; }
 button.danger { background: rgba(231, 76, 60, 0.8) !important; color: white !important; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2) !important; }
 button.danger:hover { background: #e74c3c !important; }
 
-/* Fixed Quill Editor */
 .ql-toolbar { background: #e0e0e0; border-radius: 6px 6px 0 0; border: none !important; }
 .ql-toolbar button { background: transparent !important; box-shadow: none !important; padding: 3px 5px !important; }
-.ql-toolbar button:hover { transform: none !important; }
 .ql-container { background: #ffffff; color: #000000; font-family: 'Inter', sans-serif !important; font-size: 1rem !important; border-radius: 0 0 6px 6px; border: none !important; }
 
-/* Media Galleries */
 .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; margin-top: 30px; }
 .graphic-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.4); transition: transform 0.3s; }
 .graphic-card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px rgba(0,0,0,0.6); }
-.graphic-card img { 
-    width: 100%; height: 250px; object-fit: contain; background: rgba(0, 0, 0, 0.6); 
-    display: block; border-bottom: 2px solid var(--accent-gold); cursor: zoom-in; 
-}
+.graphic-card img { width: 100%; height: 250px; object-fit: contain; background: rgba(0, 0, 0, 0.6); display: block; border-bottom: 2px solid var(--accent-gold); cursor: zoom-in; }
 .graphic-card .caption { padding: 15px; font-size: 0.95rem; color: var(--text-main); font-weight: 500; text-align: center; }
 
-/* LIGHTBOX */
-.lightbox {
-    display: none; position: fixed; z-index: 99999; top: 0; left: 0; width: 100vw; height: 100vh;
-    background-color: rgba(0, 0, 0, 0.92); backdrop-filter: blur(8px);
-    justify-content: center; align-items: center; cursor: zoom-out;
-}
+.lightbox { display: none; position: fixed; z-index: 99999; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.92); backdrop-filter: blur(8px); justify-content: center; align-items: center; cursor: zoom-out; }
 .lightbox img { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,0.8); animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 .lightbox-close { position: absolute; top: 20px; right: 35px; color: #fff; font-size: 45px; font-weight: 300; cursor: pointer; transition: 0.3s; }
 .lightbox-close:hover { color: var(--accent-gold); }
 @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-/* Results Table */
 .card table { width: 100%; border-collapse: collapse; color: var(--text-main); }
 .card th, .card td { white-space: nowrap !important; padding: 18px 25px !important; }
 .card th { background-color: rgba(0, 0, 0, 0.4) !important; color: var(--accent-gold) !important; font-family: 'Playfair Display', serif !important; font-size: 1.05rem !important; border-bottom: 2px solid var(--accent-gold) !important; text-transform: capitalize !important; }
 .card td { border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; font-size: 0.95rem; }
 .card tbody tr { transition: background-color 0.2s; }
 .card tbody tr:hover { background-color: rgba(255, 255, 255, 0.05); }
+
+/* --- PYTHON IDLE REPLICA STYLES --- */
+.idle-container { width: 100%; max-width: 1000px; margin: 0 auto; background: #002240; border: 1px solid #777; border-radius: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); overflow: hidden; font-family: Consolas, "Courier New", monospace; text-align: left; }
+.idle-titlebar { background: #ffffff; color: #000; padding: 4px 10px; font-size: 0.85rem; font-family: "Segoe UI", sans-serif; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; }
+.idle-controls { display: flex; align-items: center; }
+
+/* FIX 2: Perfectly center IDLE control buttons */
+.idle-btn { 
+    width: 45px; height: 28px; background: transparent; border: none !important; 
+    font-size: 16px; cursor: pointer; transition: background 0.2s; 
+    display: flex; align-items: center; justify-content: center; /* Centers the icon */
+    color: #000 !important; padding: 0 !important; box-shadow: none !important; margin: 0 !important;
+}
+.idle-btn:hover { background: #e5e5e5; transform: none !important; }
+.idle-btn.close:hover { background: #e81123; color: white !important; }
+
+.idle-menubar { background: #ffffff; padding: 2px 10px; font-size: 0.85rem; font-family: "Segoe UI", sans-serif; border-bottom: 1px solid #ccc; color: #000; }
+.idle-menubar span { margin-right: 15px; cursor: pointer; }
+.idle-menubar span:hover { background: #cce8ff; padding: 2px; margin: -2px 13px -2px -2px; }
+.idle-terminal { padding: 10px; height: 600px; overflow-y: auto; color: #fff; font-size: 1rem; }
+.idle-prompt { color: #ff3333; font-weight: bold; margin-right: 5px; }
+.idle-input-wrapper { display: flex; margin-top: 5px; }
+.idle-input { background: transparent; border: none; color: #fff; font-family: Consolas, "Courier New", monospace; font-size: 1rem; flex-grow: 1; outline: none; }
+.idle-code-block { white-space: pre-wrap; color: #a6e22e; margin-top: 10px; border-left: 2px solid #555; padding-left: 10px; }
+
+/* In-Terminal App Styles */
+.sys-panel { background: rgba(255,255,255,0.05); padding: 15px; border: 1px solid #555; margin-top: 15px; border-radius: 4px; }
+.sys-panel input[type="file"] { background: rgba(0,0,0,0.3) !important; border: 1px solid #777 !important; color: white !important; padding: 10px !important; margin-bottom: 15px; width: 100%; }
+.sys-panel select { padding: 10px !important; width: 100%; border-radius: 4px !important; margin-bottom: 10px; background: rgba(255,255,255,0.1) !important; }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
