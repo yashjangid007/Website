@@ -8,38 +8,10 @@
     <style>
         .contact-form { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
         .contact-form input, .contact-form textarea { width: 100%; font-family: inherit; }
-        .contact-form textarea { 
-            background: rgba(255, 255, 255, 0.05); 
-            border: 1px solid rgba(255, 255, 255, 0.15); 
-            color: #fff; 
-            border-radius: 6px; 
-            padding: 12px 15px; 
-            resize: vertical; 
-            min-height: 120px; 
-        }
-        .contact-form textarea:focus { 
-            border-color: var(--accent-gold); 
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2); 
-            outline: none; 
-        }
-        #form-status { font-weight: 600; margin-top: 10px; font-size: 0.9rem; }
-        
-        /* Side-by-side layout for Desktop, stacks on Mobile */
-        .dashboard-layout {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-            justify-content: center;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .dashboard-card {
-            flex: 1 1 450px; /* Allows cards to sit side by side and wrap if screen is small */
-            text-align: left;
-            padding: 40px !important;
-            margin-bottom: 0 !important; /* Overrides default card margin for flexbox */
-        }
+        .contact-form textarea { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; border-radius: 6px; padding: 12px 15px; resize: vertical; min-height: 120px; }
+        .contact-form textarea:focus { border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2); outline: none; }
+        .dashboard-layout { display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; max-width: 1200px; margin: 0 auto; }
+        .dashboard-card { flex: 1 1 450px; text-align: left; padding: 40px !important; margin-bottom: 0 !important; }
     </style>
 </head>
 <body>
@@ -48,107 +20,76 @@
             <a href="index.html" class="active">Home</a>
             <a href="achievements.html">Achievements</a>
             <a href="muns.html">MUNs</a>
+            <a href="graphics.html">Graphics</a>
             <a href="results.html">Results</a>
             <a href="secret.html">Secret Vault</a>
         </div>
     </nav>
 
     <section class="content-section" style="text-align: center; margin-top: 60px;">
-        
-        <!-- Profile Picture & Title -->
         <img src="yash.jpg" alt="Yash Jangid" class="profile-pic">
         <h1 style="font-size: 3rem; margin-bottom: 10px;">Yash Jangid</h1>
         <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 50px; font-weight: 500;">
             Head Boy @ Maheshwari Public School, Kalwar Road | Class 12 PCM
         </p>
 
-        <!-- TWO-COLUMN LAYOUT -->
         <div class="dashboard-layout">
-            
-            <!-- LEFT CARD: ABOUT ME -->
             <div class="card dashboard-card">
                 <h2 style="text-align: center; margin-bottom: 20px; font-size: 2rem;">About Me</h2>
-                <p style="text-align: justify; font-size: 0.95rem; line-height: 1.7; margin-bottom: 30px; color: var(--text-main);">
-                    12th-grade PCM student and Head Boy of Maheshwari Public School, Kalwar Road. I am highly active in the Jaipur MUN Circuit with a proven track record of versatile leadership and diplomatic engagement.
-                </p>
-                <h3 style="color: var(--accent-gold); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Core Competencies</h3>
-                <ul style="list-style-type: disc; padding-left: 20px; line-height: 1.8; font-size: 0.95rem;">
-                    <li style="margin-bottom: 10px;"><strong>Leadership & Extracurriculars:</strong> Selected for an exclusive educational delegation to meet the Vice President of India.</li>
-                    <li style="margin-bottom: 10px;"><strong>Diplomacy & Leadership:</strong> Extensive participation in MUNs, securing recognitions including Best Delegate and High Commendation.</li>
-                    <li style="margin-bottom: 10px;"><strong>Organizational Impact:</strong> Key member of The Indian Summit Foundation, accredited by G20, Y20, & MNIT Jaipur.</li>
-                    <li style="margin-bottom: 10px;"><strong>Creative Execution:</strong> Graphic designer and A/V editor with a strong eye for typography and visual branding.</li>
-                    <li><strong>Technical Acumen:</strong> Certified in Data Science and Game Technology via IIT Madras C.O.D.E.</li>
-                </ul>
-            </div>
-
-            <!-- RIGHT CARD: DIPLOMATIC INBOX FORM -->
-            <div class="card dashboard-card">
-                <h2 style="text-align: center; margin-bottom: 20px; font-size: 2rem;">Direct Communiqué</h2>
-                <p style="text-align: center; font-size: 0.95rem; color: var(--text-muted); margin-bottom: 25px; line-height: 1.6;">
-                    Use this secure channel for official MUN invitations, chair requests, or professional inquiries. Messages are routed directly to my Vault.
-                </p>
                 
-                <div class="contact-form">
-                    <input type="text" id="contact-name" placeholder="Your Name or Designation">
-                    <input type="email" id="contact-email" placeholder="Official Email Address">
-                    <textarea id="contact-message" placeholder="Type your message or invitation details here..."></textarea>
-                    <button id="send-message-btn" style="width: 100%; margin-top: 10px; padding: 15px !important; font-size: 1rem;">Transmit Message</button>
-                    <p id="form-status" style="text-align: center;"></p>
+                <div id="dyn-home-about" style="text-align: justify; font-size: 0.95rem; line-height: 1.7; margin-bottom: 30px; color: var(--text-main);">
+                    12th-grade PCM student and Head Boy of Maheshwari Public School, Kalwar Road. I am highly active in the Jaipur MUN Circuit with a proven track record of versatile leadership and diplomatic engagement.
+                </div>
+                
+                <h3 style="color: var(--accent-gold); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Core Competencies</h3>
+                
+                <div id="dyn-home-competencies" style="font-size: 0.95rem; line-height: 1.8;">
+                    <ul>
+                        <li><strong>Leadership & Extracurriculars:</strong> Selected for an exclusive educational delegation to meet the Vice President of India.</li>
+                        <li><strong>Diplomacy & Leadership:</strong> Extensive participation in MUNs, securing recognitions including Best Delegate and High Commendation.</li>
+                        <li><strong>Organizational Impact:</strong> Key member of The Indian Summit Foundation.</li>
+                    </ul>
                 </div>
             </div>
 
+            <div class="card dashboard-card">
+                <h2 style="text-align: center; margin-bottom: 20px; font-size: 2rem;">Direct Communiqué</h2>
+                <p style="text-align: center; font-size: 0.95rem; color: var(--text-muted); margin-bottom: 25px;">Use this secure channel for official MUN invitations or professional inquiries. Messages route to my Vault.</p>
+                <div class="contact-form">
+                    <input type="text" id="contact-name" placeholder="Your Name or Designation">
+                    <input type="email" id="contact-email" placeholder="Official Email Address">
+                    <textarea id="contact-message" placeholder="Type your message details here..."></textarea>
+                    <button id="send-message-btn" style="width: 100%; margin-top: 10px;">Transmit Message</button>
+                    <p id="form-status" style="text-align: center;"></p>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- FIREBASE DATABASE SCRIPT FOR INBOX -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8",
-            authDomain: "yash-jangid.firebaseapp.com",
-            projectId: "yash-jangid",
-            storageBucket: "yash-jangid.firebasestorage.app",
-            messagingSenderId: "413356747209",
-            appId: "1:413356747209:web:5b7332a06e3865f6e5a018",
-            measurementId: "G-BR856TNGE8"
+            apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com",
+            projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app",
+            messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8"
         };
+        const db = getFirestore(initializeApp(firebaseConfig));
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        onSnapshot(doc(db, "site_content", "home_about"), (docSnap) => {
+            if(docSnap.exists() && docSnap.data().text) document.getElementById('dyn-home-about').innerHTML = docSnap.data().text;
+        });
+        onSnapshot(doc(db, "site_content", "home_competencies"), (docSnap) => {
+            if(docSnap.exists() && docSnap.data().text) document.getElementById('dyn-home-competencies').innerHTML = docSnap.data().text;
+        });
 
         document.getElementById('send-message-btn').addEventListener('click', async () => {
-            const name = document.getElementById('contact-name').value.trim();
-            const email = document.getElementById('contact-email').value.trim();
-            const message = document.getElementById('contact-message').value.trim();
-            const status = document.getElementById('form-status');
-
-            if (!name || !email || !message) {
-                status.style.color = "#e74c3c";
-                status.innerText = "Please complete all fields before transmitting.";
-                return;
-            }
-
-            status.style.color = "#f39c12";
-            status.innerText = "Encrypting and transmitting...";
-
-            try {
-                await addDoc(collection(db, "inbox_messages"), {
-                    name: name,
-                    email: email,
-                    message: message,
-                    timestamp: Date.now()
-                });
-                status.style.color = "#2ecc71";
-                status.innerText = "Transmission successful. The administrator has been notified.";
-                document.getElementById('contact-name').value = '';
-                document.getElementById('contact-email').value = '';
-                document.getElementById('contact-message').value = '';
-            } catch (error) {
-                status.style.color = "#e74c3c";
-                status.innerText = "Transmission failed. Secure channel compromised.";
-            }
+            const n = document.getElementById('contact-name').value, e = document.getElementById('contact-email').value, m = document.getElementById('contact-message').value, s = document.getElementById('form-status');
+            if(!n || !e || !m) { s.style.color = "#e74c3c"; s.innerText = "Complete all fields."; return; }
+            s.style.color = "#f39c12"; s.innerText = "Transmitting...";
+            try { await addDoc(collection(db, "inbox_messages"), { name: n, email: e, message: m, timestamp: Date.now() }); s.style.color = "#2ecc71"; s.innerText = "Transmission successful."; document.getElementById('contact-name').value=''; document.getElementById('contact-email').value=''; document.getElementById('contact-message').value=''; } 
+            catch(err) { s.style.color = "#e74c3c"; s.innerText = "Transmission failed."; }
         });
     </script>
 </body>
