@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projects & Architecture | Yash Jangid</title>
     <link rel="stylesheet" href="style.css">
-    <!-- PapaParse for CSV reading -->
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
-    <!-- Chart.js for data visualization -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- LOAD REAL PYTHON WEBASSEMBLY ENGINE -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -26,174 +25,415 @@
         </div>
     </nav>
 
+    <!-- LIGHTBOX OVERLAY -->
+    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+        <span class="lightbox-close">&times;</span>
+        <img id="lightbox-img" src="" alt="Fullscreen view">
+    </div>
+
     <section class="content-section">
         <div style="text-align: center; margin-bottom: 40px;">
             <h1 style="font-size: 3rem; margin-bottom: 10px;">System Architecture</h1>
             <p style="color: var(--text-muted); font-size: 1.1rem; font-weight: 500;">
-                Live implementation of "Yash Jangid Project Class 12th Board Vr2.7.py" translated to Web Stack.
+                Executing "Contract System Vr2.7" via WebAssembly Native Python Engine.
             </p>
         </div>
 
-        <div class="idle-container">
-            <div class="idle-titlebar">
-                <span>IDLE Shell 3.13.7</span>
-                <div class="idle-controls">
-                    <button class="idle-btn">&minus;</button>
-                    <button class="idle-btn">&#9723;</button>
-                    <button class="idle-btn close">&#10005;</button>
-                </div>
-            </div>
-            <div class="idle-menubar">
-                <span>File</span><span>Edit</span><span>Shell</span><span>Debug</span><span>Options</span><span>Window</span><span>Help</span>
-            </div>
+        <div class="dashboard-layout">
             
-            <!-- Removed the bad onclick attribute here -->
-            <div class="idle-terminal" id="terminal">
-                <div>Python 3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:15:11) [MSC v.1944 64 bit (AMD64)] on win32</div>
-                <div>Enter "help" below or click "Help" above for more information.</div>
-                
-                <div id="output-history"></div>
-                
-                <div class="idle-input-wrapper">
-                    <span class="idle-prompt">&gt;&gt;&gt;</span>
-                    <input type="text" id="cmd-input" class="idle-input" autocomplete="off" autofocus>
+            <!-- LEFT PANEL: PYTHON TERMINAL -->
+            <div class="card dashboard-card" style="padding: 15px !important;">
+                <div class="idle-container">
+                    <div class="idle-titlebar">
+                        <span>IDLE Shell 3.13.7</span>
+                        <div class="idle-controls"><button class="idle-btn">&minus;</button><button class="idle-btn">&#9723;</button><button class="idle-btn close">&#10005;</button></div>
+                    </div>
+                    <div class="idle-menubar">
+                        <span>File</span><span>Edit</span><span>Shell</span><span>Debug</span><span>Options</span><span>Window</span><span>Help</span>
+                    </div>
+                    
+                    <div class="idle-terminal" id="terminal" onclick="document.getElementById('cmd-input').focus()">
+                        <div>Python 3.13.7 (WebAssembly) [MSC v.1944 64 bit] on browser</div>
+                        <div style="color: #f1c40f; margin-bottom: 10px;" id="boot-status">Initializing Pyodide Engine... Please wait (~15MB download).</div>
+                        
+                        <div id="output-history"></div>
+                        
+                        <div class="idle-input-wrapper" id="input-row" style="display:none;">
+                            <span class="idle-prompt" id="prompt-text">&gt;&gt;&gt;</span>
+                            <input type="text" id="cmd-input" class="idle-input" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sys-panel">
+                    <p style="margin-bottom: 5px; font-size:0.9rem;"><strong>[Mount Virtual Files]</strong> Inject .csv or .py files into RAM:</p>
+                    <input type="file" id="file-uploader" multiple>
                 </div>
             </div>
+
+            <!-- RIGHT PANEL: GRAPH RENDERER -->
+            <div class="card dashboard-card">
+                <h2 style="text-align: center; margin-bottom: 20px; font-size: 1.8rem; color: var(--accent-gold);">Output Dashboard</h2>
+                <p style="text-align: center; font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px;">
+                    Rendered matplotlib visualizations will dynamically project here.
+                </p>
+
+                <div id="plot-container" style="display: none; text-align: center;">
+                    <div class="graphic-card" style="margin-bottom: 20px;">
+                        <img id="rendered-plot" src="" alt="Matplotlib Output" onclick="openLightbox(this.src)" style="cursor: zoom-in; height: auto;">
+                        <div class="caption">Live Render Engine</div>
+                    </div>
+                    <a id="download-plot-btn" href="#" download="visualization.png" style="text-decoration: none;">
+                        <button style="width: 100%;">Download Visualization</button>
+                    </a>
+                </div>
+
+                <div id="plot-placeholder" style="text-align: center; padding: 50px 20px; border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; color: #777;">
+                    Awaiting script execution...
+                </div>
+            </div>
+
         </div>
     </section>
 
+    <!-- JavaScript Bridge & Pyodide Setup -->
     <script>
-        const inputField = document.getElementById('cmd-input');
+        const terminal = document.getElementById('terminal');
         const outputHistory = document.getElementById('output-history');
-        let chartInstance = null;
+        const inputField = document.getElementById('cmd-input');
+        const promptText = document.getElementById('prompt-text');
+        const inputRow = document.getElementById('input-row');
+        const bootStatus = document.getElementById('boot-status');
+        
+        // Lightbox Functions
+        window.openLightbox = function(url) { document.getElementById('lightbox-img').src = url; document.getElementById('lightbox').style.display = 'flex'; };
+        window.closeLightbox = function() { document.getElementById('lightbox').style.display = 'none'; };
 
-        // SMART CLICK DETECTOR: Focuses the typing input ONLY if you click the background, not the dropdowns!
-        document.getElementById('terminal').addEventListener('click', function(e) {
-            if (!e.target.closest('.sys-panel') && e.target.id !== 'cmd-input') {
-                inputField.focus();
-            }
-        });
+        // Async Input Bridge for standard typing
+        let inputResolver = null;
 
-        inputField.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const cmd = inputField.value.trim();
-                printLine(`<span class="idle-prompt">&gt;&gt;&gt;</span> ${cmd}`);
-                inputField.value = '';
-                processCommand(cmd);
-            }
-        });
-
-        function printLine(html) {
+        function print_line(html) {
             const div = document.createElement('div');
             div.innerHTML = html;
             outputHistory.appendChild(div);
-            document.getElementById('terminal').scrollTop = document.getElementById('terminal').scrollHeight;
+            terminal.scrollTop = terminal.scrollHeight;
         }
 
-        function processCommand(cmd) {
-            if (cmd === 'help') {
-                printLine(`Type <span style="color:var(--accent-gold)">run()</span> to launch Contract System Vr2.7 Web Edition.`);
-                printLine(`Type <span style="color:var(--accent-gold)">view_source()</span> to print raw Python code.`);
-                printLine(`Type <span style="color:var(--accent-gold)">clear</span> to reset terminal.`);
-            } 
-            else if (cmd === 'clear') {
-                outputHistory.innerHTML = '';
+        function set_prompt(text) { promptText.innerHTML = text; }
+        function clear_terminal() { outputHistory.innerHTML = ''; }
+
+        function render_plot(base64str) {
+            const imgSrc = "data:image/png;base64," + base64str;
+            document.getElementById('plot-placeholder').style.display = 'none';
+            document.getElementById('plot-container').style.display = 'block';
+            document.getElementById('rendered-plot').src = imgSrc;
+            document.getElementById('download-plot-btn').href = imgSrc;
+        }
+
+        function wait_for_input() {
+            return new Promise(resolve => { inputResolver = resolve; });
+        }
+
+        inputField.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const val = inputField.value;
+                inputField.value = '';
+                if (inputResolver) {
+                    const res = inputResolver;
+                    inputResolver = null;
+                    res(val);
+                }
             }
-            else if (cmd === 'view_source()') {
-                printLine(`<div class="idle-code-block">import pandas as pd
+        });
+
+        // -----------------------------------------------------------
+        // NEW FEATURE: IN-TERMINAL UI DROPDOWN GENERATORS
+        // -----------------------------------------------------------
+        
+        // 1. Dropdown for selecting CSV Files
+        function js_get_file_ui(files_str) {
+            return new Promise(resolve => {
+                const files = files_str.split(',').filter(f => f);
+                let opts = '';
+                files.forEach(f => opts += `<option value="${f}">${f}</option>`);
+                
+                const uiId = "file-ui-" + Date.now();
+                const html = `
+                <div id="${uiId}" class="sys-panel" style="margin-top: 10px; padding: 15px; border-color: var(--accent-gold);">
+                    <p style="color:var(--accent-gold); margin-bottom:10px;"><strong>Select Dataset from RAM</strong></p>
+                    <select id="${uiId}-file" style="width:100%; margin-bottom:15px; padding:8px;">${opts}</select>
+                    <div style="display:flex; gap:10px;">
+                        <button id="${uiId}-btn" style="flex:2; background:#3498db; color:#fff;">Load File</button>
+                        <button id="${uiId}-cancel" style="flex:1; background:#e74c3c; color:#fff;">Cancel</button>
+                    </div>
+                </div>`;
+                
+                print_line(html);
+                inputRow.style.display = 'none'; // Hide typing line
+                
+                document.getElementById(`${uiId}-btn`).onclick = () => {
+                    const file = document.getElementById(`${uiId}-file`).value;
+                    document.getElementById(uiId).style.display = 'none';
+                    inputRow.style.display = 'flex'; inputField.focus();
+                    resolve(JSON.stringify({cancel: false, file: file}));
+                };
+                document.getElementById(`${uiId}-cancel`).onclick = () => {
+                    document.getElementById(uiId).style.display = 'none';
+                    inputRow.style.display = 'flex'; inputField.focus();
+                    resolve(JSON.stringify({cancel: true}));
+                };
+            });
+        }
+
+        // 2. Dropdown for configuring Plots
+        function js_get_plot_ui(columns_str) {
+            return new Promise(resolve => {
+                const cols = columns_str.split(',');
+                let opts = '<option value="">-- Select Column --</option>';
+                cols.forEach(c => opts += `<option value="${c}">${c}</option>`);
+                
+                const uiId = "plot-ui-" + Date.now();
+                const html = `
+                <div id="${uiId}" class="sys-panel" style="margin-top: 10px; border-color: var(--accent-gold);">
+                    <p style="color:var(--accent-gold); margin-bottom:10px;"><strong>Configure Visualization</strong></p>
+                    
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+                        <select id="${uiId}-ptype" style="flex:1; padding:8px;" onchange="document.getElementById('${uiId}-y').style.display = this.value=='3' ? 'none' : 'block';">
+                            <option value="1">Line Chart</option>
+                            <option value="2">Bar Chart</option>
+                            <option value="3">Histogram (X-Axis Only)</option>
+                            <option value="4">Scatter Plot</option>
+                            <option value="5">Pie Chart</option>
+                        </select>
+                        <select id="${uiId}-color" style="flex:1; padding:8px;">
+                            <option value="gold">Color: Gold</option>
+                            <option value="#3498db">Color: Blue</option>
+                            <option value="#e74c3c">Color: Red</option>
+                            <option value="#2ecc71">Color: Green</option>
+                            <option value="#9b59b6">Color: Purple</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+                        <select id="${uiId}-x" style="flex:1; padding:8px;">
+                            <option value="">-- X-Axis / Labels --</option>${opts}
+                        </select>
+                        <select id="${uiId}-y" style="flex:1; padding:8px;">
+                            <option value="">-- Y-Axis / Values --</option>${opts}
+                        </select>
+                    </div>
+                    
+                    <input type="text" id="${uiId}-title" placeholder="Chart Title (Optional)" style="width:100%; margin-bottom:15px; padding:8px;">
+                    
+                    <div style="display:flex; gap:10px;">
+                        <button id="${uiId}-btn" style="flex:2; background:#2ecc71; color:#fff;">Render Graph</button>
+                        <button id="${uiId}-cancel" style="flex:1; background:#e74c3c; color:#fff;">Cancel</button>
+                    </div>
+                </div>`;
+                
+                print_line(html);
+                inputRow.style.display = 'none'; // Hide typing line
+                
+                document.getElementById(`${uiId}-btn`).onclick = () => {
+                    const config = {
+                        ptype: document.getElementById(`${uiId}-ptype`).value,
+                        x: document.getElementById(`${uiId}-x`).value,
+                        y: document.getElementById(`${uiId}-y`).value,
+                        title: document.getElementById(`${uiId}-title`).value,
+                        color: document.getElementById(`${uiId}-color`).value,
+                        cancel: false
+                    };
+                    document.getElementById(uiId).style.display = 'none';
+                    inputRow.style.display = 'flex'; inputField.focus();
+                    resolve(JSON.stringify(config));
+                };
+
+                document.getElementById(`${uiId}-cancel`).onclick = () => {
+                    document.getElementById(uiId).style.display = 'none';
+                    inputRow.style.display = 'flex'; inputField.focus();
+                    resolve(JSON.stringify({cancel: true}));
+                };
+            });
+        }
+
+        // Initialize Pyodide & Mount App
+        async function bootPython() {
+            try {
+                let pyodide = await loadPyodide();
+                bootStatus.innerText = "Engine Loaded. Installing pandas and matplotlib...";
+                await pyodide.loadPackage(['pandas', 'matplotlib', 'numpy']);
+                
+                // Expose JS functions to Python
+                pyodide.globals.set("js_print", print_line);
+                pyodide.globals.set("js_prompt", set_prompt);
+                pyodide.globals.set("js_clear", clear_terminal);
+                pyodide.globals.set("js_render", render_plot);
+                pyodide.globals.set("js_wait_input", wait_for_input);
+                
+                // Expose the new UI Generators
+                pyodide.globals.set("js_get_file_ui", js_get_file_ui);
+                pyodide.globals.set("js_get_plot_ui", js_get_plot_ui);
+
+                // Setup Virtual File System Uploader
+                document.getElementById('file-uploader').addEventListener('change', function(e) {
+                    for(let file of e.target.files) {
+                        file.arrayBuffer().then(buffer => {
+                            pyodide.FS.writeFile(file.name, new Uint8Array(buffer));
+                            print_line(`<span style="color:#3498db">[System] Mounted ${file.name} to virtual memory.</span>`);
+                        });
+                    }
+                });
+
+                bootStatus.style.display = 'none';
+                inputRow.style.display = 'flex';
+                inputField.focus();
+
+                // Inject and Run Python Script Loop
+                const pythonCode = `
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import io, base64, os, json
 
-print("=== Contract System Vr2.7===")
-# ... Project Data Loaded ...
-# View GitHub repository for full 150-line pandas & matplotlib source.</div>`);
-            }
-            else if (cmd === 'run()') {
-                printLine(`<span style="color: #4CAF50;">=== Contract System Vr2.7 Web Active ===</span>`);
-                loadAppUI();
-            }
-            else if (cmd !== '') {
-                printLine(`Traceback (most recent call last):<br>  File "&lt;pyshell#0&gt;", line 1, in &lt;module&gt;<br>NameError: name '${cmd}' is not defined`);
+plt.style.use('dark_background')
+
+# Generate default testing file
+dummy_data = "Name,Score,Attendance,Committee\\nYash,98,100,UNSC\\nZoya,89,92,UNHRC\\nParesh,94,95,UNGA\\nRahul,78,85,UNEP\\nTanvi,91,88,UNICEF"
+with open('mun_scores.csv', 'w') as f:
+    f.write(dummy_data)
+
+async def async_input(prompt):
+    js_prompt(prompt)
+    val = await js_wait_input()
+    js_print(f"<span style='color:#fff'>{val}</span>")
+    return val
+
+async def main():
+    df = None
+    
+    while True:
+        js_print("<br><span style='color:var(--accent-gold)'>=== Contract System Vr2.7 (WebAssembly) ===</span>")
+        js_print("1. Open Existing CSV")
+        js_print("2. Mount/Upload Files (Use UI Button below)")
+        js_print("3. Show Data")
+        js_print("4. Plot Data (Line, Bar, Hist, Scatter, Pie)")
+        js_print("5. Clear Terminal")
+        
+        choice = await async_input("Enter choice: ")
+        
+        if choice == "1":
+            csv_files = [f for f in os.listdir('.') if f.endswith('.csv')]
+            if not csv_files:
+                js_print("<span style='color:#e74c3c'>[Error] No CSV files available in virtual memory. Use 'Mount Files' below.</span>")
+                continue
+            
+            # TRIGGER JAVASCRIPT DROPDOWN UI
+            file_resp_json = await js_get_file_ui(",".join(csv_files))
+            file_resp = json.loads(file_resp_json)
+            
+            if file_resp.get("cancel"):
+                js_print("<span style='color:#f39c12'>[Info] File load cancelled.</span>")
+                continue
+                
+            filename = file_resp["file"]
+            try:
+                df = pd.read_csv(filename)
+                js_print(f"<span style='color:#2ecc71'>[Success] {filename} loaded successfully.</span>")
+            except Exception as e:
+                js_print(f"<span style='color:#e74c3c'>[Error] {e}</span>")
+                
+        elif choice == "2":
+            js_print("<span style='color:#3498db'>[Info] Use the 'Mount Virtual Files' button below to inject .csv files into RAM.</span>")
+            
+        elif choice == "3":
+            if df is None:
+                js_print("<span style='color:#e74c3c'>[Error] No CSV loaded.</span>")
+            else:
+                html_table = df.to_html(index=False).replace('\\n', '')
+                js_print(f"<div style='overflow-x:auto; margin-top:10px;'>{html_table}</div>")
+                
+        elif choice == "4":
+            if df is None:
+                js_print("<span style='color:#e74c3c'>[Error] Load a CSV first.</span>")
+                continue
+                
+            # TRIGGER JAVASCRIPT PLOT CONFIGURATION UI
+            config_json = await js_get_plot_ui(",".join(df.columns))
+            config = json.loads(config_json)
+            
+            if config.get("cancel"):
+                js_print("<span style='color:#f39c12'>[Info] Plotting cancelled.</span>")
+                continue
+                
+            ptype = config["ptype"]
+            x_col = config["x"]
+            y_col = config["y"]
+            title = config["title"]
+            color = config["color"]
+            
+            if not x_col or (ptype != "3" and not y_col):
+                js_print("<span style='color:#e74c3c'>[Error] Required columns not selected.</span>")
+                continue
+            
+            # Execute Plot
+            plt.clf()
+            fig = plt.figure(figsize=(7, 5))
+            fig.patch.set_facecolor('#0f2027')
+            ax = plt.axes()
+            ax.set_facecolor('#0f2027')
+            
+            try:
+                if ptype == "1":
+                    plt.plot(df[x_col], df[y_col], marker='o', color=color, linewidth=2)
+                    plt.xlabel(x_col)
+                    plt.ylabel(y_col)
+                elif ptype == "2":
+                    plt.bar(df[x_col], df[y_col], color=color)
+                    plt.xlabel(x_col)
+                    plt.ylabel(y_col)
+                elif ptype == "3":
+                    plt.hist(df[x_col].dropna(), bins=10, color=color, edgecolor='white')
+                    plt.xlabel(x_col)
+                    plt.ylabel('Frequency')
+                elif ptype == "4":
+                    plt.scatter(df[x_col], df[y_col], color=color, s=100)
+                    plt.xlabel(x_col)
+                    plt.ylabel(y_col)
+                elif ptype == "5":
+                    plt.pie(df[y_col], labels=df[x_col], autopct='%1.1f%%', colors=[color, '#3498db', '#e74c3c', '#2ecc71', '#9b59b6'])
+                    
+                if title:
+                    plt.title(title, color='white', pad=20, fontsize=16)
+                plt.tight_layout()
+                
+                buf = io.BytesIO()
+                plt.savefig(buf, format='png', bbox_inches='tight')
+                buf.seek(0)
+                img_str = base64.b64encode(buf.read()).decode('utf-8')
+                plt.close()
+                
+                js_render(img_str)
+                js_print("<span style='color:#2ecc71'>[Success] Plot generated and pushed to Output Dashboard!</span>")
+            except Exception as e:
+                js_print(f"<span style='color:#e74c3c'>[Plot Error] Check your column names or data types. ({e})</span>")
+                
+        elif choice == "5":
+            js_clear()
+
+import asyncio
+asyncio.ensure_future(main())
+                `;
+                
+                pyodide.runPython(pythonCode);
+            } catch (err) {
+                bootStatus.style.color = '#e74c3c';
+                bootStatus.innerText = "Fatal Error: WebAssembly engine failed to initialize.";
+                console.error(err);
             }
         }
 
-        function loadAppUI() {
-            const uiHTML = `
-                <div class="sys-panel" id="app-panel">
-                    <p style="margin-bottom: 5px;"><strong>[Data Initializer]</strong> Select a CSV dataset to mount:</p>
-                    <input type="file" id="csv-upload" accept=".csv">
-                    <div id="plot-controls" style="display:none;">
-                        <p style="margin-top:10px; margin-bottom: 10px; color:var(--accent-gold);">Dataset Mounted Successfully. Initialize Plot Menu:</p>
-                        <select id="x-axis"><option value="">-- X Axis (Categories) --</option></select>
-                        <select id="y-axis"><option value="">-- Y Axis (Values) --</option></select>
-                        <select id="chart-type">
-                            <option value="bar">Bar Chart</option>
-                            <option value="line">Line Chart</option>
-                        </select>
-                        <button id="plot-btn" style="width:100%; margin-top:5px; background-color:#3498db; color:white;">Render Visualization</button>
-                    </div>
-                    <canvas id="chart-canvas" style="margin-top:20px; max-height: 400px; display:none; background:#fff; border-radius:6px; padding: 10px;"></canvas>
-                </div>
-            `;
-            printLine(uiHTML);
-
-            const fileInput = document.getElementById('csv-upload');
-            let parsedData = [];
-            let headers = [];
-
-            fileInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if(file) {
-                    printLine(`[System] Reading ${file.name}...`);
-                    Papa.parse(file, {
-                        header: true, dynamicTyping: true, skipEmptyLines: true,
-                        complete: function(results) {
-                            parsedData = results.data; headers = results.meta.fields;
-                            document.getElementById('plot-controls').style.display = 'block';
-                            const xSel = document.getElementById('x-axis');
-                            const ySel = document.getElementById('y-axis');
-                            headers.forEach(h => {
-                                xSel.innerHTML += `<option value="${h}">${h}</option>`;
-                                ySel.innerHTML += `<option value="${h}">${h}</option>`;
-                            });
-                            printLine(`[System] CSV Parsed. Found ${parsedData.length} records. Ready to plot.`);
-                        }
-                    });
-                }
-            });
-
-            document.getElementById('plot-btn').addEventListener('click', function() {
-                const xCol = document.getElementById('x-axis').value;
-                const yCol = document.getElementById('y-axis').value;
-                const type = document.getElementById('chart-type').value;
-
-                if(!xCol || !yCol) { printLine(`<span style="color:#e74c3c;">[Error] Must select X and Y columns.</span>`); return; }
-
-                const xData = parsedData.map(row => row[xCol]);
-                const yData = parsedData.map(row => row[yCol]);
-
-                document.getElementById('chart-canvas').style.display = 'block';
-                const ctx = document.getElementById('chart-canvas').getContext('2d');
-                if(chartInstance) chartInstance.destroy();
-
-                chartInstance = new Chart(ctx, {
-                    type: type,
-                    data: {
-                        labels: xData,
-                        datasets: [{
-                            label: `${yCol} vs ${xCol}`,
-                            data: yData,
-                            backgroundColor: 'rgba(212, 175, 55, 0.7)',
-                            borderColor: 'rgba(212, 175, 55, 1)',
-                            borderWidth: 2,
-                            tension: 0.3
-                        }]
-                    },
-                    options: { responsive: true, scales: { y: { beginAtZero: true } } }
-                });
-                printLine(`[System] Chart generated successfully.`);
-            });
-        }
+        // Start Boot Sequence
+        bootPython();
     </script>
 </body>
 </html>
