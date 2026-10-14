@@ -7,12 +7,18 @@
     <link rel="stylesheet" href="style.css">
     <style>
         .cv-container { max-width: 900px; margin: 0 auto; text-align: center; }
-        .cv-image { width: 100%; height: auto; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 20px rgba(212, 175, 55, 0.15); border: 2px solid var(--accent-gold); display: block; transition: transform 0.3s ease; }
-        .cv-image:hover { transform: scale(1.02); }
+        .cv-image {
+            width: 100%; height: auto; border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 20px rgba(212, 175, 55, 0.15);
+            border: 2px solid var(--accent-gold); display: block;
+            transition: transform 0.3s ease; cursor: zoom-in;
+        }
+        .cv-image:hover { transform: scale(1.015); }
     </style>
 </head>
 <body>
     <nav class="navbar">
+        <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')">☰</button>
         <div class="nav-links">
             <a href="index.html">Home</a>
             <a href="cv.html" class="active">MUN CV</a>
@@ -27,10 +33,31 @@
         </div>
     </nav>
 
+    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+        <span class="lightbox-close">&times;</span>
+        <img id="lightbox-img" src="" alt="Fullscreen CV">
+    </div>
+
     <section class="content-section" style="margin-top: 40px;">
         <div class="cv-container">
-            <img src="your_cv_image.png" alt="Yash Jangid - MUN Curriculum Vitae" class="cv-image">
+            <img src="your_cv_image.png" alt="Yash Jangid - MUN Curriculum Vitae" class="cv-image" onclick="openLightbox(this.src)">
+            <div style="margin-top: 25px;">
+                <a href="your_cv_image.png" download="Yash_Jangid_MUN_CV.png" style="text-decoration: none;">
+                    <button>Download Official MUN CV</button>
+                </a>
+            </div>
         </div>
     </section>
+
+    <script>
+        function openLightbox(url) {
+            document.getElementById('lightbox-img').src = url;
+            document.getElementById('lightbox').style.display = 'flex';
+        }
+        function closeLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+        }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+    </script>
 </body>
 </html>

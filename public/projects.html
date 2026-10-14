@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projects & Architecture | Yash Jangid</title>
     <link rel="stylesheet" href="style.css">
-    
-    <!-- LOAD REAL PYTHON WEBASSEMBLY ENGINE -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 </head>
 <body>
     <nav class="navbar">
+        <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')">☰</button>
         <div class="nav-links">
             <a href="index.html">Home</a>
             <a href="cv.html">MUN CV</a>
@@ -25,7 +24,6 @@
         </div>
     </nav>
 
-    <!-- LIGHTBOX OVERLAY -->
     <div id="lightbox" class="lightbox" onclick="closeLightbox()">
         <span class="lightbox-close">&times;</span>
         <img id="lightbox-img" src="" alt="Fullscreen view">
@@ -41,20 +39,27 @@
 
         <div class="dashboard-layout">
             
-            <!-- LEFT PANEL: PYTHON TERMINAL -->
+            <!-- LEFT PANEL: PYTHON IDLE 3.13.7 REPLICA -->
             <div class="card dashboard-card" style="padding: 15px !important; display: flex; flex-direction: column;">
                 <div class="idle-container">
                     <div class="idle-titlebar">
                         <span>IDLE Shell 3.13.7</span>
-                        <div class="idle-controls"><button class="idle-btn">&minus;</button><button class="idle-btn">&#9723;</button><button class="idle-btn close">&#10005;</button></div>
+                        <div class="idle-controls">
+                            <button class="idle-btn">&minus;</button>
+                            <button class="idle-btn">&#9723;</button>
+                            <button class="idle-btn close" onclick="clear_terminal()">&#10005;</button>
+                        </div>
                     </div>
                     <div class="idle-menubar">
-                        <span>File</span><span>Edit</span><span>Shell</span><span>Debug</span><span>Options</span><span>Window</span><span>Help</span>
+                        <span onclick="document.getElementById('file-uploader').click()">File</span>
+                        <span onclick="clear_terminal()">Edit</span>
+                        <span>Shell</span><span>Debug</span><span>Options</span><span>Window</span><span>Help</span>
                     </div>
                     
-                    <div class="idle-terminal" id="terminal" onclick="document.getElementById('cmd-input').focus()">
-                        <div>Python 3.13.7 (WebAssembly) [MSC v.1944 64 bit] on browser</div>
-                        <div style="color: #f1c40f; margin-bottom: 10px;" id="boot-status">Initializing Pyodide Engine... Please wait (~15MB download).</div>
+                    <div class="idle-terminal" id="terminal">
+                        <div>Python 3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:15:11) [MSC v.1944 64 bit (AMD64)] on win32</div>
+                        <div>Enter "help" below or click "Help" above for more information.</div>
+                        <div style="color: #f1c40f; margin: 10px 0;" id="boot-status">[1/3] Initializing Pyodide WebAssembly Engine...</div>
                         
                         <div id="output-history"></div>
                         
@@ -63,45 +68,55 @@
                             <input type="text" id="cmd-input" class="idle-input" autocomplete="off">
                         </div>
                     </div>
+
+                    <div class="idle-statusbar">
+                        <span id="idle-ln">Ln: 3</span>
+                        <span id="idle-col">Col: 0</span>
+                    </div>
                 </div>
 
-                <div class="sys-panel" style="margin-top: auto;">
-                    <p style="margin-bottom: 5px; font-size:0.9rem;"><strong>[Mount Virtual Files]</strong> Inject .csv or .py files into RAM:</p>
+                <div class="sys-panel" style="margin-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 10px;">
+                        <span style="font-size:0.9rem;"><strong>[Mount Virtual Files]</strong> Inject .csv, .py, or .txt into RAM:</span>
+                        <button id="download-csv-btn" class="secondary-btn" style="padding: 6px 12px !important; font-size: 0.75rem !important; display: none;" onclick="downloadActiveCSV()">Download Active CSV</button>
+                    </div>
                     <input type="file" id="file-uploader" multiple>
                 </div>
             </div>
 
-            <!-- RIGHT PANEL: GRAPH RENDERER & TEXT DASHBOARD -->
+            <!-- RIGHT PANEL: OUTPUT DASHBOARD -->
             <div class="card dashboard-card" style="display: flex; flex-direction: column;">
-                <h2 style="text-align: center; margin-bottom: 20px; font-size: 1.8rem; color: var(--accent-gold);">Output Dashboard</h2>
+                <h2 style="text-align: center; margin-bottom: 10px; font-size: 1.8rem; color: var(--accent-gold);">Output Dashboard</h2>
                 <p style="text-align: center; font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px;">
-                    Rendered visualizations and script outputs will dynamically project here.
+                    Rendered matplotlib visualizations and script outputs project here.
                 </p>
 
                 <!-- Plot Container -->
                 <div id="plot-container" style="display: none; text-align: center;">
                     <div class="graphic-card" style="margin-bottom: 20px;">
-                        <img id="rendered-plot" src="" alt="Matplotlib Output" onclick="openLightbox(this.src)" style="cursor: zoom-in; height: auto;">
-                        <div class="caption">Live Render Engine</div>
+                        <img id="rendered-plot" src="" alt="Matplotlib Output" onclick="openLightbox(this.src)" style="cursor: zoom-in; height: auto; max-height: 380px;">
+                        <div class="caption">Click graph to view Fullscreen | Live Render Engine</div>
                     </div>
                     <a id="download-plot-btn" href="#" download="visualization.png" style="text-decoration: none;">
-                        <button style="width: 100%;">Download Visualization</button>
+                        <button style="width: 100%;">Download Visualization (.PNG)</button>
                     </a>
                 </div>
 
-                <!-- NEW: Text Output Container for .py scripts -->
-                <div id="text-container" style="display: none; text-align: left; background: #05151c; padding: 20px; border-radius: 8px; font-family: Consolas, 'Courier New', monospace; color: #a6e22e; height: 400px; overflow-y: auto; border: 1px solid var(--glass-border); white-space: pre-wrap; font-size: 0.95rem; box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);"></div>
+                <!-- Text Output Container for .py scripts -->
+                <div id="text-wrapper" style="display: none; flex-direction: column; gap: 15px;">
+                    <div id="text-container" style="text-align: left; background: #05151c; padding: 20px; border-radius: 8px; font-family: Consolas, 'Courier New', monospace; color: #a6e22e; height: 380px; overflow-y: auto; border: 1px solid var(--glass-border); white-space: pre-wrap; font-size: 0.95rem; box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);"></div>
+                    <button class="secondary-btn" onclick="downloadTextOutput()" style="width: 100%;">Download Console Output (.TXT)</button>
+                </div>
 
                 <!-- Default Placeholder -->
                 <div id="plot-placeholder" style="text-align: center; padding: 50px 20px; border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; color: #777; margin-top: auto; margin-bottom: auto;">
-                    Awaiting script execution...
+                    Awaiting script or visualization execution...
                 </div>
             </div>
 
         </div>
     </section>
 
-    <!-- JavaScript Bridge & Pyodide Setup -->
     <script>
         const terminal = document.getElementById('terminal');
         const outputHistory = document.getElementById('output-history');
@@ -109,43 +124,52 @@
         const promptText = document.getElementById('prompt-text');
         const inputRow = document.getElementById('input-row');
         const bootStatus = document.getElementById('boot-status');
-        
+        let pyodideInstance = null;
+        let lineCount = 3;
+        let activeCsvFilename = "";
+
         window.openLightbox = function(url) { document.getElementById('lightbox-img').src = url; document.getElementById('lightbox').style.display = 'flex'; };
         window.closeLightbox = function() { document.getElementById('lightbox').style.display = 'none'; };
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeLightbox(); });
 
         let inputResolver = null;
 
-        // SMART CLICK DETECTOR
-        document.getElementById('terminal').addEventListener('click', function(e) {
-            if (!e.target.closest('.sys-panel') && e.target.id !== 'cmd-input') {
+        // Keep typing focus unless clicking an interactive panel
+        terminal.addEventListener('click', function(e) {
+            if (!e.target.closest('.sys-panel') && e.target.tagName !== 'SELECT' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
                 inputField.focus();
             }
         });
+
+        inputField.addEventListener('input', () => {
+            document.getElementById('idle-col').innerText = `Col: ${inputField.value.length}`;
+        });
+
+        function updateLineCount(added = 1) {
+            lineCount += added;
+            document.getElementById('idle-ln').innerText = `Ln: ${lineCount}`;
+        }
 
         function print_line(html) {
             const div = document.createElement('div');
             div.innerHTML = html;
             outputHistory.appendChild(div);
+            updateLineCount(1);
             terminal.scrollTop = terminal.scrollHeight;
         }
 
-        // NEW: Function to print raw text directly to the Right Dashboard
         function dashboard_print(text) {
             document.getElementById('plot-placeholder').style.display = 'none';
             document.getElementById('plot-container').style.display = 'none';
-            document.getElementById('text-container').style.display = 'block';
-            
-            // Safely append text to preserve \n newlines and prevent HTML injection
-            document.getElementById('text-container').appendChild(document.createTextNode(text));
-            
+            document.getElementById('text-wrapper').style.display = 'flex';
             const tc = document.getElementById('text-container');
+            tc.appendChild(document.createTextNode(text));
             tc.scrollTop = tc.scrollHeight;
         }
 
-        // NEW: Function to clear the Right Dashboard
         function clear_dashboard() {
             document.getElementById('text-container').innerHTML = '';
-            document.getElementById('text-container').style.display = 'none';
+            document.getElementById('text-wrapper').style.display = 'none';
             document.getElementById('plot-container').style.display = 'none';
             document.getElementById('plot-placeholder').style.display = 'block';
         }
@@ -154,17 +178,46 @@
         
         function clear_terminal() { 
             outputHistory.innerHTML = ''; 
-            clear_dashboard(); // Clear right side too
+            lineCount = 3;
+            updateLineCount(0);
+            clear_dashboard();
         }
 
         function render_plot(base64str) {
             const imgSrc = "data:image/png;base64," + base64str;
             document.getElementById('plot-placeholder').style.display = 'none';
-            document.getElementById('text-container').style.display = 'none'; // Hide text console
+            document.getElementById('text-wrapper').style.display = 'none';
             document.getElementById('plot-container').style.display = 'block';
             document.getElementById('rendered-plot').src = imgSrc;
             document.getElementById('download-plot-btn').href = imgSrc;
         }
+
+        function set_active_csv(filename) {
+            activeCsvFilename = filename;
+            document.getElementById('download-csv-btn').style.display = filename ? 'inline-block' : 'none';
+            document.getElementById('download-csv-btn').innerText = `Download ${filename}`;
+        }
+
+        window.downloadActiveCSV = function() {
+            if (!pyodideInstance || !activeCsvFilename) return;
+            try {
+                const content = pyodideInstance.FS.readFile(activeCsvFilename, { encoding: 'utf8' });
+                const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = activeCsvFilename;
+                a.click();
+            } catch (e) { console.error(e); }
+        };
+
+        window.downloadTextOutput = function() {
+            const text = document.getElementById('text-container').innerText;
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = "script_output.txt";
+            a.click();
+        };
 
         function wait_for_input() { return new Promise(resolve => { inputResolver = resolve; }); }
 
@@ -172,6 +225,7 @@
             if (e.key === 'Enter') {
                 const val = inputField.value;
                 inputField.value = '';
+                document.getElementById('idle-col').innerText = 'Col: 0';
                 if (inputResolver) {
                     const res = inputResolver;
                     inputResolver = null;
@@ -180,42 +234,152 @@
             }
         });
 
-        // Dropdown for selecting Files
+        // 1. UI: Select File Dropdown
         function js_get_file_ui(files_str) {
             return new Promise(resolve => {
                 const files = files_str.split(',').filter(f => f);
                 let opts = '';
                 files.forEach(f => opts += `<option value="${f}">${f}</option>`);
-                
                 const uiId = "file-ui-" + Date.now();
                 const html = `
                 <div id="${uiId}" class="sys-panel" style="margin-top: 10px; padding: 15px; border-color: var(--accent-gold);">
-                    <p style="color:var(--accent-gold); margin-bottom:10px;"><strong>Select File from RAM</strong></p>
+                    <p style="color:var(--accent-gold); margin-bottom:10px;"><strong>Select File from Virtual RAM</strong></p>
                     <select id="${uiId}-file" style="width:100%; margin-bottom:15px; padding:8px;">${opts}</select>
                     <div style="display:flex; gap:10px;">
-                        <button id="${uiId}-btn" style="flex:2; background:#3498db; color:#fff;">Execute / Load</button>
-                        <button id="${uiId}-cancel" style="flex:1; background:#e74c3c; color:#fff;">Cancel</button>
+                        <button id="${uiId}-btn" style="flex:2;">Load / Execute</button>
+                        <button id="${uiId}-cancel" class="danger" style="flex:1;">Cancel</button>
                     </div>
                 </div>`;
-                
                 print_line(html);
                 inputRow.style.display = 'none'; 
-                
                 document.getElementById(`${uiId}-btn`).onclick = () => {
                     const file = document.getElementById(`${uiId}-file`).value;
-                    document.getElementById(uiId).style.display = 'none';
+                    document.getElementById(uiId).remove();
                     inputRow.style.display = 'flex'; inputField.focus();
                     resolve(JSON.stringify({cancel: false, file: file}));
                 };
                 document.getElementById(`${uiId}-cancel`).onclick = () => {
-                    document.getElementById(uiId).style.display = 'none';
+                    document.getElementById(uiId).remove();
                     inputRow.style.display = 'flex'; inputField.focus();
                     resolve(JSON.stringify({cancel: true}));
                 };
             });
         }
 
-        // Dropdown for configuring Plots
+        // 2. UI: Create New CSV
+        function js_create_csv_ui() {
+            return new Promise(resolve => {
+                const uiId = "create-ui-" + Date.now();
+                const html = `
+                <div id="${uiId}" class="sys-panel" style="margin-top: 10px; border-color: var(--accent-gold);">
+                    <p style="color:var(--accent-gold); margin-bottom:10px;"><strong>Create New CSV Dataset</strong></p>
+                    <input type="text" id="${uiId}-name" placeholder="Filename (e.g. contracts.csv)" style="width:100%; margin-bottom:10px; padding:8px;">
+                    <input type="text" id="${uiId}-cols" placeholder="Column names separated by commas (e.g. Name,Score,Rank)" style="width:100%; margin-bottom:15px; padding:8px;">
+                    <div style="display:flex; gap:10px;">
+                        <button id="${uiId}-btn" style="flex:2;">Create CSV</button>
+                        <button id="${uiId}-cancel" class="danger" style="flex:1;">Cancel</button>
+                    </div>
+                </div>`;
+                print_line(html);
+                inputRow.style.display = 'none';
+                document.getElementById(`${uiId}-btn`).onclick = () => {
+                    let fname = document.getElementById(`${uiId}-name`).value.trim();
+                    const cols = document.getElementById(`${uiId}-cols`).value.trim();
+                    if (fname && !fname.endsWith('.csv')) fname += '.csv';
+                    document.getElementById(uiId).remove();
+                    inputRow.style.display = 'flex'; inputField.focus();
+                    resolve(JSON.stringify({cancel: false, filename: fname, cols: cols}));
+                };
+                document.getElementById(`${uiId}-cancel`).onclick = () => {
+                    document.getElementById(uiId).remove();
+                    inputRow.style.display = 'flex'; inputField.focus();
+                    resolve(JSON.stringify({cancel: true}));
+                };
+            });
+        }
+
+        // 3. UI: Edit Existing CSV (Matches Original Vr2.7 Edit Menu)
+        function js_edit_csv_ui(columns_str, row_count) {
+            return new Promise(resolve => {
+                const cols = columns_str.split(',').filter(c => c);
+                let colOpts = '';
+                cols.forEach(c => colOpts += `<option value="${c}">${c}</option>`);
+                let rowOpts = '';
+                for(let i = 0; i < row_count; i++) rowOpts += `<option value="${i}">Row Index ${i}</option>`;
+
+                const uiId = "edit-ui-" + Date.now();
+                const html = `
+                <div id="${uiId}" class="sys-panel" style="margin-top: 10px; border-color: var(--accent-gold);">
+                    <p style="color:var(--accent-gold); margin-bottom:10px;"><strong>Edit Menu (Contract System Vr2.7)</strong></p>
+                    <select id="${uiId}-action" style="width:100%; margin-bottom:12px; padding:8px;">
+                        <option value="show">1. Show Data Table</option>
+                        <option value="add_row">2. Add New Row</option>
+                        <option value="edit_cell">3. Edit Specific Cell</option>
+                        <option value="del_row">4. Delete Row</option>
+                        <option value="ren_col">5. Rename Column</option>
+                    </select>
+                    <div id="${uiId}-fields" style="margin-bottom:12px;"></div>
+                    <div style="display:flex; gap:10px;">
+                        <button id="${uiId}-btn" style="flex:2;">Apply Action</button>
+                        <button id="${uiId}-cancel" class="secondary-btn" style="flex:1;">Back to Main Menu</button>
+                    </div>
+                </div>`;
+                print_line(html);
+                inputRow.style.display = 'none';
+
+                const actionSel = document.getElementById(`${uiId}-action`);
+                const fieldsBox = document.getElementById(`${uiId}-fields`);
+
+                function renderFields() {
+                    const act = actionSel.value;
+                    if (act === 'show') {
+                        fieldsBox.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted);">Prints the current DataFrame table into the terminal.</p>`;
+                    } else if (act === 'add_row') {
+                        fieldsBox.innerHTML = cols.map((c, idx) => `<input type="text" class="${uiId}-rowval" data-col="${c}" placeholder="Value for '${c}'" style="width:100%; margin-bottom:6px; padding:8px;">`).join('');
+                    } else if (act === 'edit_cell') {
+                        fieldsBox.innerHTML = `
+                            <select id="${uiId}-ridx" style="width:100%; margin-bottom:8px; padding:8px;">${rowOpts}</select>
+                            <select id="${uiId}-cname" style="width:100%; margin-bottom:8px; padding:8px;">${colOpts}</select>
+                            <input type="text" id="${uiId}-newval" placeholder="Enter new cell value" style="width:100%; padding:8px;">`;
+                    } else if (act === 'del_row') {
+                        fieldsBox.innerHTML = `<select id="${uiId}-delidx" style="width:100%; padding:8px;">${rowOpts}</select>`;
+                    } else if (act === 'ren_col') {
+                        fieldsBox.innerHTML = `
+                            <select id="${uiId}-oldcol" style="width:100%; margin-bottom:8px; padding:8px;">${colOpts}</select>
+                            <input type="text" id="${uiId}-newcol" placeholder="Enter new column name" style="width:100%; padding:8px;">`;
+                    }
+                }
+                actionSel.onchange = renderFields;
+                renderFields();
+
+                document.getElementById(`${uiId}-btn`).onclick = () => {
+                    const act = actionSel.value;
+                    let payload = { cancel: false, action: act };
+                    if (act === 'add_row') {
+                        payload.values = Array.from(document.querySelectorAll(`.${uiId}-rowval`)).map(el => el.value);
+                    } else if (act === 'edit_cell') {
+                        payload.row = document.getElementById(`${uiId}-ridx`).value;
+                        payload.col = document.getElementById(`${uiId}-cname`).value;
+                        payload.val = document.getElementById(`${uiId}-newval`).value;
+                    } else if (act === 'del_row') {
+                        payload.row = document.getElementById(`${uiId}-delidx`).value;
+                    } else if (act === 'ren_col') {
+                        payload.old_col = document.getElementById(`${uiId}-oldcol`).value;
+                        payload.new_col = document.getElementById(`${uiId}-newcol`).value;
+                    }
+                    document.getElementById(uiId).remove();
+                    inputRow.style.display = 'flex'; inputField.focus();
+                    resolve(JSON.stringify(payload));
+                };
+                document.getElementById(`${uiId}-cancel`).onclick = () => {
+                    document.getElementById(uiId).remove();
+                    inputRow.style.display = 'flex'; inputField.focus();
+                    resolve(JSON.stringify({cancel: true}));
+                };
+            });
+        }
+
+        // 4. UI: Plot Configuration Dropdown
         function js_get_plot_ui(columns_str) {
             return new Promise(resolve => {
                 const cols = columns_str.split(',');
@@ -225,23 +389,41 @@
                 const uiId = "plot-ui-" + Date.now();
                 const html = `
                 <div id="${uiId}" class="sys-panel" style="margin-top: 10px; border-color: var(--accent-gold);">
-                    <p style="color:var(--accent-gold); margin-bottom:10px;"><strong>Configure Visualization</strong></p>
+                    <p style="color:var(--accent-gold); margin-bottom:10px;"><strong>Configure Live Visualization</strong></p>
                     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
-                        <select id="${uiId}-ptype" style="flex:1; padding:8px;" onchange="document.getElementById('${uiId}-y').style.display = this.value=='3' ? 'none' : 'block';">
-                            <option value="1">Line Chart</option><option value="2">Bar Chart</option><option value="3">Histogram (X-Axis Only)</option><option value="4">Scatter Plot</option><option value="5">Pie Chart</option>
+                        <select id="${uiId}-ptype" style="flex:1; padding:8px;" onchange="
+                            document.getElementById('${uiId}-y').style.display = this.value=='3' ? 'none' : 'block';
+                            document.getElementById('${uiId}-bins').style.display = this.value=='3' ? 'block' : 'none';
+                        ">
+                            <option value="1">1. Line Chart</option>
+                            <option value="2">2. Bar Chart</option>
+                            <option value="3">3. Histogram (X-Axis Only)</option>
+                            <option value="4">4. Scatter Plot</option>
+                            <option value="5">5. Pie Chart</option>
                         </select>
                         <select id="${uiId}-color" style="flex:1; padding:8px;">
-                            <option value="gold">Color: Gold</option><option value="#3498db">Color: Blue</option><option value="#e74c3c">Color: Red</option><option value="#2ecc71">Color: Green</option><option value="#9b59b6">Color: Purple</option>
+                            <option value="#d4af37">Theme: Majestic Gold</option>
+                            <option value="#3498db">Theme: Royal Blue</option>
+                            <option value="#e74c3c">Theme: Crimson Red</option>
+                            <option value="#2ecc71">Theme: Emerald Green</option>
+                            <option value="#9b59b6">Theme: Amethyst Purple</option>
                         </select>
                     </div>
                     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
                         <select id="${uiId}-x" style="flex:1; padding:8px;"><option value="">-- X-Axis / Labels --</option>${opts}</select>
                         <select id="${uiId}-y" style="flex:1; padding:8px;"><option value="">-- Y-Axis / Values --</option>${opts}</select>
+                        <input type="number" id="${uiId}-bins" placeholder="Bins (Default: 10)" style="flex:1; padding:8px; display:none;" value="10">
                     </div>
-                    <input type="text" id="${uiId}-title" placeholder="Chart Title (Optional)" style="width:100%; margin-bottom:15px; padding:8px;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
+                        <input type="text" id="${uiId}-title" placeholder="Custom Chart Title" style="flex:2; padding:8px;">
+                        <select id="${uiId}-grid" style="flex:1; padding:8px;">
+                            <option value="true">Grid: Enabled</option>
+                            <option value="false">Grid: Hidden</option>
+                        </select>
+                    </div>
                     <div style="display:flex; gap:10px;">
-                        <button id="${uiId}-btn" style="flex:2; background:#2ecc71; color:#fff;">Render Graph</button>
-                        <button id="${uiId}-cancel" style="flex:1; background:#e74c3c; color:#fff;">Cancel</button>
+                        <button id="${uiId}-btn" style="flex:2;">Render Visualization</button>
+                        <button id="${uiId}-cancel" class="danger" style="flex:1;">Cancel</button>
                     </div>
                 </div>`;
                 
@@ -249,41 +431,54 @@
                 inputRow.style.display = 'none'; 
                 
                 document.getElementById(`${uiId}-btn`).onclick = () => {
-                    const config = { ptype: document.getElementById(`${uiId}-ptype`).value, x: document.getElementById(`${uiId}-x`).value, y: document.getElementById(`${uiId}-y`).value, title: document.getElementById(`${uiId}-title`).value, color: document.getElementById(`${uiId}-color`).value, cancel: false };
-                    document.getElementById(uiId).style.display = 'none';
+                    const config = {
+                        ptype: document.getElementById(`${uiId}-ptype`).value,
+                        x: document.getElementById(`${uiId}-x`).value,
+                        y: document.getElementById(`${uiId}-y`).value,
+                        bins: document.getElementById(`${uiId}-bins`).value || "10",
+                        title: document.getElementById(`${uiId}-title`).value,
+                        color: document.getElementById(`${uiId}-color`).value,
+                        grid: document.getElementById(`${uiId}-grid`).value === "true",
+                        cancel: false
+                    };
+                    document.getElementById(uiId).remove();
                     inputRow.style.display = 'flex'; inputField.focus();
                     resolve(JSON.stringify(config));
                 };
                 document.getElementById(`${uiId}-cancel`).onclick = () => {
-                    document.getElementById(uiId).style.display = 'none';
+                    document.getElementById(uiId).remove();
                     inputRow.style.display = 'flex'; inputField.focus();
                     resolve(JSON.stringify({cancel: true}));
                 };
             });
         }
 
-        // Initialize Pyodide & Mount App
+        // Boot Pyodide Engine
         async function bootPython() {
             try {
-                let pyodide = await loadPyodide();
-                bootStatus.innerText = "Engine Loaded. Installing pandas and matplotlib...";
-                await pyodide.loadPackage(['pandas', 'matplotlib', 'numpy']);
+                pyodideInstance = await loadPyodide();
+                bootStatus.innerText = "[2/3] Loading Data Science Stack (pandas, numpy, matplotlib)...";
+                await pyodideInstance.loadPackage(['pandas', 'matplotlib', 'numpy']);
+                bootStatus.innerText = "[3/3] Mounting Virtual File System & Contract System Vr2.7...";
                 
-                pyodide.globals.set("js_print", print_line);
-                pyodide.globals.set("js_prompt", set_prompt);
-                pyodide.globals.set("js_clear", clear_terminal);
-                pyodide.globals.set("js_render", render_plot);
-                pyodide.globals.set("js_wait_input", wait_for_input);
-                pyodide.globals.set("js_get_file_ui", js_get_file_ui);
-                pyodide.globals.set("js_get_plot_ui", js_get_plot_ui);
-                pyodide.globals.set("js_dashboard_print", dashboard_print);
-                pyodide.globals.set("js_clear_dashboard", clear_dashboard);
+                pyodideInstance.globals.set("js_print", print_line);
+                pyodideInstance.globals.set("js_prompt", set_prompt);
+                pyodideInstance.globals.set("js_clear", clear_terminal);
+                pyodideInstance.globals.set("js_render", render_plot);
+                pyodideInstance.globals.set("js_wait_input", wait_for_input);
+                pyodideInstance.globals.set("js_get_file_ui", js_get_file_ui);
+                pyodideInstance.globals.set("js_create_csv_ui", js_create_csv_ui);
+                pyodideInstance.globals.set("js_edit_csv_ui", js_edit_csv_ui);
+                pyodideInstance.globals.set("js_get_plot_ui", js_get_plot_ui);
+                pyodideInstance.globals.set("js_dashboard_print", dashboard_print);
+                pyodideInstance.globals.set("js_clear_dashboard", clear_dashboard);
+                pyodideInstance.globals.set("js_set_active_csv", set_active_csv);
 
                 document.getElementById('file-uploader').addEventListener('change', function(e) {
                     for(let file of e.target.files) {
                         file.arrayBuffer().then(buffer => {
-                            pyodide.FS.writeFile(file.name, new Uint8Array(buffer));
-                            print_line(`<span style="color:#3498db">[System] Mounted ${file.name} to virtual memory.</span>`);
+                            pyodideInstance.FS.writeFile(file.name, new Uint8Array(buffer));
+                            print_line(`<span style="color:#3498db">[System] Mounted '${file.name}' to virtual RAM.</span>`);
                         });
                     }
                 });
@@ -301,14 +496,12 @@ import js
 
 plt.style.use('dark_background')
 
-# Magic override: Standard menu prints go to left terminal
 class WebTerminalOut:
     def write(self, txt):
         if txt == '\\n': return
         js_print(f"<span style='color:#e0e0e0'>{txt}</span>")
     def flush(self): pass
 
-# Magic override: Executed .py script prints go to right dashboard
 class DashboardOut:
     def write(self, txt):
         js_dashboard_print(str(txt))
@@ -316,9 +509,21 @@ class DashboardOut:
 
 sys.stdout = WebTerminalOut()
 
-# THE WORKAROUND: Override input() to use native popup, but log it to Terminal
+# Override plt.show() globally so custom .py scripts also render to the Right Dashboard
+def custom_plt_show(*args, **kwargs):
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    buf.seek(0)
+    img_str = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close()
+    js_render(img_str)
+    js_print("<span style='color:#2ecc71'>[System] plt.show() captured -> Pushed to Output Dashboard!</span>")
+
+plt.show = custom_plt_show
+
+# Override standard input() for uploaded .py files
 def browser_sync_input(prompt_text=""):
-    js_print(f"<span style='color:#f39c12'>[System] Input Requested: {prompt_text} (Check Browser Popup Window)</span>")
+    js_print(f"<span style='color:#f39c12'>[System] Input Requested: {prompt_text}</span>")
     val = js.prompt(prompt_text)
     if val is None: val = ""
     js_print(f"<span style='color:#3498db'>&gt; {val}</span>")
@@ -326,7 +531,7 @@ def browser_sync_input(prompt_text=""):
 
 builtins.input = browser_sync_input
 
-# Generate default testing file
+# Pre-load demo CSV in Virtual RAM
 dummy_data = "Name,Score,Attendance,Committee\\nYash,98,100,UNSC\\nZoya,89,92,UNHRC\\nParesh,94,95,UNGA\\nRahul,78,85,UNEP\\nTanvi,91,88,UNICEF"
 with open('mun_scores.csv', 'w') as f:
     f.write(dummy_data)
@@ -339,57 +544,100 @@ async def async_input(prompt):
 
 async def main():
     df = None
+    filename = None
     
     while True:
         js_print("<br><span style='color:var(--accent-gold)'>=== Contract System Vr2.7 (WebAssembly) ===</span>")
         js_print("1. Open Existing CSV")
-        js_print("2. Mount/Upload Files (Use UI Button below)")
-        js_print("3. Show Data")
+        js_print("2. Create New CSV")
+        js_print("3. Edit Existing CSV (Show / Add / Edit / Delete / Rename)")
         js_print("4. Plot Data (Line, Bar, Hist, Scatter, Pie)")
         js_print("5. Clear Terminal & Dashboard")
-        js_print("6. Execute Python Script (.py)")
+        js_print("6. Execute Custom Python Script (.py)")
         
-        choice = await async_input("Enter choice: ")
+        choice = await async_input("&gt;&gt;&gt; ")
         
         if choice == "1":
             csv_files = [f for f in os.listdir('.') if f.endswith('.csv')]
             if not csv_files:
-                js_print("<span style='color:#e74c3c'>[Error] No CSV files found. Use 'Mount Files' below.</span>")
+                js_print("<span style='color:#e74c3c'>[Error] No CSV files found. Create or mount one first.</span>")
                 continue
             
-            file_resp_json = await js_get_file_ui(",".join(csv_files))
-            file_resp = json.loads(file_resp_json)
-            
+            file_resp = json.loads(await js_get_file_ui(",".join(csv_files)))
             if file_resp.get("cancel"): continue
                 
             filename = file_resp["file"]
             try:
                 df = pd.read_csv(filename)
-                js_print(f"<span style='color:#2ecc71'>[Success] {filename} loaded successfully.</span>")
+                js_set_active_csv(filename)
+                js_print(f"<span style='color:#2ecc71'>[Success] '{filename}' opened! ({len(df)} rows)</span>")
+                html_table = df.to_html(index=True).replace('\\n', '')
+                js_print(f"<div style='overflow-x:auto; margin-top:8px;'>{html_table}</div>")
             except Exception as e:
                 js_print(f"<span style='color:#e74c3c'>[Error] {e}</span>")
                 
         elif choice == "2":
-            js_print("<span style='color:#3498db'>[Info] Use the 'Mount Virtual Files' button below.</span>")
+            resp = json.loads(await js_create_csv_ui())
+            if resp.get("cancel"): continue
+            new_fname = resp.get("filename")
+            cols_raw = [c.strip() for c in resp.get("cols", "").split(",") if c.strip()]
+            if not new_fname or not cols_raw:
+                js_print("<span style='color:#e74c3c'>[Error] Filename and columns are required.</span>")
+                continue
+            filename = new_fname
+            df = pd.DataFrame(columns=cols_raw)
+            df.to_csv(filename, index=False)
+            js_set_active_csv(filename)
+            js_print(f"<span style='color:#2ecc71'>[Success] Created '{filename}' with columns: {', '.join(cols_raw)}</span>")
             
         elif choice == "3":
-            if df is None:
-                js_print("<span style='color:#e74c3c'>[Error] No CSV loaded.</span>")
-            else:
-                html_table = df.to_html(index=False).replace('\\n', '')
-                js_print(f"<div style='overflow-x:auto; margin-top:10px;'>{html_table}</div>")
+            if df is None or filename is None:
+                js_print("<span style='color:#e74c3c'>[Error] No CSV loaded. Open (1) or Create (2) one first.</span>")
+                continue
+            while True:
+                edit_resp = json.loads(await js_edit_csv_ui(",".join(df.columns), len(df)))
+                if edit_resp.get("cancel"): break
+                act = edit_resp.get("action")
+                try:
+                    if act == "show":
+                        html_table = df.to_html(index=True).replace('\\n', '')
+                        js_print(f"<div style='overflow-x:auto; margin-top:8px;'>{html_table}</div>")
+                    elif act == "add_row":
+                        vals = edit_resp.get("values", [])
+                        df.loc[len(df)] = vals
+                        df.to_csv(filename, index=False)
+                        js_print("<span style='color:#2ecc71'>[Success] Row added and saved to virtual RAM!</span>")
+                    elif act == "edit_cell":
+                        r_idx = int(edit_resp.get("row"))
+                        c_name = edit_resp.get("col")
+                        n_val = edit_resp.get("val")
+                        df.at[r_idx, c_name] = n_val
+                        df.to_csv(filename, index=False)
+                        js_print(f"<span style='color:#2ecc71'>[Success] Updated Row {r_idx}, Column '{c_name}'!</span>")
+                    elif act == "del_row":
+                        r_idx = int(edit_resp.get("row"))
+                        df = df.drop(r_idx).reset_index(drop=True)
+                        df.to_csv(filename, index=False)
+                        js_print(f"<span style='color:#2ecc71'>[Success] Row {r_idx} deleted!</span>")
+                    elif act == "ren_col":
+                        old_c = edit_resp.get("old_col")
+                        new_c = edit_resp.get("new_col", "").strip()
+                        if new_c:
+                            df.rename(columns={old_c: new_c}, inplace=True)
+                            df.to_csv(filename, index=False)
+                            js_print(f"<span style='color:#2ecc71'>[Success] Renamed '{old_c}' to '{new_c}'!</span>")
+                except Exception as e:
+                    js_print(f"<span style='color:#e74c3c'>[Edit Error] {e}</span>")
                 
         elif choice == "4":
             if df is None:
-                js_print("<span style='color:#e74c3c'>[Error] Load a CSV first.</span>")
+                js_print("<span style='color:#e74c3c'>[Error] Open or create a CSV first.</span>")
                 continue
                 
-            config_json = await js_get_plot_ui(",".join(df.columns))
-            config = json.loads(config_json)
-            
+            config = json.loads(await js_get_plot_ui(",".join(df.columns)))
             if config.get("cancel"): continue
                 
-            ptype, x_col, y_col, title, color = config["ptype"], config["x"], config["y"], config["title"], config["color"]
+            ptype, x_col, y_col, title, color, show_grid = config["ptype"], config["x"], config["y"], config["title"], config["color"], config["grid"]
             if not x_col or (ptype != "3" and not y_col):
                 js_print("<span style='color:#e74c3c'>[Error] Required columns not selected.</span>")
                 continue
@@ -402,31 +650,35 @@ async def main():
             
             try:
                 if ptype == "1":
-                    plt.plot(df[x_col], df[y_col], marker='o', color=color, linewidth=2)
+                    x = pd.to_numeric(df[x_col], errors='ignore')
+                    y = pd.to_numeric(df[y_col], errors='coerce')
+                    plt.plot(x, y, marker='o', color=color, linewidth=2.5)
                     plt.xlabel(x_col); plt.ylabel(y_col)
                 elif ptype == "2":
-                    plt.bar(df[x_col], df[y_col], color=color)
+                    y = pd.to_numeric(df[y_col], errors='coerce')
+                    plt.bar(df[x_col].astype(str), y, color=color, edgecolor='white')
                     plt.xlabel(x_col); plt.ylabel(y_col)
+                    plt.xticks(rotation=30, ha='right')
                 elif ptype == "3":
-                    plt.hist(df[x_col].dropna(), bins=10, color=color, edgecolor='white')
+                    bins_val = int(config.get("bins", 10))
+                    data = pd.to_numeric(df[x_col], errors='coerce').dropna()
+                    plt.hist(data, bins=bins_val, color=color, edgecolor='white')
                     plt.xlabel(x_col); plt.ylabel('Frequency')
                 elif ptype == "4":
-                    plt.scatter(df[x_col], df[y_col], color=color, s=100)
+                    x = pd.to_numeric(df[x_col], errors='coerce')
+                    y = pd.to_numeric(df[y_col], errors='coerce')
+                    plt.scatter(x, y, color=color, s=110, edgecolors='white')
                     plt.xlabel(x_col); plt.ylabel(y_col)
                 elif ptype == "5":
-                    plt.pie(df[y_col], labels=df[x_col], autopct='%1.1f%%', colors=[color, '#3498db', '#e74c3c', '#2ecc71', '#9b59b6'])
-                    
-                if title: plt.title(title, color='white', pad=20, fontsize=16)
+                    y = pd.to_numeric(df[y_col], errors='coerce').dropna()
+                    plt.pie(y, labels=df[x_col].loc[y.index], autopct='%1.1f%%', colors=[color, '#3498db', '#e74c3c', '#2ecc71', '#9b59b6', '#f39c12'])
+                
+                if ptype != "5":
+                    plt.grid(show_grid, alpha=0.25)
+                final_title = title if title else f"{y_col if ptype!='3' else 'Distribution'} by {x_col}"
+                plt.title(final_title, color='#d4af37', pad=18, fontsize=15, fontweight='bold')
                 plt.tight_layout()
-                
-                buf = io.BytesIO()
-                plt.savefig(buf, format='png', bbox_inches='tight')
-                buf.seek(0)
-                img_str = base64.b64encode(buf.read()).decode('utf-8')
-                plt.close()
-                
-                js_render(img_str)
-                js_print("<span style='color:#2ecc71'>[Success] Plot generated and pushed to Output Dashboard!</span>")
+                plt.show()
             except Exception as e:
                 js_print(f"<span style='color:#e74c3c'>[Plot Error] {e}</span>")
                 
@@ -436,45 +688,36 @@ async def main():
         elif choice == "6":
             py_files = [f for f in os.listdir('.') if f.endswith('.py')]
             if not py_files:
-                js_print("<span style='color:#e74c3c'>[Error] No .py files found. Mount one using the button below.</span>")
+                js_print("<span style='color:#e74c3c'>[Error] No .py files in RAM. Mount one using the button below.</span>")
                 continue
                 
-            file_resp_json = await js_get_file_ui(",".join(py_files))
-            file_resp = json.loads(file_resp_json)
-            
+            file_resp = json.loads(await js_get_file_ui(",".join(py_files)))
             if file_resp.get("cancel"): continue
                 
-            filename = file_resp["file"]
+            py_fname = file_resp["file"]
             try:
-                js_print(f"<br><span style='color:#a6e22e'>--- Executing {filename} ---</span>")
-                js_print("<span style='color:#3498db'>[Info] Output redirected to Output Dashboard (Right Panel).</span>")
-                
-                # Clear dashboard before printing new output
+                js_print(f"<br><span style='color:#a6e22e'>--- Executing {py_fname} ---</span>")
                 js_clear_dashboard()
-                
-                with open(filename, 'r') as f:
+                with open(py_fname, 'r') as f:
                     script_code = f.read()
-                
-                # MAGIC: Reroute stdout to the Dashboard
                 old_stdout = sys.stdout
                 sys.stdout = DashboardOut()
-                
-                # Execute user code
                 exec(script_code, globals())
-                
-                # Return stdout to Terminal
                 sys.stdout = old_stdout
-                
-                js_print(f"<br><span style='color:#2ecc71'>--- Execution Complete ---</span><br>")
+                js_print(f"<span style='color:#2ecc71'>--- Execution Complete (Output on Right Dashboard) ---</span><br>")
             except Exception as e:
                 sys.stdout = old_stdout
                 js_print(f"<span style='color:#e74c3c'>[Execution Error] {e}</span>")
+        elif choice.lower() == "help":
+            js_print("<span style='color:#3498db'>Enter 1-6 to navigate Contract System Vr2.7. Mount custom .csv or .py files below.</span>")
+        else:
+            js_print("<span style='color:#e74c3c'>Invalid choice. Enter 1-6.</span>")
 
 import asyncio
 asyncio.ensure_future(main())
                 `;
                 
-                pyodide.runPython(pythonCode);
+                pyodideInstance.runPython(pythonCode);
             } catch (err) {
                 bootStatus.style.color = '#e74c3c';
                 bootStatus.innerText = "Fatal Error: WebAssembly engine failed to initialize.";

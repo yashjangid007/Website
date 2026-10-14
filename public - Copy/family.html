@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Real Family | Yash Jangid</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 250px; padding: 15px 20px; background-color: #333; color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 0.95rem; animation: slideIn 0.4s ease forwards; opacity: 0; transform: translateX(100%); }
+        .toast.error { background-color: #e74c3c; border-left: 5px solid #c0392b; }
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+        
+        .filter-nav { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
+        .filter-btn { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); padding: 8px 20px; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+        .filter-btn.active { background: var(--accent-gold); color: #000; font-weight: 600; border-color: var(--accent-gold); }
+        
+        /* Video specific styling for the grid */
+        .graphic-card video { width: 100%; height: 250px; object-fit: cover; border-bottom: 2px solid var(--accent-gold); cursor: zoom-in; }
+        .video-indicator { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div id="toast-container"></div>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="cv.html">MUN CV</a>
+            <a href="lors.html">LORs</a>
+            <a href="achievements.html">Achievements</a>
+            <a href="muns.html">MUNs</a>
+            <a href="projects.html">Projects</a>
+            <a href="graphics.html">Graphics</a>
+            <a href="results.html">Results</a>
+            <a href="family.html" class="active">My Real Family</a>
+            <a href="secret.html">Secret Vault</a>
+        </div>
+    </nav>
+
+    <!-- DYNAMIC LIGHTBOX (Supports Image & Video) -->
+    <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+        <span class="lightbox-close" onclick="closeLightbox(event)">&times;</span>
+        <div id="lightbox-content-container"></div>
+    </div>
+
+    <section class="content-section">
+        
+        <!-- HARDCODED 6-DIGIT PASSCODE LOCK -->
+        <div id="login-screen" class="card" style="max-width: 400px; margin: 0 auto; text-align: center;">
+            <h2 style="font-size: 2rem;">Family Vault</h2>
+            <p style="color: var(--text-muted); margin-bottom: 25px;">Enter 6-digit access code.</p>
+            <input type="password" id="family-passcode" placeholder="------" maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 10px; width: 100%; margin-bottom: 15px;">
+            <button id="login-btn" style="width: 100%;">Unlock Album</button>
+        </div>
+
+        <div id="family-content" style="display: none;">
+            <div style="text-align: center;">
+                <h1 style="font-size: 3rem; margin-bottom: 10px;">My Real Family</h1>
+                <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; font-weight: 500;">
+                    The people and moments that matter most.
+                </p>
+            </div>
+
+            <!-- FILTER TABS -->
+            <div class="filter-nav">
+                <div class="filter-btn active" onclick="filterGallery('all', this)">All Memories</div>
+                <div class="filter-btn" onclick="filterGallery('image', this)">Pictures</div>
+                <div class="filter-btn" onclick="filterGallery('video', this)">Videos</div>
+            </div>
+
+            <div id="gallery-container" class="gallery-grid">
+                <p style="text-align: center; width: 100%; color: var(--text-muted);">Synchronizing media...</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 50px;">
+                <button onclick="location.reload()" class="danger">Secure & Lock Album</button>
+            </div>
+        </div>
+    </section>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
+        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
+
+        let globalMediaData = [];
+
+        // LIGHTBOX LOGIC
+        window.openLightbox = function(url, type) { 
+            const container = document.getElementById('lightbox-content-container');
+            if (type === 'video') {
+                container.innerHTML = `<video src="${url}" controls autoplay style="max-width: 90vw; max-height: 90vh; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,0.8); animation: zoomIn 0.3s; outline: none;"></video>`;
+            } else {
+                container.innerHTML = `<img src="${url}" style="max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,0.8); animation: zoomIn 0.3s;">`;
+            }
+            document.getElementById('lightbox').style.display = 'flex'; 
+        };
+        
+        window.closeLightbox = function(e) { 
+            // Only close if clicking the background or the close button, not the video controls
+            if(e && e.target.tagName === 'VIDEO') return; 
+            document.getElementById('lightbox-content-container').innerHTML = ''; // Kill video playback
+            document.getElementById('lightbox').style.display = 'none'; 
+        };
+
+        // PASSCODE LOGIC
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const code = document.getElementById('family-passcode').value;
+            if (code === '272930') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('family-content').style.display = 'block';
+                loadFamilyData();
+            } else {
+                const container = document.getElementById('toast-container');
+                const t = document.createElement('div'); t.className = `toast error`; t.innerText = "Invalid Passcode";
+                container.appendChild(t); setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
+            }
+        });
+
+        function isVideo(url) {
+            const cleanUrl = url.split('?')[0]; // Strip URL parameters
+            return cleanUrl.match(/\.(mp4|webm|ogg|mov)$/i);
+        }
+
+        window.filterGallery = function(filterType, btnElement) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            renderGallery(filterType);
+        };
+
+        function renderGallery(filter = 'all') {
+            const container = document.getElementById("gallery-container");
+            container.innerHTML = "";
+            
+            const filteredData = globalMediaData.filter(img => {
+                const mediaType = (img.type === 'video' || isVideo(img.url)) ? 'video' : 'image';
+                if (filter === 'all') return true;
+                return filter === mediaType;
+            });
+
+            if(filteredData.length === 0) { 
+                container.innerHTML = "<p style='text-align:center; width:100%; color: var(--text-muted);'>No memories found in this category.</p>"; 
+                return; 
+            }
+
+            filteredData.forEach((img) => { 
+                const mediaType = (img.type === 'video' || isVideo(img.url)) ? 'video' : 'image';
+                let mediaHTML = "";
+                
+                if (mediaType === 'video') {
+                    // Muted autoplaying preview for the grid
+                    mediaHTML = `
+                        <div style="position:relative;">
+                            <video src="${img.url}" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()" onclick="window.openLightbox('${img.url}', 'video')"></video>
+                            <div class="video-indicator">▶ Video</div>
+                        </div>`;
+                } else {
+                    mediaHTML = `<img src="${img.url}" alt="${img.caption}" onclick="window.openLightbox('${img.url}', 'image')">`;
+                }
+
+                container.innerHTML += `
+                    <div class="graphic-card">
+                        ${mediaHTML}
+                        ${img.caption ? `<div class="caption">${img.caption}</div>` : ''}
+                    </div>
+                `; 
+            });
+        }
+
+        function loadFamilyData() {
+            onSnapshot(collection(db, "family"), (snapshot) => {
+                globalMediaData = []; 
+                snapshot.forEach((doc) => { globalMediaData.push({ id: doc.id, ...doc.data() }); }); 
+                globalMediaData.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+                renderGallery('all');
+            });
+        }
+    </script>
+</body>
+</html>

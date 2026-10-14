@@ -13,6 +13,7 @@
 </head>
 <body>
     <nav class="navbar">
+        <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')">☰</button>
         <div class="nav-links">
             <a href="index.html">Home</a>
             <a href="cv.html">MUN CV</a>
@@ -28,7 +29,12 @@
     </nav>
 
     <section class="content-section">
-        <div style="text-align: center;"><h1 style="font-size: 3rem; margin-bottom: 10px;">Official MUN Results</h1><p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 40px; font-weight: 500;">Comprehensive directory of delegation portfolios, scores, and evaluations.</p></div>
+        <div style="text-align: center;">
+            <h1 style="font-size: 3rem; margin-bottom: 10px;">Official MUN Results</h1>
+            <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 40px; font-weight: 500;">
+                Comprehensive directory of delegation portfolios, scores, and evaluations.
+            </p>
+        </div>
         <div id="dynamic-results-container"><p style="text-align:center;">Synchronizing with secure database...</p></div>
     </section>
 
@@ -39,11 +45,24 @@
         const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
         const db = getFirestore(initializeApp(firebaseConfig));
 
-        window.filterTable = function(inputElement) { const filter = inputElement.value.toUpperCase(); const tableBody = inputElement.nextElementSibling.querySelector("tbody"); const trs = tableBody.getElementsByTagName("tr"); for (let i = 0; i < trs.length; i++) { const tds = trs[i].getElementsByTagName("td"); let matchFound = false; for (let j = 0; j < tds.length; j++) { if (tds[j].innerText.toUpperCase().indexOf(filter) > -1) { matchFound = true; break; } } trs[i].style.display = matchFound ? "" : "none"; } };
+        window.filterTable = function(inputElement) {
+            const filter = inputElement.value.toUpperCase();
+            const tableBody = inputElement.nextElementSibling.querySelector("tbody");
+            const trs = tableBody.getElementsByTagName("tr");
+            for (let i = 0; i < trs.length; i++) {
+                const tds = trs[i].getElementsByTagName("td");
+                let matchFound = false;
+                for (let j = 0; j < tds.length; j++) {
+                    if (tds[j].innerText.toUpperCase().indexOf(filter) > -1) { matchFound = true; break; }
+                }
+                trs[i].style.display = matchFound ? "" : "none";
+            }
+        };
 
         onSnapshot(collection(db, "mun_events"), (eventsSnapshot) => {
             const container = document.getElementById("dynamic-results-container"); container.innerHTML = ""; 
-            let eventsArray = []; eventsSnapshot.forEach((doc) => { eventsArray.push({ id: doc.id, ...doc.data() }); }); eventsArray.sort((a, b) => ((a.orderIndex || 0) - (b.orderIndex || 0)) || a.id.localeCompare(b.id));
+            let eventsArray = []; eventsSnapshot.forEach((doc) => { eventsArray.push({ id: doc.id, ...doc.data() }); });
+            eventsArray.sort((a, b) => ((a.orderIndex || 0) - (b.orderIndex || 0)) || a.id.localeCompare(b.id));
             let publicEventsCount = 0;
             eventsArray.forEach((data) => {
                 if (data.isPublished === false) return;
@@ -51,7 +70,8 @@
                 let html = `<h3 style="margin-bottom: 15px; color: var(--accent-gold);">${data.displayName}</h3>`;
                 if (data.excelData && data.excelData.length > 0) {
                     const headers = data.excelData[0].rowData, rows = data.excelData.slice(1), highlights = data.highlights || [];
-                    let highlightedColIndexes = []; highlights.forEach(hl => { if (hl.type === 'column') { const colIdx = headers.findIndex(h => h.toLowerCase() === hl.target.toLowerCase()); if (colIdx !== -1) highlightedColIndexes.push({ index: colIdx, color: hl.color }); } });
+                    let highlightedColIndexes = [];
+                    highlights.forEach(hl => { if (hl.type === 'column') { const colIdx = headers.findIndex(h => h.toLowerCase() === hl.target.toLowerCase()); if (colIdx !== -1) highlightedColIndexes.push({ index: colIdx, color: hl.color }); } });
                     html += `<input type="text" class="search-bar" placeholder="Search delegates or scores..." onkeyup="filterTable(this)">`;
                     html += `<div class="table-responsive"><table><thead><tr>`;
                     headers.forEach((headerText, colIdx) => { let thStyle = ""; highlightedColIndexes.forEach(hl => { if (hl.index === colIdx) thStyle = `style="background-color: ${hl.color}; color: #000;"`; }); html += `<th ${thStyle}>${headerText}</th>`; });

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | Yash Jangid</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .contact-form { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
+        .contact-form input, .contact-form textarea { width: 100%; font-family: inherit; }
+        .contact-form textarea { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; border-radius: 6px; padding: 12px 15px; resize: vertical; min-height: 120px; }
+        .dashboard-layout { display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; max-width: 1200px; margin: 0 auto; }
+        .dashboard-card { flex: 1 1 450px; text-align: left; padding: 40px !important; margin-bottom: 0 !important; }
+        .competencies-list { list-style-type: disc !important; padding-left: 22px !important; margin: 0 !important; }
+        .competencies-list li { margin-bottom: 12px !important; line-height: 1.7 !important; font-size: 0.95rem !important; color: var(--text-main) !important; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="index.html" class="active">Home</a>
+            <a href="cv.html">MUN CV</a>
+            <a href="lors.html">LORs</a>
+            <a href="achievements.html">Achievements</a>
+            <a href="muns.html">MUNs</a>
+            <a href="projects.html">Projects</a>
+            <a href="graphics.html">Graphics</a>
+            <a href="results.html">Results</a>
+            <a href="family.html">My Real Family</a>
+            <a href="secret.html">Secret Vault</a>
+        </div>
+    </nav>
+
+    <section class="content-section" style="text-align: center; margin-top: 60px;">
+        <img src="yash.jpg" alt="Yash Jangid" class="profile-pic">
+        <h1 style="font-size: 3rem; margin-bottom: 10px;">Yash Jangid</h1>
+        <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 50px; font-weight: 500;">
+            Head Boy @ Maheshwari Public School, Kalwar Road | Class 12 PCM
+        </p>
+
+        <div class="dashboard-layout">
+            <div class="card dashboard-card">
+                <h2 style="text-align: center; margin-bottom: 20px; font-size: 2rem;">About Me</h2>
+                <div style="text-align: justify; font-size: 0.95rem; line-height: 1.7; margin-bottom: 30px; color: var(--text-main);">
+                    <p>12th-grade PCM student and Head Boy of Maheshwari Public School, Kalwar Road. I am highly active in the Jaipur MUN Circuit with a proven track record of versatile leadership and diplomatic engagement.</p>
+                </div>
+                <h3 style="color: var(--accent-gold); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Core Competencies</h3>
+                <div>
+                    <ul class="competencies-list">
+                        <li><strong>Leadership & Extracurriculars:</strong> Selected for an exclusive educational delegation to meet the Vice President of India; active in academic and cultural research projects.</li>
+                        <li><strong>Diplomacy & Leadership:</strong> Extensive participation in MUNs, securing recognitions including Best Delegate, High Commendation, and Honorable Mention.</li>
+                        <li><strong>Organizational Impact:</strong> Key member of The Indian Summit Foundation, accredited by G20, Y20, & MNIT Jaipur.</li>
+                        <li><strong>Creative Execution:</strong> Graphic designer and A/V editor with a strong eye for typography and visual branding.</li>
+                        <li><strong>Musical Arts:</strong> Certified Grade 4 in Music by Trinity College, London.</li>
+                        <li><strong>Technical Acumen:</strong> Certified in Data Science and Game Technology via IIT Madras C.O.D.E.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card dashboard-card">
+                <h2 style="text-align: center; margin-bottom: 20px; font-size: 2rem;">Direct Communiqué</h2>
+                <p style="text-align: center; font-size: 0.95rem; color: var(--text-muted); margin-bottom: 25px;">Use this secure channel for official MUN invitations, chair requests, or professional inquiries.</p>
+                <div class="contact-form">
+                    <input type="text" id="contact-name" placeholder="Your Name or Designation">
+                    <input type="email" id="contact-email" placeholder="Official Email Address">
+                    <textarea id="contact-message" placeholder="Type your message details here..."></textarea>
+                    <button id="send-message-btn" style="width: 100%; margin-top: 10px;">Transmit Message</button>
+                    <p id="form-status" style="text-align: center;"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
+        const db = getFirestore(initializeApp(firebaseConfig));
+
+        document.getElementById('send-message-btn').addEventListener('click', async () => {
+            const n = document.getElementById('contact-name').value.trim(), e = document.getElementById('contact-email').value.trim(), m = document.getElementById('contact-message').value.trim(), s = document.getElementById('form-status');
+            if (!n || !e || !m) { s.style.color = "#e74c3c"; s.innerText = "Complete all fields."; return; }
+            s.style.color = "#f39c12"; s.innerText = "Transmitting...";
+            try { await addDoc(collection(db, "inbox_messages"), { name: n, email: e, message: m, timestamp: Date.now() }); s.style.color = "#2ecc71"; s.innerText = "Transmission successful."; document.getElementById('contact-name').value = ''; document.getElementById('contact-email').value = ''; document.getElementById('contact-message').value = ''; } 
+            catch(err) { s.style.color = "#e74c3c"; s.innerText = "Transmission failed."; }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Official Results | Yash Jangid</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .search-bar { width: 100%; max-width: 400px; padding: 10px 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color:#fff; border-radius: 6px; font-size: 0.9rem; font-family: inherit; transition: all 0.3s; }
+        .search-bar:focus { outline: none; border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.2); }
+        .table-responsive { width: 100%; overflow-x: auto; margin-bottom: 10px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="cv.html">MUN CV</a>
+            <a href="lors.html">LORs</a>
+            <a href="achievements.html">Achievements</a>
+            <a href="muns.html">MUNs</a>
+            <a href="projects.html">Projects</a>
+            <a href="graphics.html">Graphics</a>
+            <a href="results.html" class="active">Results</a>
+            <a href="family.html">My Real Family</a>
+            <a href="secret.html">Secret Vault</a>
+        </div>
+    </nav>
+
+    <section class="content-section">
+        <div style="text-align: center;"><h1 style="font-size: 3rem; margin-bottom: 10px;">Official MUN Results</h1><p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 40px; font-weight: 500;">Comprehensive directory of delegation portfolios, scores, and evaluations.</p></div>
+        <div id="dynamic-results-container"><p style="text-align:center;">Synchronizing with secure database...</p></div>
+    </section>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
+        const db = getFirestore(initializeApp(firebaseConfig));
+
+        window.filterTable = function(inputElement) { const filter = inputElement.value.toUpperCase(); const tableBody = inputElement.nextElementSibling.querySelector("tbody"); const trs = tableBody.getElementsByTagName("tr"); for (let i = 0; i < trs.length; i++) { const tds = trs[i].getElementsByTagName("td"); let matchFound = false; for (let j = 0; j < tds.length; j++) { if (tds[j].innerText.toUpperCase().indexOf(filter) > -1) { matchFound = true; break; } } trs[i].style.display = matchFound ? "" : "none"; } };
+
+        onSnapshot(collection(db, "mun_events"), (eventsSnapshot) => {
+            const container = document.getElementById("dynamic-results-container"); container.innerHTML = ""; 
+            let eventsArray = []; eventsSnapshot.forEach((doc) => { eventsArray.push({ id: doc.id, ...doc.data() }); }); eventsArray.sort((a, b) => ((a.orderIndex || 0) - (b.orderIndex || 0)) || a.id.localeCompare(b.id));
+            let publicEventsCount = 0;
+            eventsArray.forEach((data) => {
+                if (data.isPublished === false) return;
+                publicEventsCount++; const card = document.createElement('div'); card.className = 'card'; card.style.marginTop = '25px';
+                let html = `<h3 style="margin-bottom: 15px; color: var(--accent-gold);">${data.displayName}</h3>`;
+                if (data.excelData && data.excelData.length > 0) {
+                    const headers = data.excelData[0].rowData, rows = data.excelData.slice(1), highlights = data.highlights || [];
+                    let highlightedColIndexes = []; highlights.forEach(hl => { if (hl.type === 'column') { const colIdx = headers.findIndex(h => h.toLowerCase() === hl.target.toLowerCase()); if (colIdx !== -1) highlightedColIndexes.push({ index: colIdx, color: hl.color }); } });
+                    html += `<input type="text" class="search-bar" placeholder="Search delegates or scores..." onkeyup="filterTable(this)">`;
+                    html += `<div class="table-responsive"><table><thead><tr>`;
+                    headers.forEach((headerText, colIdx) => { let thStyle = ""; highlightedColIndexes.forEach(hl => { if (hl.index === colIdx) thStyle = `style="background-color: ${hl.color}; color: #000;"`; }); html += `<th ${thStyle}>${headerText}</th>`; });
+                    html += `</tr></thead><tbody>`;
+                    rows.forEach((rowObj, rowIdx) => {
+                        let rowBgColor = ""; highlights.forEach(hl => { if (hl.type === 'row' && parseInt(hl.target) === (rowIdx + 1)) rowBgColor = `background-color: ${hl.color}; color: #000;`; }); html += `<tr style="${rowBgColor}">`;
+                        for (let i = 0; i < headers.length; i++) { let cellStyle = ""; highlights.forEach(hl => { if (hl.type === 'column' && headers.findIndex(h => h.toLowerCase() === hl.target.toLowerCase()) === i && !rowBgColor) { cellStyle = `style="background-color: ${hl.color}; color: #000;"`; } }); html += `<td ${cellStyle}>${rowObj.rowData[i] !== undefined ? rowObj.rowData[i] : ''}</td>`; }
+                        html += `</tr>`;
+                    }); html += `</tbody></table></div>`;
+                } else { html += `<p style="color: var(--text-muted); font-style: italic;">Data pending synchronization.</p>`; }
+                card.innerHTML = html; container.appendChild(card);
+            });
+            if (publicEventsCount === 0) container.innerHTML = "<p style='text-align:center;'>No finalized marksheets available yet.</p>";
+        });
+    </script>
+</body>
+</html>

@@ -8,6 +8,7 @@
 </head>
 <body>
     <nav class="navbar">
+        <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')">☰</button>
         <div class="nav-links">
             <a href="index.html">Home</a>
             <a href="cv.html">MUN CV</a>
@@ -23,12 +24,20 @@
     </nav>
 
     <div id="lightbox" class="lightbox" onclick="closeLightbox()">
-        <span class="lightbox-close">&times;</span><img id="lightbox-img" src="" alt="Fullscreen view">
+        <span class="lightbox-close">&times;</span>
+        <img id="lightbox-img" src="" alt="Fullscreen view">
     </div>
 
     <section class="content-section">
-        <div style="text-align: center;"><h1 style="font-size: 3rem; margin-bottom: 10px;">Visual Arts & Graphics</h1><p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 40px; font-weight: 500;">A curated portfolio of creative execution and graphic design.</p></div>
-        <div id="gallery-container" class="gallery-grid"><p style="text-align: center; width: 100%; color: var(--text-muted);">Synchronizing gallery...</p></div>
+        <div style="text-align: center;">
+            <h1 style="font-size: 3rem; margin-bottom: 10px;">Visual Arts & Graphics</h1>
+            <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 40px; font-weight: 500;">
+                A curated portfolio of creative execution and graphic design.
+            </p>
+        </div>
+        <div id="gallery-container" class="gallery-grid">
+            <p style="text-align: center; width: 100%; color: var(--text-muted);">Synchronizing gallery...</p>
+        </div>
     </section>
 
     <script type="module">
@@ -40,12 +49,16 @@
 
         window.openLightbox = function(url) { document.getElementById('lightbox-img').src = url; document.getElementById('lightbox').style.display = 'flex'; };
         window.closeLightbox = function() { document.getElementById('lightbox').style.display = 'none'; };
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeLightbox(); });
 
         onSnapshot(collection(db, "graphics"), (snapshot) => {
             const container = document.getElementById("gallery-container"); container.innerHTML = ""; 
-            let images = []; snapshot.forEach((doc) => { images.push({ id: doc.id, ...doc.data() }); }); images.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+            let images = []; snapshot.forEach((doc) => { images.push({ id: doc.id, ...doc.data() }); });
+            images.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
             if(images.length === 0) { container.innerHTML = "<p style='text-align:center; width:100%;'>No graphics uploaded yet.</p>"; return; }
-            images.forEach((img) => { container.innerHTML += `<div class="graphic-card"><img src="${img.url}" alt="${img.caption}" onclick="window.openLightbox('${img.url}')">${img.caption ? `<div class="caption">${img.caption}</div>` : ''}</div>`; });
+            images.forEach((img) => {
+                container.innerHTML += `<div class="graphic-card"><img loading="lazy" src="${img.url}" alt="${img.caption || 'Graphic'}" onclick="window.openLightbox('${img.url}')">${img.caption ? `<div class="caption">${img.caption}</div>` : ''}</div>`;
+            });
         });
     </script>
 </body>

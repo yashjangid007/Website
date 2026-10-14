@@ -11,18 +11,18 @@
         .toast.error { background-color: #e74c3c; border-left: 5px solid #c0392b; }
         @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
         
-        .filter-nav { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
-        .filter-btn { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); padding: 8px 20px; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+        .filter-nav { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+        .filter-btn { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); padding: 8px 22px; border-radius: 20px; cursor: pointer; transition: 0.3s; }
         .filter-btn.active { background: var(--accent-gold); color: #000; font-weight: 600; border-color: var(--accent-gold); }
         
-        /* Video specific styling for the grid */
-        .graphic-card video { width: 100%; height: 250px; object-fit: cover; border-bottom: 2px solid var(--accent-gold); cursor: zoom-in; }
-        .video-indicator { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; pointer-events: none; }
+        .graphic-card video { width: 100%; height: 250px; object-fit: cover; border-bottom: 2px solid var(--accent-gold); cursor: zoom-in; display: block; }
+        .video-indicator { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.75); color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 4px 10px; border-radius: 5px; font-size: 0.8rem; pointer-events: none; font-weight: 600; }
     </style>
 </head>
 <body>
     <div id="toast-container"></div>
     <nav class="navbar">
+        <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')">☰</button>
         <div class="nav-links">
             <a href="index.html">Home</a>
             <a href="cv.html">MUN CV</a>
@@ -37,7 +37,6 @@
         </div>
     </nav>
 
-    <!-- DYNAMIC LIGHTBOX (Supports Image & Video) -->
     <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
         <span class="lightbox-close" onclick="closeLightbox(event)">&times;</span>
         <div id="lightbox-content-container"></div>
@@ -45,11 +44,11 @@
 
     <section class="content-section">
         
-        <!-- HARDCODED 6-DIGIT PASSCODE LOCK -->
+        <!-- OBFUSCATED 6-DIGIT PASSCODE LOCK -->
         <div id="login-screen" class="card" style="max-width: 400px; margin: 0 auto; text-align: center;">
             <h2 style="font-size: 2rem;">Family Vault</h2>
             <p style="color: var(--text-muted); margin-bottom: 25px;">Enter 6-digit access code.</p>
-            <input type="password" id="family-passcode" placeholder="------" maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 10px; width: 100%; margin-bottom: 15px;">
+            <input type="password" id="family-passcode" placeholder="••••••" maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 10px; width: 100%; margin-bottom: 15px;">
             <button id="login-btn" style="width: 100%;">Unlock Album</button>
         </div>
 
@@ -61,7 +60,6 @@
                 </p>
             </div>
 
-            <!-- FILTER TABS -->
             <div class="filter-nav">
                 <div class="filter-btn active" onclick="filterGallery('all', this)">All Memories</div>
                 <div class="filter-btn" onclick="filterGallery('image', this)">Pictures</div>
@@ -87,7 +85,6 @@
 
         let globalMediaData = [];
 
-        // LIGHTBOX LOGIC
         window.openLightbox = function(url, type) { 
             const container = document.getElementById('lightbox-content-container');
             if (type === 'video') {
@@ -99,16 +96,23 @@
         };
         
         window.closeLightbox = function(e) { 
-            // Only close if clicking the background or the close button, not the video controls
-            if(e && e.target.tagName === 'VIDEO') return; 
-            document.getElementById('lightbox-content-container').innerHTML = ''; // Kill video playback
+            if(e && e.target && e.target.tagName === 'VIDEO') return; 
+            document.getElementById('lightbox-content-container').innerHTML = '';
             document.getElementById('lightbox').style.display = 'none'; 
         };
 
-        // PASSCODE LOGIC
-        document.getElementById('login-btn').addEventListener('click', () => {
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeLightbox(); });
+
+        // Obfuscated bitwise verification for 272930
+        function verifyAccessCode(pin) {
+            const key = [24, 29, 24, 19, 25, 26];
+            if (!pin || pin.length !== 6) return false;
+            return key.every((v, i) => (pin.charCodeAt(i) ^ 42) === v);
+        }
+
+        function attemptUnlock() {
             const code = document.getElementById('family-passcode').value;
-            if (code === '272930') {
+            if (verifyAccessCode(code)) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('family-content').style.display = 'block';
                 loadFamilyData();
@@ -117,10 +121,15 @@
                 const t = document.createElement('div'); t.className = `toast error`; t.innerText = "Invalid Passcode";
                 container.appendChild(t); setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
             }
+        }
+
+        document.getElementById('login-btn').addEventListener('click', attemptUnlock);
+        document.getElementById('family-passcode').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') attemptUnlock();
         });
 
         function isVideo(url) {
-            const cleanUrl = url.split('?')[0]; // Strip URL parameters
+            const cleanUrl = (url || "").split('?')[0];
             return cleanUrl.match(/\.(mp4|webm|ogg|mov)$/i);
         }
 
@@ -150,14 +159,13 @@
                 let mediaHTML = "";
                 
                 if (mediaType === 'video') {
-                    // Muted autoplaying preview for the grid
                     mediaHTML = `
                         <div style="position:relative;">
                             <video src="${img.url}" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()" onclick="window.openLightbox('${img.url}', 'video')"></video>
                             <div class="video-indicator">▶ Video</div>
                         </div>`;
                 } else {
-                    mediaHTML = `<img src="${img.url}" alt="${img.caption}" onclick="window.openLightbox('${img.url}', 'image')">`;
+                    mediaHTML = `<img loading="lazy" src="${img.url}" alt="${img.caption || 'Memory'}" onclick="window.openLightbox('${img.url}', 'image')">`;
                 }
 
                 container.innerHTML += `

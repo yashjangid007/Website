@@ -8,15 +8,14 @@
     <style>
         .contact-form { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
         .contact-form input, .contact-form textarea { width: 100%; font-family: inherit; }
-        .contact-form textarea { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; border-radius: 6px; padding: 12px 15px; resize: vertical; min-height: 120px; }
-        .dashboard-layout { display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; max-width: 1200px; margin: 0 auto; }
-        .dashboard-card { flex: 1 1 450px; text-align: left; padding: 40px !important; margin-bottom: 0 !important; }
+        .contact-form textarea { resize: vertical; min-height: 120px; }
         .competencies-list { list-style-type: disc !important; padding-left: 22px !important; margin: 0 !important; }
         .competencies-list li { margin-bottom: 12px !important; line-height: 1.7 !important; font-size: 0.95rem !important; color: var(--text-main) !important; }
     </style>
 </head>
 <body>
     <nav class="navbar">
+        <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')">☰</button>
         <div class="nav-links">
             <a href="index.html" class="active">Home</a>
             <a href="cv.html">MUN CV</a>
@@ -82,8 +81,11 @@
             const n = document.getElementById('contact-name').value.trim(), e = document.getElementById('contact-email').value.trim(), m = document.getElementById('contact-message').value.trim(), s = document.getElementById('form-status');
             if (!n || !e || !m) { s.style.color = "#e74c3c"; s.innerText = "Complete all fields."; return; }
             s.style.color = "#f39c12"; s.innerText = "Transmitting...";
-            try { await addDoc(collection(db, "inbox_messages"), { name: n, email: e, message: m, timestamp: Date.now() }); s.style.color = "#2ecc71"; s.innerText = "Transmission successful."; document.getElementById('contact-name').value = ''; document.getElementById('contact-email').value = ''; document.getElementById('contact-message').value = ''; } 
-            catch(err) { s.style.color = "#e74c3c"; s.innerText = "Transmission failed."; }
+            try {
+                await addDoc(collection(db, "inbox_messages"), { name: n, email: e, message: m, timestamp: Date.now() });
+                s.style.color = "#2ecc71"; s.innerText = "Transmission successful.";
+                document.getElementById('contact-name').value = ''; document.getElementById('contact-email').value = ''; document.getElementById('contact-message').value = '';
+            } catch(err) { s.style.color = "#e74c3c"; s.innerText = "Transmission failed."; }
         });
     </script>
 </body>
