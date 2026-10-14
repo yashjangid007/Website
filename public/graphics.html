@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Graphics Portfolio | Yash Jangid</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/jpeg" href="yash.jpg">
+    <link rel="stylesheet" href="style.css?v=3.0">
 </head>
 <body>
     <nav class="navbar">
@@ -47,6 +48,14 @@
         const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
         const db = getFirestore(initializeApp(firebaseConfig));
 
+        function escapeHTML(str) {
+            return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+        }
+        function safeURL(url) {
+            const raw = String(url || '').trim();
+            return /^https?:\/\//i.test(raw) ? raw : encodeURI(raw);
+        }
+
         window.openLightbox = function(url) { document.getElementById('lightbox-img').src = url; document.getElementById('lightbox').style.display = 'flex'; };
         window.closeLightbox = function() { document.getElementById('lightbox').style.display = 'none'; };
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeLightbox(); });
@@ -57,7 +66,9 @@
             images.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
             if(images.length === 0) { container.innerHTML = "<p style='text-align:center; width:100%;'>No graphics uploaded yet.</p>"; return; }
             images.forEach((img) => {
-                container.innerHTML += `<div class="graphic-card"><img loading="lazy" src="${img.url}" alt="${img.caption || 'Graphic'}" onclick="window.openLightbox('${img.url}')">${img.caption ? `<div class="caption">${img.caption}</div>` : ''}</div>`;
+                const sUrl = escapeHTML(safeURL(img.url));
+                const sCap = escapeHTML(img.caption || '');
+                container.innerHTML += `<div class="graphic-card"><img loading="lazy" src="${sUrl}" alt="${sCap || 'Graphic'}" onclick="window.openLightbox(this.getAttribute('src'))">${sCap ? `<div class="caption">${sCap}</div>` : ''}</div>`;
             });
         });
     </script>

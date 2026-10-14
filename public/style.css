@@ -132,7 +132,7 @@ h1, h2, h3, h4, h5, h6 {
     margin-bottom: 15px;
 }
 
-/* Cards & Restored Hover Lift Effect */
+/* Cards & Hover Lift Effect */
 .card {
     background: var(--glass-bg) !important;
     backdrop-filter: blur(16px);
@@ -358,6 +358,11 @@ button.secondary-btn:hover {
     text-align: left;
     padding: 30px !important;
     margin-bottom: 0 !important;
+    transition: flex-basis 0.35s ease, transform 0.3s ease !important;
+}
+
+.dashboard-card.maximized {
+    flex: 1 1 100% !important;
 }
 
 .idle-container {
@@ -369,6 +374,12 @@ button.secondary-btn:hover {
     overflow: hidden;
     font-family: Consolas, "Courier New", monospace;
     text-align: left;
+}
+
+.idle-container.minimized .idle-terminal,
+.idle-container.minimized .idle-menubar,
+.idle-container.minimized .idle-statusbar {
+    display: none;
 }
 
 .idle-titlebar {

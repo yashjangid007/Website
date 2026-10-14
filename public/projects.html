@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projects & Architecture | Yash Jangid</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/jpeg" href="yash.jpg">
+    <link rel="stylesheet" href="style.css?v=3.0">
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 </head>
 <body>
@@ -40,20 +41,22 @@
         <div class="dashboard-layout">
             
             <!-- LEFT PANEL: PYTHON IDLE 3.13.7 REPLICA -->
-            <div class="card dashboard-card" style="padding: 15px !important; display: flex; flex-direction: column;">
-                <div class="idle-container">
+            <div id="idle-card" class="card dashboard-card" style="padding: 15px !important; display: flex; flex-direction: column;">
+                <div id="idle-box" class="idle-container">
                     <div class="idle-titlebar">
                         <span>IDLE Shell 3.13.7</span>
                         <div class="idle-controls">
-                            <button class="idle-btn">&minus;</button>
-                            <button class="idle-btn">&#9723;</button>
-                            <button class="idle-btn close" onclick="clear_terminal()">&#10005;</button>
+                            <button class="idle-btn" title="Minimize / Restore Shell" onclick="toggleMinimizeIdle()">&minus;</button>
+                            <button class="idle-btn" title="Maximize / Restore Width" onclick="toggleMaximizeIdle()">&#9723;</button>
+                            <button class="idle-btn close" title="Clear Console" onclick="clear_terminal()">&#10005;</button>
                         </div>
                     </div>
                     <div class="idle-menubar">
                         <span onclick="document.getElementById('file-uploader').click()">File</span>
                         <span onclick="clear_terminal()">Edit</span>
-                        <span>Shell</span><span>Debug</span><span>Options</span><span>Window</span><span>Help</span>
+                        <span onclick="toggleMaximizeIdle()">Shell</span>
+                        <span>Debug</span><span>Options</span><span>Window</span>
+                        <span onclick="print_line('<span style=\'color:#3498db\'>[Help] Type 1-6 to use Contract System Vr2.7, or mount custom .csv/.py files below.</span>')">Help</span>
                     </div>
                     
                     <div class="idle-terminal" id="terminal">
@@ -128,13 +131,19 @@
         let lineCount = 3;
         let activeCsvFilename = "";
 
+        window.toggleMinimizeIdle = function() {
+            document.getElementById('idle-box').classList.toggle('minimized');
+        };
+        window.toggleMaximizeIdle = function() {
+            document.getElementById('idle-card').classList.toggle('maximized');
+        };
+
         window.openLightbox = function(url) { document.getElementById('lightbox-img').src = url; document.getElementById('lightbox').style.display = 'flex'; };
         window.closeLightbox = function() { document.getElementById('lightbox').style.display = 'none'; };
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeLightbox(); });
 
         let inputResolver = null;
 
-        // Keep typing focus unless clicking an interactive panel
         terminal.addEventListener('click', function(e) {
             if (!e.target.closest('.sys-panel') && e.target.tagName !== 'SELECT' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
                 inputField.focus();
@@ -298,7 +307,7 @@
             });
         }
 
-        // 3. UI: Edit Existing CSV (Matches Original Vr2.7 Edit Menu)
+        // 3. UI: Edit Existing CSV
         function js_edit_csv_ui(columns_str, row_count) {
             return new Promise(resolve => {
                 const cols = columns_str.split(',').filter(c => c);
@@ -335,7 +344,7 @@
                     if (act === 'show') {
                         fieldsBox.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted);">Prints the current DataFrame table into the terminal.</p>`;
                     } else if (act === 'add_row') {
-                        fieldsBox.innerHTML = cols.map((c, idx) => `<input type="text" class="${uiId}-rowval" data-col="${c}" placeholder="Value for '${c}'" style="width:100%; margin-bottom:6px; padding:8px;">`).join('');
+                        fieldsBox.innerHTML = cols.map((c) => `<input type="text" class="${uiId}-rowval" data-col="${c}" placeholder="Value for '${c}'" style="width:100%; margin-bottom:6px; padding:8px;">`).join('');
                     } else if (act === 'edit_cell') {
                         fieldsBox.innerHTML = `
                             <select id="${uiId}-ridx" style="width:100%; margin-bottom:8px; padding:8px;">${rowOpts}</select>
@@ -496,6 +505,8 @@ import js
 
 plt.style.use('dark_background')
 
+recent_stdout_buffer = []
+
 class WebTerminalOut:
     def write(self, txt):
         if txt == '\\n': return
@@ -505,6 +516,10 @@ class WebTerminalOut:
 class DashboardOut:
     def write(self, txt):
         js_dashboard_print(str(txt))
+        if str(txt).strip():
+            recent_stdout_buffer.append(str(txt).strip())
+            if len(recent_stdout_buffer) > 10:
+                recent_stdout_buffer.pop(0)
     def flush(self): pass
 
 sys.stdout = WebTerminalOut()
@@ -521,11 +536,17 @@ def custom_plt_show(*args, **kwargs):
 
 plt.show = custom_plt_show
 
-# Override standard input() for uploaded .py files
+# Cancel-Safe input() override with context preview for Option 6 scripts
 def browser_sync_input(prompt_text=""):
-    js_print(f"<span style='color:#f39c12'>[System] Input Requested: {prompt_text}</span>")
-    val = js.prompt(prompt_text)
-    if val is None: val = ""
+    context_str = "\\n".join(recent_stdout_buffer[-8:])
+    full_prompt = f"{context_str}\\n\\n{prompt_text}" if context_str else str(prompt_text)
+    js_print(f"<span style='color:#f39c12'>[Input Prompt] {prompt_text} (Click Cancel to abort script)</span>")
+    val = js.prompt(full_prompt)
+    if val is None:
+        recent_stdout_buffer.clear()
+        raise KeyboardInterrupt("Script execution cancelled by user.")
+    recent_stdout_buffer.clear()
+    js_dashboard_print(f"{prompt_text}{val}\\n")
     js_print(f"<span style='color:#3498db'>&gt; {val}</span>")
     return val
 
@@ -650,28 +671,46 @@ async def main():
             
             try:
                 if ptype == "1":
-                    x = pd.to_numeric(df[x_col], errors='ignore')
                     y = pd.to_numeric(df[y_col], errors='coerce')
-                    plt.plot(x, y, marker='o', color=color, linewidth=2.5)
+                    mask = df[x_col].notna() & y.notna()
+                    if mask.sum() == 0:
+                        js_print("<span style='color:#e74c3c'>[Error] No valid numeric rows to plot.</span>")
+                        plt.close(); continue
+                    plt.plot(df[x_col][mask].astype(str), y[mask], marker='o', color=color, linewidth=2.5)
                     plt.xlabel(x_col); plt.ylabel(y_col)
                 elif ptype == "2":
                     y = pd.to_numeric(df[y_col], errors='coerce')
-                    plt.bar(df[x_col].astype(str), y, color=color, edgecolor='white')
+                    mask = df[x_col].notna() & y.notna()
+                    if mask.sum() == 0:
+                        js_print("<span style='color:#e74c3c'>[Error] No valid numeric rows to plot.</span>")
+                        plt.close(); continue
+                    plt.bar(df[x_col][mask].astype(str), y[mask], color=color, edgecolor='white')
                     plt.xlabel(x_col); plt.ylabel(y_col)
                     plt.xticks(rotation=30, ha='right')
                 elif ptype == "3":
                     bins_val = int(config.get("bins", 10))
                     data = pd.to_numeric(df[x_col], errors='coerce').dropna()
+                    if len(data) == 0:
+                        js_print("<span style='color:#e74c3c'>[Error] Column contains no numeric values for Histogram.</span>")
+                        plt.close(); continue
                     plt.hist(data, bins=bins_val, color=color, edgecolor='white')
                     plt.xlabel(x_col); plt.ylabel('Frequency')
                 elif ptype == "4":
                     x = pd.to_numeric(df[x_col], errors='coerce')
                     y = pd.to_numeric(df[y_col], errors='coerce')
-                    plt.scatter(x, y, color=color, s=110, edgecolors='white')
+                    mask = x.notna() & y.notna()
+                    if mask.sum() == 0:
+                        js_print("<span style='color:#e74c3c'>[Error] Both X and Y must contain numeric values for Scatter Plot.</span>")
+                        plt.close(); continue
+                    plt.scatter(x[mask], y[mask], color=color, s=110, edgecolors='white')
                     plt.xlabel(x_col); plt.ylabel(y_col)
                 elif ptype == "5":
-                    y = pd.to_numeric(df[y_col], errors='coerce').dropna()
-                    plt.pie(y, labels=df[x_col].loc[y.index], autopct='%1.1f%%', colors=[color, '#3498db', '#e74c3c', '#2ecc71', '#9b59b6', '#f39c12'])
+                    y = pd.to_numeric(df[y_col], errors='coerce')
+                    mask = df[x_col].notna() & y.notna() & (y > 0)
+                    if mask.sum() == 0:
+                        js_print("<span style='color:#e74c3c'>[Error] No positive numeric values found for Pie Chart.</span>")
+                        plt.close(); continue
+                    plt.pie(y[mask], labels=df[x_col][mask].astype(str), autopct='%1.1f%%', colors=[color, '#3498db', '#e74c3c', '#2ecc71', '#9b59b6', '#f39c12'])
                 
                 if ptype != "5":
                     plt.grid(show_grid, alpha=0.25)
@@ -680,6 +719,7 @@ async def main():
                 plt.tight_layout()
                 plt.show()
             except Exception as e:
+                plt.close()
                 js_print(f"<span style='color:#e74c3c'>[Plot Error] {e}</span>")
                 
         elif choice == "5":
@@ -695,16 +735,20 @@ async def main():
             if file_resp.get("cancel"): continue
                 
             py_fname = file_resp["file"]
+            old_stdout = sys.stdout
             try:
                 js_print(f"<br><span style='color:#a6e22e'>--- Executing {py_fname} ---</span>")
                 js_clear_dashboard()
+                recent_stdout_buffer.clear()
                 with open(py_fname, 'r') as f:
                     script_code = f.read()
-                old_stdout = sys.stdout
                 sys.stdout = DashboardOut()
                 exec(script_code, globals())
                 sys.stdout = old_stdout
                 js_print(f"<span style='color:#2ecc71'>--- Execution Complete (Output on Right Dashboard) ---</span><br>")
+            except KeyboardInterrupt as ki:
+                sys.stdout = old_stdout
+                js_print(f"<span style='color:#f39c12'>[Aborted] {ki}</span>")
             except Exception as e:
                 sys.stdout = old_stdout
                 js_print(f"<span style='color:#e74c3c'>[Execution Error] {e}</span>")

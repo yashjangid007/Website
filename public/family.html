@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Real Family | Yash Jangid</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/jpeg" href="yash.jpg">
+    <link rel="stylesheet" href="style.css?v=3.0">
     <style>
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { min-width: 250px; padding: 15px 20px; background-color: #333; color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 0.95rem; animation: slideIn 0.4s ease forwards; opacity: 0; transform: translateX(100%); }
@@ -44,7 +45,6 @@
 
     <section class="content-section">
         
-        <!-- OBFUSCATED 6-DIGIT PASSCODE LOCK -->
         <div id="login-screen" class="card" style="max-width: 400px; margin: 0 auto; text-align: center;">
             <h2 style="font-size: 2rem;">Family Vault</h2>
             <p style="color: var(--text-muted); margin-bottom: 25px;">Enter 6-digit access code.</p>
@@ -85,12 +85,21 @@
 
         let globalMediaData = [];
 
+        function escapeHTML(str) {
+            return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+        }
+        function safeURL(url) {
+            const raw = String(url || '').trim();
+            return /^https?:\/\//i.test(raw) ? raw : encodeURI(raw);
+        }
+
         window.openLightbox = function(url, type) { 
             const container = document.getElementById('lightbox-content-container');
+            const sUrl = escapeHTML(url);
             if (type === 'video') {
-                container.innerHTML = `<video src="${url}" controls autoplay style="max-width: 90vw; max-height: 90vh; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,0.8); animation: zoomIn 0.3s; outline: none;"></video>`;
+                container.innerHTML = `<video src="${sUrl}" controls autoplay style="max-width: 90vw; max-height: 90vh; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,0.8); animation: zoomIn 0.3s; outline: none;"></video>`;
             } else {
-                container.innerHTML = `<img src="${url}" style="max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,0.8); animation: zoomIn 0.3s;">`;
+                container.innerHTML = `<img src="${sUrl}" style="max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,0.8); animation: zoomIn 0.3s;">`;
             }
             document.getElementById('lightbox').style.display = 'flex'; 
         };
@@ -103,7 +112,6 @@
 
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeLightbox(); });
 
-        // Obfuscated bitwise verification for 272930
         function verifyAccessCode(pin) {
             const key = [24, 29, 24, 19, 25, 26];
             if (!pin || pin.length !== 6) return false;
@@ -156,22 +164,24 @@
 
             filteredData.forEach((img) => { 
                 const mediaType = (img.type === 'video' || isVideo(img.url)) ? 'video' : 'image';
+                const sUrl = escapeHTML(safeURL(img.url));
+                const sCap = escapeHTML(img.caption || '');
                 let mediaHTML = "";
                 
                 if (mediaType === 'video') {
                     mediaHTML = `
                         <div style="position:relative;">
-                            <video src="${img.url}" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()" onclick="window.openLightbox('${img.url}', 'video')"></video>
+                            <video src="${sUrl}" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()" onclick="window.openLightbox(this.getAttribute('src'), 'video')"></video>
                             <div class="video-indicator">▶ Video</div>
                         </div>`;
                 } else {
-                    mediaHTML = `<img loading="lazy" src="${img.url}" alt="${img.caption || 'Memory'}" onclick="window.openLightbox('${img.url}', 'image')">`;
+                    mediaHTML = `<img loading="lazy" src="${sUrl}" alt="${sCap || 'Memory'}" onclick="window.openLightbox(this.getAttribute('src'), 'image')">`;
                 }
 
                 container.innerHTML += `
                     <div class="graphic-card">
                         ${mediaHTML}
-                        ${img.caption ? `<div class="caption">${img.caption}</div>` : ''}
+                        ${sCap ? `<div class="caption">${sCap}</div>` : ''}
                     </div>
                 `; 
             });
