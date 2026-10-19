@@ -325,7 +325,7 @@ button.secondary-btn:hover {
     text-align: center;
 }
 
-/* Secret Vault 100x100 Thumbnail Zoom */
+/* Secret Vault 100x100 Thumbnail Zoom (Backed by 300x300 HD WebP) */
 .vault-thumb {
     width: 100px;
     height: 100px;
