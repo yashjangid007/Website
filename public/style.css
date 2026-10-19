@@ -1,5 +1,5 @@
 /* =========================================
-   THE MAJESTIC THEME - OFFICIAL MUN VAULT
+   THE MAJESTIC THEME v4.0 - STYLE 2 EDITION
    ========================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
@@ -7,25 +7,48 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-    --primary-bg: #0f2027;      
-    --secondary-bg: #203a43;    
-    --tertiary-bg: #2c5364;     
+    --primary-bg: #091118;      
+    --secondary-bg: #12232f;    
+    --tertiary-bg: #183140;     
     --accent-gold: #d4af37;     
     --accent-gold-hover: #f3c623;
-    --text-main: #e0e0e0;
+    --text-main: #e8ecef;
     --text-muted: #b0bec5;
-    --glass-bg: rgba(15, 32, 39, 0.65);
-    --glass-border: rgba(212, 175, 55, 0.15); 
+    --glass-bg: rgba(10, 20, 28, 0.68);
+    --glass-border: rgba(212, 175, 55, 0.24); 
 }
+
+/* Custom Luxury Gold Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #070d12; }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #8a6f1d, #d4af37);
+    border-radius: 5px;
+    border: 2px solid #070d12;
+}
+::-webkit-scrollbar-thumb:hover { background: #f3c623; }
 
 body {
     font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, var(--primary-bg), var(--secondary-bg), var(--tertiary-bg));
+    background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--tertiary-bg) 100%);
     background-attachment: fixed;
     color: var(--text-main);
     line-height: 1.6;
     min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
     animation: fadeIn 0.8s ease-in-out;
+}
+
+/* Interactive Gold Constellation Background Canvas */
+#bg-canvas-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: -1;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -36,15 +59,15 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Navigation Bar */
 .navbar {
-    background: rgba(15, 32, 39, 0.88);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(9, 17, 24, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--glass-border);
     padding: 18px 5%;
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: flex-end;
     align-items: center;
@@ -100,6 +123,8 @@ h1, h2, h3, h4, h5, h6 {
     max-width: 1200px;
     margin: 50px auto;
     padding: 0 20px;
+    position: relative;
+    z-index: 1;
 }
 
 .profile-pic {
@@ -108,15 +133,15 @@ h1, h2, h3, h4, h5, h6 {
     object-fit: cover;
     border-radius: 16px;
     border: 2px solid var(--accent-gold);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.5), 0 0 15px rgba(212,175,55,0.15);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.65), 0 0 20px rgba(212,175,55,0.2);
     display: block;
     margin: 0 auto 30px auto;
     transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 
 .profile-pic:hover {
-    transform: scale(1.03);
-    box-shadow: 0 12px 35px rgba(0,0,0,0.7), 0 0 25px rgba(212,175,55,0.3);
+    transform: scale(1.03) translateY(-4px);
+    box-shadow: 0 16px 45px rgba(0,0,0,0.8), 0 0 30px rgba(212,175,55,0.35);
 }
 
 #login-screen {
@@ -132,23 +157,38 @@ h1, h2, h3, h4, h5, h6 {
     margin-bottom: 15px;
 }
 
-/* Cards & Hover Lift Effect */
+/* Cards with Hover Lift & Metallic Sheen Sweep */
 .card {
     background: var(--glass-bg) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     border: 1px solid var(--glass-border) !important;
-    border-radius: 12px !important;
+    border-radius: 14px !important;
     padding: 35px !important;
     margin-bottom: 30px !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease !important;
+    box-shadow: 0 10px 35px 0 rgba(0, 0, 0, 0.5) !important;
+    transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease !important;
+    position: relative;
+    overflow: hidden;
 }
+
+.card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: -130%;
+    width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.07), rgba(255, 255, 255, 0.05), transparent);
+    transform: skewX(-25deg);
+    transition: left 0.65s ease;
+    pointer-events: none;
+}
+
+.card:hover::before { left: 140%; }
 
 .card:hover {
     transform: translateY(-6px) !important;
-    box-shadow: 0 14px 45px rgba(0, 0, 0, 0.65), 0 0 18px rgba(212, 175, 55, 0.15) !important;
-    border-color: rgba(212, 175, 55, 0.4) !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.72), 0 0 22px rgba(212, 175, 55, 0.18) !important;
+    border-color: rgba(212, 175, 55, 0.5) !important;
 }
 
 /* Vault Navigation & Panels */
@@ -200,7 +240,7 @@ select option { background: var(--primary-bg); color: white; }
 /* Buttons (Excludes IDLE Window Controls) */
 button:not([class^="ql-"]):not(.idle-btn):not(.menu-toggle) { 
     font-family: 'Inter', sans-serif !important;
-    background: var(--accent-gold) !important;
+    background: linear-gradient(135deg, #d4af37, #e5c158) !important;
     color: #111 !important; 
     border: none !important;
     padding: 12px 24px !important;
@@ -253,24 +293,25 @@ button.secondary-btn:hover {
 
 .graphic-card {
     background: var(--glass-bg);
+    backdrop-filter: blur(14px);
     border: 1px solid var(--glass-border);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
     transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
 }
 
 .graphic-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.15);
-    border-color: rgba(212, 175, 55, 0.4);
+    box-shadow: 0 14px 42px rgba(0,0,0,0.7), 0 0 18px rgba(212, 175, 55, 0.18);
+    border-color: rgba(212, 175, 55, 0.5);
 }
 
 .graphic-card img {
     width: 100%;
     height: 250px;
     object-fit: contain;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.65);
     display: block;
     border-bottom: 2px solid var(--accent-gold);
     cursor: zoom-in;
@@ -282,6 +323,26 @@ button.secondary-btn:hover {
     color: var(--text-main);
     font-weight: 500;
     text-align: center;
+}
+
+/* Secret Vault 100x100 Thumbnail Zoom */
+.vault-thumb {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--accent-gold);
+    background: #050a0e;
+    cursor: zoom-in;
+    flex-shrink: 0;
+    position: relative;
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s ease;
+}
+
+.vault-thumb:hover {
+    transform: scale(1.7);
+    z-index: 50;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.9), 0 0 15px rgba(212, 175, 55, 0.45);
 }
 
 /* Fullscreen Lightbox */
@@ -361,9 +422,7 @@ button.secondary-btn:hover {
     transition: flex-basis 0.35s ease, transform 0.3s ease !important;
 }
 
-.dashboard-card.maximized {
-    flex: 1 1 100% !important;
-}
+.dashboard-card.maximized { flex: 1 1 100% !important; }
 
 .idle-container {
     width: 100%;

@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Letters of Recommendation | Yash Jangid</title>
     <link rel="icon" type="image/jpeg" href="yash.jpg">
-    <link rel="stylesheet" href="style.css?v=3.0">
+    <link rel="stylesheet" href="style.css?v=4.0">
 </head>
 <body>
+    <canvas id="bg-canvas-particles"></canvas>
+
     <nav class="navbar">
         <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')">☰</button>
         <div class="nav-links">
@@ -43,34 +45,98 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
         const db = getFirestore(initializeApp(firebaseConfig));
 
+        let ghBase = "";
+        try {
+            const cfg = await getDoc(doc(db, "site_config", "github"));
+            if (cfg.exists() && cfg.data().enabled && cfg.data().user && cfg.data().repo) {
+                const d = cfg.data();
+                const folder = d.folder ? d.folder.replace(/^\/+|\/+$/g, '') + '/' : '';
+                ghBase = `https://raw.githubusercontent.com/${d.user}/${d.repo}/${d.branch || 'main'}/${folder}`;
+            }
+        } catch (e) {}
+
         function escapeHTML(str) {
             return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
         }
-        function safeURL(url) {
-            const raw = String(url || '').trim();
-            return /^https?:\/\//i.test(raw) ? raw : encodeURI(raw);
+        function resolveOriginalURL(rawUrl) {
+            const clean = String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+            if (/^https?:\/\//i.test(clean)) return clean;
+            return ghBase ? (ghBase + encodeURI(clean)) : encodeURI(clean);
+        }
+        function localFallbackURL(rawUrl) {
+            const clean = String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+            return encodeURI(clean);
         }
 
-        window.openLightbox = function(url) { document.getElementById('lightbox-img').src = url; document.getElementById('lightbox').style.display = 'flex'; };
+        window.openLightbox = function(url, fallback) {
+            const img = document.getElementById('lightbox-img');
+            img.onerror = function() { if (fallback && this.src !== fallback) this.src = fallback; };
+            img.src = url;
+            document.getElementById('lightbox').style.display = 'flex';
+        };
         window.closeLightbox = function() { document.getElementById('lightbox').style.display = 'none'; };
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeLightbox(); });
 
         onSnapshot(collection(db, "lors"), (snapshot) => {
             const container = document.getElementById("gallery-container"); container.innerHTML = ""; 
-            let images = []; snapshot.forEach((doc) => { images.push({ id: doc.id, ...doc.data() }); });
+            let images = []; snapshot.forEach((d) => { images.push({ id: d.id, ...d.data() }); });
             images.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
             if(images.length === 0) { container.innerHTML = "<p style='text-align:center; width:100%;'>No documents uploaded yet.</p>"; return; }
             images.forEach((img) => {
-                const sUrl = escapeHTML(safeURL(img.url));
+                const primaryUrl = escapeHTML(resolveOriginalURL(img.url));
+                const fallbackUrl = escapeHTML(localFallbackURL(img.url));
                 const sCap = escapeHTML(img.caption || '');
-                container.innerHTML += `<div class="graphic-card"><img loading="lazy" src="${sUrl}" alt="${sCap || 'LOR'}" onclick="window.openLightbox(this.getAttribute('src'))">${sCap ? `<div class="caption">${sCap}</div>` : ''}</div>`;
+                container.innerHTML += `<div class="graphic-card"><img loading="lazy" src="${primaryUrl}" data-fallback="${fallbackUrl}" onerror="if(this.src!==this.dataset.fallback)this.src=this.dataset.fallback;" alt="${sCap || 'LOR'}" onclick="window.openLightbox(this.src, this.dataset.fallback)">${sCap ? `<div class="caption">${sCap}</div>` : ''}</div>`;
             });
         });
+    </script>
+    <script>
+        (function initConstellation() {
+            const canvas = document.getElementById('bg-canvas-particles');
+            const ctx = canvas.getContext('2d');
+            let particles = [], mouse = { x: null, y: null };
+            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            window.addEventListener('resize', resize); resize();
+            window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+            window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+            for (let i = 0; i < 68; i++) {
+                particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.55, vy: (Math.random() - 0.5) * 0.55, r: Math.random() * 1.9 + 0.9 });
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < particles.length; i++) {
+                    let p = particles[i];
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(212, 175, 55, 0.85)'; ctx.fill();
+                    for (let j = i + 1; j < particles.length; j++) {
+                        let p2 = particles[j], d = Math.hypot(p.x - p2.x, p.y - p2.y);
+                        if (d < 135) {
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y);
+                            ctx.strokeStyle = `rgba(212, 175, 55, ${0.22 * (1 - d / 135)})`;
+                            ctx.lineWidth = 0.9; ctx.stroke();
+                        }
+                    }
+                    if (mouse.x !== null) {
+                        let md = Math.hypot(p.x - mouse.x, p.y - mouse.y);
+                        if (md < 195) {
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y);
+                            ctx.strokeStyle = `rgba(255, 215, 70, ${0.88 * (1 - md / 195)})`;
+                            ctx.lineWidth = 1.75; ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
     </script>
 </body>
 </html>

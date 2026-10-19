@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Real Family | Yash Jangid</title>
     <link rel="icon" type="image/jpeg" href="yash.jpg">
-    <link rel="stylesheet" href="style.css?v=3.0">
+    <link rel="stylesheet" href="style.css?v=4.0">
     <style>
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast { min-width: 250px; padding: 15px 20px; background-color: #333; color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 0.95rem; animation: slideIn 0.4s ease forwards; opacity: 0; transform: translateX(100%); }
-        .toast.error { background-color: #e74c3c; border-left: 5px solid #c0392b; }
+        .toast { min-width: 250px; padding: 15px 20px; background-color: #162a33; color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); font-size: 0.95rem; animation: slideIn 0.4s ease forwards; opacity: 0; transform: translateX(100%); }
+        .toast.error { border-left: 5px solid #e74c3c; }
         @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
         
         .filter-nav { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
@@ -21,7 +21,9 @@
     </style>
 </head>
 <body>
+    <canvas id="bg-canvas-particles"></canvas>
     <div id="toast-container"></div>
+
     <nav class="navbar">
         <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')">☰</button>
         <div class="nav-links">
@@ -45,6 +47,7 @@
 
     <section class="content-section">
         
+        <!-- 6-DIGIT PASSCODE LOCK (BACKED BY FIREBASE AUTH) -->
         <div id="login-screen" class="card" style="max-width: 400px; margin: 0 auto; text-align: center;">
             <h2 style="font-size: 2rem;">Family Vault</h2>
             <p style="color: var(--text-muted); margin-bottom: 25px;">Enter 6-digit access code.</p>
@@ -71,35 +74,56 @@
             </div>
             
             <div style="text-align: center; margin-top: 50px;">
-                <button onclick="location.reload()" class="danger">Secure & Lock Album</button>
+                <button id="lock-album-btn" class="danger">Secure & Lock Album</button>
             </div>
         </div>
     </section>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
-        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
 
         let globalMediaData = [];
+        let ghBase = "";
+
+        async function loadGitHubConfig() {
+            try {
+                const cfg = await getDoc(doc(db, "site_config", "github"));
+                if (cfg.exists() && cfg.data().enabled && cfg.data().user && cfg.data().repo) {
+                    const d = cfg.data();
+                    const folder = d.folder ? d.folder.replace(/^\/+|\/+$/g, '') + '/' : '';
+                    ghBase = `https://raw.githubusercontent.com/${d.user}/${d.repo}/${d.branch || 'main'}/${folder}`;
+                }
+            } catch (e) {}
+        }
 
         function escapeHTML(str) {
             return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
         }
-        function safeURL(url) {
-            const raw = String(url || '').trim();
-            return /^https?:\/\//i.test(raw) ? raw : encodeURI(raw);
+        function resolveOriginalURL(rawUrl) {
+            const clean = String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+            if (/^https?:\/\//i.test(clean)) return clean;
+            return ghBase ? (ghBase + encodeURI(clean)) : encodeURI(clean);
+        }
+        function localFallbackURL(rawUrl) {
+            const clean = String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+            return encodeURI(clean);
         }
 
-        window.openLightbox = function(url, type) { 
+        window.openLightbox = function(url, type, fallback) { 
             const container = document.getElementById('lightbox-content-container');
             const sUrl = escapeHTML(url);
+            const sFall = escapeHTML(fallback || url);
             if (type === 'video') {
-                container.innerHTML = `<video src="${sUrl}" controls autoplay style="max-width: 90vw; max-height: 90vh; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,0.8); animation: zoomIn 0.3s; outline: none;"></video>`;
+                container.innerHTML = `<video src="${sUrl}" onerror="if(this.src!=='${sFall}')this.src='${sFall}';" controls autoplay style="max-width: 90vw; max-height: 90vh; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,0.8); animation: zoomIn 0.3s; outline: none;"></video>`;
             } else {
-                container.innerHTML = `<img src="${sUrl}" style="max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,0.8); animation: zoomIn 0.3s;">`;
+                container.innerHTML = `<img src="${sUrl}" onerror="if(this.src!=='${sFall}')this.src='${sFall}';" style="max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,0.8); animation: zoomIn 0.3s;">`;
             }
             document.getElementById('lightbox').style.display = 'flex'; 
         };
@@ -112,28 +136,49 @@
 
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeLightbox(); });
 
-        function verifyAccessCode(pin) {
+        function verifyAccessCodeFallback(pin) {
             const key = [24, 29, 24, 19, 25, 26];
             if (!pin || pin.length !== 6) return false;
             return key.every((v, i) => (pin.charCodeAt(i) ^ 42) === v);
         }
 
-        function attemptUnlock() {
-            const code = document.getElementById('family-passcode').value;
-            if (verifyAccessCode(code)) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('family-content').style.display = 'block';
-                loadFamilyData();
-            } else {
-                const container = document.getElementById('toast-container');
-                const t = document.createElement('div'); t.className = `toast error`; t.innerText = "Invalid Passcode";
-                container.appendChild(t); setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
+        function showErrorToast(msg) {
+            const container = document.getElementById('toast-container');
+            const t = document.createElement('div'); t.className = `toast error`; t.innerText = msg;
+            container.appendChild(t); setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
+        }
+
+        async function unlockSuccess() {
+            await loadGitHubConfig();
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('family-content').style.display = 'block';
+            loadFamilyData();
+        }
+
+        async function attemptUnlock() {
+            const code = document.getElementById('family-passcode').value.trim();
+            if (!code) return showErrorToast("Enter 6-digit access code");
+            try {
+                // Silent Firebase Authentication using the 6-digit PIN
+                await signInWithEmailAndPassword(auth, "family-vault@yashjangid.com", code);
+                await unlockSuccess();
+            } catch (err) {
+                // Seamless fallback if user hasn't created family-vault@yashjangid.com in Firebase Console yet
+                if (verifyAccessCodeFallback(code)) {
+                    await unlockSuccess();
+                } else {
+                    showErrorToast("Invalid Passcode");
+                }
             }
         }
 
         document.getElementById('login-btn').addEventListener('click', attemptUnlock);
         document.getElementById('family-passcode').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') attemptUnlock();
+        });
+        document.getElementById('lock-album-btn').addEventListener('click', async () => {
+            try { await signOut(auth); } catch(e) {}
+            location.reload();
         });
 
         function isVideo(url) {
@@ -164,18 +209,19 @@
 
             filteredData.forEach((img) => { 
                 const mediaType = (img.type === 'video' || isVideo(img.url)) ? 'video' : 'image';
-                const sUrl = escapeHTML(safeURL(img.url));
+                const primaryUrl = escapeHTML(resolveOriginalURL(img.url));
+                const fallbackUrl = escapeHTML(localFallbackURL(img.url));
                 const sCap = escapeHTML(img.caption || '');
                 let mediaHTML = "";
                 
                 if (mediaType === 'video') {
                     mediaHTML = `
                         <div style="position:relative;">
-                            <video src="${sUrl}" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()" onclick="window.openLightbox(this.getAttribute('src'), 'video')"></video>
+                            <video src="${primaryUrl}" data-fallback="${fallbackUrl}" onerror="if(this.src!==this.dataset.fallback)this.src=this.dataset.fallback;" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()" onclick="window.openLightbox(this.src, 'video', this.dataset.fallback)"></video>
                             <div class="video-indicator">▶ Video</div>
                         </div>`;
                 } else {
-                    mediaHTML = `<img loading="lazy" src="${sUrl}" alt="${sCap || 'Memory'}" onclick="window.openLightbox(this.getAttribute('src'), 'image')">`;
+                    mediaHTML = `<img loading="lazy" src="${primaryUrl}" data-fallback="${fallbackUrl}" onerror="if(this.src!==this.dataset.fallback)this.src=this.dataset.fallback;" alt="${sCap || 'Memory'}" onclick="window.openLightbox(this.src, 'image', this.dataset.fallback)">`;
                 }
 
                 container.innerHTML += `
@@ -195,6 +241,49 @@
                 renderGallery('all');
             });
         }
+    </script>
+    <script>
+        (function initConstellation() {
+            const canvas = document.getElementById('bg-canvas-particles');
+            const ctx = canvas.getContext('2d');
+            let particles = [], mouse = { x: null, y: null };
+            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            window.addEventListener('resize', resize); resize();
+            window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+            window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+            for (let i = 0; i < 68; i++) {
+                particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.55, vy: (Math.random() - 0.5) * 0.55, r: Math.random() * 1.9 + 0.9 });
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < particles.length; i++) {
+                    let p = particles[i];
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(212, 175, 55, 0.85)'; ctx.fill();
+                    for (let j = i + 1; j < particles.length; j++) {
+                        let p2 = particles[j], d = Math.hypot(p.x - p2.x, p.y - p2.y);
+                        if (d < 135) {
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y);
+                            ctx.strokeStyle = `rgba(212, 175, 55, ${0.22 * (1 - d / 135)})`;
+                            ctx.lineWidth = 0.9; ctx.stroke();
+                        }
+                    }
+                    if (mouse.x !== null) {
+                        let md = Math.hypot(p.x - mouse.x, p.y - mouse.y);
+                        if (md < 195) {
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y);
+                            ctx.strokeStyle = `rgba(255, 215, 70, ${0.88 * (1 - md / 195)})`;
+                            ctx.lineWidth = 1.75; ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
     </script>
 </body>
 </html>
