@@ -3,12 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Graphics Portfolio | Yash Jangid</title>
+    <title>Visual Arts & Graphics | Yash Jangid</title>
     <link rel="icon" type="image/jpeg" href="yash.jpg">
-    <link rel="stylesheet" href="style.css?v=4.0">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css?v=4.2">
+    <style>
+        .folders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 18px;
+            margin-bottom: 35px;
+        }
+        .folder-box {
+            background: rgba(10, 20, 28, 0.78);
+            border: 1px solid rgba(212, 175, 55, 0.28);
+            border-left: 4px solid var(--accent-gold);
+            border-radius: 12px;
+            padding: 20px 18px;
+            cursor: pointer;
+            transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .folder-box:hover, .folder-box.active {
+            transform: translateY(-4px);
+            background: rgba(212, 175, 55, 0.15);
+            border-color: var(--accent-gold);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 18px rgba(212,175,55,0.2);
+        }
+        .folder-title { font-weight: 600; font-size: 1.05rem; color: var(--text-main); }
+        .folder-count {
+            background: rgba(212, 175, 55, 0.18);
+            color: var(--accent-gold);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            padding: 3px 10px;
+            border-radius: 14px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+        .lightbox-caption-bar {
+            margin-top: 12px;
+            color: var(--text-main);
+            background: rgba(10, 20, 28, 0.9);
+            border: 1px solid var(--accent-gold);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            text-align: center;
+            max-width: 80vw;
+        }
+    </style>
 </head>
 <body>
     <canvas id="bg-canvas-particles"></canvas>
+
+    <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+        <span class="lightbox-close" onclick="closeLightbox(event)">&times;</span>
+        <div id="lightbox-content-container" style="display:flex; flex-direction:column; align-items:center;"></div>
+    </div>
 
     <nav class="navbar">
         <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')">☰</button>
@@ -27,31 +80,42 @@
         </div>
     </nav>
 
-    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
-        <span class="lightbox-close">&times;</span>
-        <img id="lightbox-img" src="" alt="Fullscreen view">
-    </div>
-
     <section class="content-section">
-        <div style="text-align: center;">
-            <h1 style="font-size: 3rem; margin-bottom: 10px;">Visual Arts & Graphics</h1>
-            <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 40px; font-weight: 500;">
-                A curated portfolio of creative execution and graphic design.
+        <div style="text-align: center; margin-bottom: 35px;">
+            <h1 style="font-size: 3rem; margin-bottom: 10px;">Visual Identity & Graphics</h1>
+            <p style="color: var(--text-muted); font-size: 1.1rem; font-weight: 500;">
+                Select a category folder below to inspect official event collateral, placards, brochures, and branding decks.
             </p>
         </div>
-        <div id="gallery-container" class="gallery-grid">
-            <p style="text-align: center; width: 100%; color: var(--text-muted);">Synchronizing gallery...</p>
+
+        <!-- INTERACTIVE FOLDER BOXES -->
+        <div id="folders-container" class="folders-grid"></div>
+
+        <!-- CURRENT FOLDER HEADER -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
+            <h2 id="active-folder-heading" style="margin:0; font-size:1.5rem; color:var(--accent-gold);">📁 All Design Archives</h2>
+            <span id="active-folder-sub" style="color:var(--text-muted); font-size:0.9rem;">Click any design to inspect full resolution</span>
+        </div>
+
+        <!-- GALLERY GRID -->
+        <div id="graphics-gallery" class="gallery-grid">
+            <p style="color: var(--text-muted); text-align: center; grid-column: 1/-1;">Synchronizing visual archive...</p>
         </div>
     </section>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
-        const db = getFirestore(initializeApp(firebaseConfig));
+        const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
         let ghBase = "";
+        let configuredFolders = ["Placards", "Brochures", "PPTs & Decks", "Branding & Logos", "Event Collateral"];
+        let allGraphics = [];
+        let selectedFolder = "ALL";
+
         try {
             const cfg = await getDoc(doc(db, "site_config", "github"));
             if (cfg.exists() && cfg.data().enabled && cfg.data().user && cfg.data().repo) {
@@ -64,36 +128,121 @@
         function escapeHTML(str) {
             return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
         }
+
+        function normalizeFilename(rawUrl) {
+            return String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+        }
+
         function resolveOriginalURL(rawUrl) {
-            const clean = String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+            const clean = normalizeFilename(rawUrl);
             if (/^https?:\/\//i.test(clean)) return clean;
             return ghBase ? (ghBase + encodeURI(clean)) : encodeURI(clean);
         }
-        function localFallbackURL(rawUrl) {
-            const clean = String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
-            return encodeURI(clean);
+
+        function resolveThumbURL(item) {
+            if (item.thumbData) return item.thumbData;
+            const clean = normalizeFilename(item.url);
+            if (/^https?:\/\//i.test(clean)) return clean;
+            const baseName = clean.split('/').pop().replace(/\.[^/.]+$/, "");
+            return encodeURI(`thumbs/${baseName}.webp`);
         }
 
-        window.openLightbox = function(url, fallback) {
-            const img = document.getElementById('lightbox-img');
-            img.onerror = function() { if (fallback && this.src !== fallback) this.src = fallback; };
-            img.src = url;
+        window.openLightbox = function(url, type, fallback, caption, cat) {
+            const container = document.getElementById('lightbox-content-container');
+            const sUrl = escapeHTML(url), sFall = escapeHTML(fallback || url);
+            const capHTML = caption ? `<div class="lightbox-caption-bar"><strong style="color:var(--accent-gold);">[${escapeHTML(cat)}]</strong> ${escapeHTML(caption)}</div>` : '';
+            if (type === 'video') {
+                container.innerHTML = `<video src="${sUrl}" onerror="if(this.src!=='${sFall}')this.src='${sFall}';" controls autoplay style="max-width: 90vw; max-height: 82vh; border-radius: 8px;"></video>${capHTML}`;
+            } else {
+                container.innerHTML = `<img src="${sUrl}" onerror="if(this.src!=='${sFall}')this.src='${sFall}';" style="max-width: 90vw; max-height: 82vh; object-fit: contain; border-radius: 8px;">${capHTML}`;
+            }
             document.getElementById('lightbox').style.display = 'flex';
         };
-        window.closeLightbox = function() { document.getElementById('lightbox').style.display = 'none'; };
+
+        window.closeLightbox = function(e) {
+            if (e && e.target && e.target.tagName === 'VIDEO') return;
+            document.getElementById('lightbox-content-container').innerHTML = '';
+            document.getElementById('lightbox').style.display = 'none';
+        };
+
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeLightbox(); });
 
-        onSnapshot(collection(db, "graphics"), (snapshot) => {
-            const container = document.getElementById("gallery-container"); container.innerHTML = ""; 
-            let images = []; snapshot.forEach((d) => { images.push({ id: d.id, ...d.data() }); });
-            images.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
-            if(images.length === 0) { container.innerHTML = "<p style='text-align:center; width:100%;'>No graphics uploaded yet.</p>"; return; }
-            images.forEach((img) => {
-                const primaryUrl = escapeHTML(resolveOriginalURL(img.url));
-                const fallbackUrl = escapeHTML(localFallbackURL(img.url));
-                const sCap = escapeHTML(img.caption || '');
-                container.innerHTML += `<div class="graphic-card"><img loading="lazy" src="${primaryUrl}" data-fallback="${fallbackUrl}" onerror="if(this.src!==this.dataset.fallback)this.src=this.dataset.fallback;" alt="${sCap || 'Graphic'}" onclick="window.openLightbox(this.src, this.dataset.fallback)">${sCap ? `<div class="caption">${sCap}</div>` : ''}</div>`;
+        window.selectFolder = function(folderName) {
+            selectedFolder = folderName;
+            document.getElementById('active-folder-heading').innerText = folderName === 'ALL' ? '📁 All Design Archives' : `📂 ${folderName}`;
+            renderFoldersAndGallery();
+        };
+
+        function renderFoldersAndGallery() {
+            const folderContainer = document.getElementById('folders-container');
+            const gallery = document.getElementById('graphics-gallery');
+
+            const counts = { ALL: allGraphics.length };
+            const folderSet = new Set(configuredFolders);
+            allGraphics.forEach(g => {
+                const c = g.category || "Placards";
+                folderSet.add(c);
+                counts[c] = (counts[c] || 0) + 1;
             });
+
+            const finalFolders = Array.from(folderSet);
+            folderContainer.innerHTML = `
+                <div class="folder-box ${selectedFolder === 'ALL' ? 'active' : ''}" onclick="window.selectFolder('ALL')">
+                    <span class="folder-title">📁 All Work</span>
+                    <span class="folder-count">${counts.ALL}</span>
+                </div>
+            ` + finalFolders.map(f => `
+                <div class="folder-box ${selectedFolder === f ? 'active' : ''}" onclick="window.selectFolder('${escapeHTML(f)}')">
+                    <span class="folder-title">📁 ${escapeHTML(f)}</span>
+                    <span class="folder-count">${counts[f] || 0}</span>
+                </div>
+            `).join('');
+
+            const filtered = selectedFolder === 'ALL'
+                ? allGraphics
+                : allGraphics.filter(g => (g.category || "Placards") === selectedFolder);
+
+            if (filtered.length === 0) {
+                gallery.innerHTML = `<div class="card" style="grid-column:1/-1; text-align:center; color:var(--text-muted);">No graphics inside <strong>${escapeHTML(selectedFolder)}</strong> yet. Upload or assign items to this folder in the Secret Vault.</div>`;
+                return;
+            }
+
+            gallery.innerHTML = filtered.map(item => {
+                const isVid = item.type === 'video' || /\.(mp4|webm|mov)$/i.test(item.url || '');
+                const origUrl = escapeHTML(resolveOriginalURL(item.url));
+                const fallUrl = escapeHTML(encodeURI(normalizeFilename(item.url)));
+                const thumbUrl = escapeHTML(resolveThumbURL(item));
+                const cap = escapeHTML(item.caption || '');
+                const cat = escapeHTML(item.category || 'Placards');
+
+                const mediaTag = isVid
+                    ? `<video src="${origUrl}" data-fallback="${fallUrl}" onerror="if(this.src!==this.dataset.fallback)this.src=this.dataset.fallback;" muted loop onmouseover="this.play()" onmouseout="this.pause()"></video>`
+                    : `<img loading="lazy" src="${thumbUrl}" data-gh="${origUrl}" data-fallback="${fallUrl}" onerror="if(this.src!==this.dataset.gh){this.src=this.dataset.gh;}else if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}" alt="${cap}">`;
+
+                return `
+                    <div class="gallery-item" onclick="window.openLightbox('${origUrl}', '${isVid ? 'video' : 'image'}', '${fallUrl}', '${cap.replace(/'/g, "\\'")}', '${cat.replace(/'/g, "\\'")}')">
+                        ${mediaTag}
+                        <div class="gallery-caption">
+                            <span style="color:var(--accent-gold); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; display:block;">${cat}</span>
+                            ${cap || 'View Full Resolution'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        onSnapshot(doc(db, "site_config", "graphics_categories"), (snap) => {
+            if (snap.exists() && Array.isArray(snap.data().list) && snap.data().list.length > 0) {
+                configuredFolders = snap.data().list;
+                renderFoldersAndGallery();
+            }
+        });
+
+        onSnapshot(collection(db, "graphics"), (snap) => {
+            allGraphics = [];
+            snap.forEach(d => allGraphics.push({ id: d.id, ...d.data() }));
+            allGraphics.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+            renderFoldersAndGallery();
         });
     </script>
     <script>

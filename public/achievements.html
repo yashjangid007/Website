@@ -3,12 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Achievements | Yash Jangid</title>
+    <title>Achievements & Certifications | Yash Jangid</title>
+    <meta name="description" content="Official achievements, technical certifications, and leadership milestones of Yash Jangid.">
     <link rel="icon" type="image/jpeg" href="yash.jpg">
-    <link rel="stylesheet" href="style.css?v=4.0">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#d4af37">
+    <link rel="stylesheet" href="style.css?v=4.1">
     <style>
-        .achievements-card ul { list-style-type: disc !important; padding-left: 22px !important; margin: 15px 0 0 0 !important; }
-        .achievements-card li { margin-bottom: 10px !important; line-height: 1.7 !important; font-size: 0.95rem !important; color: var(--text-main) !important; }
+        .achievement-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 30px;
+            background: rgba(10, 20, 28, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-left: 4px solid var(--accent-gold);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .achievement-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-gold);
+            background: rgba(212, 175, 55, 0.08);
+        }
+        .ach-content h3 { margin: 0 0 8px 0; font-size: 1.35rem; color: var(--text-main); }
+        .ach-content h4 { margin: 0 0 10px 0; font-size: 0.95rem; color: var(--accent-gold); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+        .ach-content p { margin: 0; font-size: 0.95rem; line-height: 1.6; color: var(--text-muted); }
     </style>
 </head>
 <body>
@@ -31,46 +52,61 @@
         </div>
     </nav>
 
-    <section class="content-section">
-        <h2 style="font-size: 2.5rem; margin-bottom: 30px;">Skills, Certifications & Achievements</h2>
-        
-        <div class="card achievements-card">
-            <h3 style="color: var(--accent-gold); margin-bottom: 10px; font-size: 1.3rem;">Skills & Certifications</h3>
-            <div>
-                <ul>
-                    <li>Trinity Grade 4 Electric Keyboard.</li>
-                    <li>Data Science & GameTech – IIT Madras C.O.D.E.</li>
-                    <li>Skills: Strategic Planning, Research & Analysis, Multi-Tasking & Determination, Time Management, Diplomacy, Music & Graphics, Illustration Design, Social Media Optimization.</li>
-                </ul>
-            </div>
+    <section class="content-section" style="margin-top: 50px;">
+        <div style="text-align: center; margin-bottom: 45px;">
+            <h1 style="font-size: 3rem; margin-bottom: 10px;">Official Milestones</h1>
+            <p style="color: var(--text-muted); font-size: 1.1rem; font-weight: 500;">
+                Executive Leadership, Technical Certifications & Artistic Accolades
+            </p>
         </div>
 
-        <div class="card achievements-card">
-            <h3 style="color: var(--accent-gold); margin-bottom: 10px; font-size: 1.3rem;">Experience – School Work</h3>
-            <div>
-                <ul>
-                    <li>STEM Project CBSE Meet (2023–24) & STEM Project Inter-School 1st Prize (2025–26).</li>
-                    <li>Editorial Team Student Member & Inter-School Magazine Cover Making (2024–27).</li>
-                    <li>Annual Day, Teacher's Day, Farewell, Excellencia 2.0 (DANCE Audio, SKIT Audio, ORCHESTRA Audio) (2023–27).</li>
-                    <li>Ganesh Chaturthi Dance Audio & Fun Fiesta Stall Graphics & Decor (2024–25).</li>
-                    <li>Cyber Fraud Detection Skit + Awareness & MPS Kalwar Road Brochure (2025–26).</li>
-                    <li>Arduino Coding for Inter-School & Inter-House PPTs Verification (2026–27).</li>
-                    <li>ECMS Magazine Editorial Team (2026–27).</li>
-                </ul>
+        <div style="max-width: 900px; margin: 0 auto;">
+            
+            <!-- Vice President Delegation -->
+            <div class="achievement-card">
+                <div class="ach-content">
+                    <h3>Vice President of India Delegation</h3>
+                    <h4>National Representation • 2024–2025 Session</h4>
+                    <p>Selected for an exclusive educational delegation to officially meet the Vice President of India, engaging in high-level diplomatic discussions and national policy orientation.</p>
+                </div>
             </div>
-        </div>
 
-        <div class="card achievements-card">
-            <h3 style="color: var(--accent-gold); margin-bottom: 10px; font-size: 1.3rem;">Experience – Outside</h3>
-            <div>
-                <ul>
-                    <li>Harvard MUN Graphics Applicant (2026–27).</li>
-                    <li>TISF: Aawaaz 2.0 & Jaipur Edition 3.0 (Logos, Placards, Core Sec Trophies, Banners, LOR, Marketing Brochures, Certificates) (2025–27).</li>
-                    <li>Aurellia Soul Studio Jaipur Logo, Brochure + PPT (2026–27).</li>
-                    <li>Raising Voices Logo & Brochure (2026–27).</li>
-                    <li>Equilibrium MUN Founder Post & Certificate (2026–27).</li>
-                </ul>
+            <!-- The Indian Summit Foundation -->
+            <div class="achievement-card">
+                <div class="ach-content">
+                    <h3>The Indian Summit Foundation</h3>
+                    <h4>Director General • Jaipur Edition 3.0</h4>
+                    <p>Serving as Director General for The Indian Summit — Jaipur Edition 3.0 at MNIT Jaipur. Previously acted as Head of Conference Affairs, directing comprehensive branding, marketing campaigns, and stage collateral for massive-scale diplomatic events including Aawaaz 2.0.</p>
+                </div>
             </div>
+
+            <!-- IIT Madras -->
+            <div class="achievement-card">
+                <div class="ach-content">
+                    <h3>IIT Madras C.O.D.E.</h3>
+                    <h4>Data Science & Game Technology</h4>
+                    <p>Officially certified by the Indian Institute of Technology Madras in advanced technical disciplines, specializing in data architecture, statistical analysis, and game engine technologies.</p>
+                </div>
+            </div>
+
+            <!-- Trinity College London -->
+            <div class="achievement-card">
+                <div class="ach-content">
+                    <h3>Trinity College London</h3>
+                    <h4>Grade 4 Certification • Music</h4>
+                    <p>Awarded international certification in musical arts and performance on the electric keyboard, mastering complex compositions and advanced acoustic techniques.</p>
+                </div>
+            </div>
+
+            <!-- Aurellia Soul Studio / MPS -->
+            <div class="achievement-card">
+                <div class="ach-content">
+                    <h3>Visual Identity & Publication Design</h3>
+                    <h4>Aurellia Soul Studio & MPS Kalwar Road</h4>
+                    <p>Lead graphic designer producing complete visual identity assets, corporate presentations, and visiting cards for Aurellia Soul Studio, alongside extensive multi-year editorial and layout direction for official school magazines.</p>
+                </div>
+            </div>
+
         </div>
     </section>
 
@@ -88,4 +124,37 @@
             }
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                for (let i = 0; i < particles.length
+                for (let i = 0; i < particles.length; i++) {
+                    let p = particles[i];
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(212, 175, 55, 0.85)'; ctx.fill();
+                    for (let j = i + 1; j < particles.length; j++) {
+                        let p2 = particles[j], d = Math.hypot(p.x - p2.x, p.y - p2.y);
+                        if (d < 140) {
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y);
+                            ctx.strokeStyle = `rgba(212, 175, 55, ${0.38 * (1 - d / 140)})`;
+                            ctx.lineWidth = 1.05; ctx.stroke();
+                        }
+                    }
+                    if (mouse.x !== null) {
+                        let md = Math.hypot(p.x - mouse.x, p.y - mouse.y);
+                        if (md < 195) {
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y);
+                            ctx.strokeStyle = `rgba(255, 215, 70, ${0.88 * (1 - md / 195)})`;
+                            ctx.lineWidth = 1.75; ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
+    </script>
+    
+    <!-- Phase 1 Spotlight Integration -->
+    <script type="module" src="palette.js"></script>
+</body>
+</html>

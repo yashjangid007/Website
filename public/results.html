@@ -3,17 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Official Results | Yash Jangid</title>
+    <title>Official MUN Results | Yash Jangid</title>
     <link rel="icon" type="image/jpeg" href="yash.jpg">
-    <link rel="stylesheet" href="style.css?v=4.0">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css?v=4.2">
     <style>
-        .search-bar { width: 100%; max-width: 400px; padding: 10px 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color:#fff; border-radius: 6px; font-size: 0.9rem; font-family: inherit; transition: all 0.3s; }
-        .search-bar:focus { outline: none; border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.2); }
-        .table-responsive { width: 100%; overflow-x: auto; margin-bottom: 10px; border-radius: 6px; }
+        .master-search-box {
+            max-width: 720px;
+            margin: 0 auto 30px auto;
+            position: relative;
+        }
+        .master-search-input {
+            width: 100%;
+            padding: 15px 22px !important;
+            border-radius: 30px !important;
+            border: 1px solid var(--accent-gold) !important;
+            background: rgba(10, 22, 32, 0.9) !important;
+            font-size: 1rem !important;
+            color: #fff !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(212,175,55,0.15) !important;
+        }
+        .event-tabs { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px; }
+        .event-tab-btn {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.25s;
+        }
+        .event-tab-btn:hover, .event-tab-btn.active {
+            background: var(--accent-gold);
+            color: #000;
+            font-weight: 700;
+            border-color: var(--accent-gold);
+        }
+        .results-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid rgba(212,175,55,0.3); background: rgba(8, 16, 24, 0.85); }
+        table.results-table { width: 100%; border-collapse: collapse; text-align: left; }
+        table.results-table th { background: rgba(212,175,55,0.18); color: var(--accent-gold); padding: 14px 16px; font-weight: 700; border-bottom: 1px solid rgba(212,175,55,0.35); white-space: nowrap; }
+        table.results-table td { padding: 13px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); color: var(--text-main); font-size: 0.93rem; }
+        table.results-table tbody tr { cursor: pointer; transition: background 0.15s ease; }
+        table.results-table tbody tr:hover { background: rgba(212, 175, 55, 0.15) !important; }
+
+        /* Digital Delegate Scorecard Modal */
+        .scorecard-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(4, 9, 14, 0.86);
+            backdrop-filter: blur(10px);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .scorecard-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+        .scorecard-box {
+            width: 100%;
+            max-width: 540px;
+            background: linear-gradient(155deg, #0b1721 0%, #132736 100%);
+            border: 2px solid var(--accent-gold);
+            border-radius: 18px;
+            padding: 32px 28px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.9), 0 0 35px rgba(212,175,55,0.28);
+            position: relative;
+        }
+        .sc-metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .sc-metric {
+            background: rgba(0,0,0,0.38);
+            border: 1px solid rgba(212,175,55,0.28);
+            border-radius: 10px;
+            padding: 12px;
+        }
+        .sc-metric-label { font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .sc-metric-val { font-size: 1.08rem; font-weight: 700; color: var(--accent-gold); margin-top: 4px; word-break: break-word; }
     </style>
 </head>
 <body>
     <canvas id="bg-canvas-particles"></canvas>
+
+    <!-- CLICKABLE DELEGATE SCORECARD MODAL -->
+    <div id="scorecard-modal" class="scorecard-overlay" onclick="window.closeScorecard()">
+        <div class="scorecard-box" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <span style="background:rgba(212,175,55,0.18); color:var(--accent-gold); border:1px solid var(--accent-gold); padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; letter-spacing:0.6px;">OFFICIAL DELEGATE SCORECARD</span>
+                <span style="cursor:pointer; font-size:1.5rem; color:var(--text-muted); line-height:1;" onclick="window.closeScorecard()">&times;</span>
+            </div>
+            <h2 id="sc-title" style="margin:14px 0 4px 0; font-size:1.75rem; color:#fff;">Delegate Name</h2>
+            <p id="sc-event" style="margin:0; color:var(--accent-gold); font-weight:600; font-size:0.95rem;">Event Name</p>
+            
+            <div id="sc-metrics" class="sc-metric-grid"></div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.1); padding-top:14px; margin-top:10px; font-size:0.78rem; color:var(--text-muted);">
+                <span>Verified • yash-jangid.web.app</span>
+                <span> Secretariat Archive</span>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:18px; flex-wrap:wrap;">
+                <button onclick="window.downloadScorecardPNG()" style="flex:1;">📸 Download Scorecard (.PNG)</button>
+                <button class="secondary-btn" onclick="window.closeScorecard()">Close</button>
+            </div>
+        </div>
+    </div>
 
     <nav class="navbar">
         <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')">☰</button>
@@ -33,62 +130,259 @@
     </nav>
 
     <section class="content-section">
-        <div style="text-align: center;">
-            <h1 style="font-size: 3rem; margin-bottom: 10px;">Official MUN Results</h1>
-            <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 40px; font-weight: 500;">
-                Comprehensive directory of delegation portfolios, scores, and evaluations.
+        <div style="text-align: center; margin-bottom: 25px;">
+            <h1 style="font-size: 3rem; margin-bottom: 10px;">Official MUN Marksheets</h1>
+            <p style="color: var(--text-muted); font-size: 1.05rem;">
+                Search across all conferences simultaneously or click any delegate row to generate a shareable Digital Scorecard.
             </p>
         </div>
-        <div id="dynamic-results-container"><p style="text-align:center;">Synchronizing with secure database...</p></div>
+
+        <!-- MASTER GLOBAL DELEGATE SEARCH -->
+        <div class="master-search-box">
+            <input type="text" id="global-delegate-search" class="master-search-input" placeholder="🔍 Global Search: Type a delegate name, country, portfolio, or award across all MUNs...">
+        </div>
+
+        <!-- EVENT SELECTOR TABS -->
+        <div id="event-tabs-container" class="event-tabs"></div>
+
+        <!-- RESULTS TABLE AREA -->
+        <div id="results-display-area">
+            <p style="text-align: center; color: var(--text-muted);">Synchronizing official marksheets...</p>
+        </div>
     </section>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
-        const db = getFirestore(initializeApp(firebaseConfig));
+        const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        window.filterTable = function(inputElement) {
-            const filter = inputElement.value.toUpperCase();
-            const tableBody = inputElement.nextElementSibling.querySelector("tbody");
-            const trs = tableBody.getElementsByTagName("tr");
-            for (let i = 0; i < trs.length; i++) {
-                const tds = trs[i].getElementsByTagName("td");
-                let matchFound = false;
-                for (let j = 0; j < tds.length; j++) {
-                    if (tds[j].innerText.toUpperCase().indexOf(filter) > -1) { matchFound = true; break; }
-                }
-                trs[i].style.display = matchFound ? "" : "none";
-            }
+        let publishedEvents = [];
+        let activeEventId = null;
+        let activeScorecardData = null;
+
+        function escapeHTML(str) {
+            return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+        }
+
+        window.selectEventTab = function(evId) {
+            activeEventId = evId;
+            document.getElementById('global-delegate-search').value = '';
+            renderTabsAndTable();
         };
 
-        onSnapshot(collection(db, "mun_events"), (eventsSnapshot) => {
-            const container = document.getElementById("dynamic-results-container"); container.innerHTML = ""; 
-            let eventsArray = []; eventsSnapshot.forEach((doc) => { eventsArray.push({ id: doc.id, ...doc.data() }); });
-            eventsArray.sort((a, b) => ((a.orderIndex || 0) - (b.orderIndex || 0)) || a.id.localeCompare(b.id));
-            let publicEventsCount = 0;
-            eventsArray.forEach((data) => {
-                if (data.isPublished === false) return;
-                publicEventsCount++; const card = document.createElement('div'); card.className = 'card'; card.style.marginTop = '25px';
-                let html = `<h3 style="margin-bottom: 15px; color: var(--accent-gold);">${data.displayName}</h3>`;
-                if (data.excelData && data.excelData.length > 0) {
-                    const headers = data.excelData[0].rowData, rows = data.excelData.slice(1), highlights = data.highlights || [];
-                    let highlightedColIndexes = [];
-                    highlights.forEach(hl => { if (hl.type === 'column') { const colIdx = headers.findIndex(h => h.toLowerCase() === hl.target.toLowerCase()); if (colIdx !== -1) highlightedColIndexes.push({ index: colIdx, color: hl.color }); } });
-                    html += `<input type="text" class="search-bar" placeholder="Search delegates or scores..." onkeyup="filterTable(this)">`;
-                    html += `<div class="table-responsive"><table><thead><tr>`;
-                    headers.forEach((headerText, colIdx) => { let thStyle = ""; highlightedColIndexes.forEach(hl => { if (hl.index === colIdx) thStyle = `style="background-color: ${hl.color}; color: #000;"`; }); html += `<th ${thStyle}>${headerText}</th>`; });
-                    html += `</tr></thead><tbody>`;
-                    rows.forEach((rowObj, rowIdx) => {
-                        let rowBgColor = ""; highlights.forEach(hl => { if (hl.type === 'row' && parseInt(hl.target) === (rowIdx + 1)) rowBgColor = `background-color: ${hl.color}; color: #000;`; }); html += `<tr style="${rowBgColor}">`;
-                        for (let i = 0; i < headers.length; i++) { let cellStyle = ""; highlights.forEach(hl => { if (hl.type === 'column' && headers.findIndex(h => h.toLowerCase() === hl.target.toLowerCase()) === i && !rowBgColor) { cellStyle = `style="background-color: ${hl.color}; color: #000;"`; } }); html += `<td ${cellStyle}>${rowObj.rowData[i] !== undefined ? rowObj.rowData[i] : ''}</td>`; }
-                        html += `</tr>`;
-                    }); html += `</tbody></table></div>`;
-                } else { html += `<p style="color: var(--text-muted); font-style: italic;">Data pending synchronization.</p>`; }
-                card.innerHTML = html; container.appendChild(card);
+        window.openScorecard = function(eventName, headers, rowCells) {
+            activeScorecardData = { eventName, headers, rowCells };
+            document.getElementById('sc-title').innerText = rowCells[0] || "Delegate Record";
+            document.getElementById('sc-event').innerText = eventName;
+
+            const metricsEl = document.getElementById('sc-metrics');
+            metricsEl.innerHTML = headers.map((h, i) => `
+                <div class="sc-metric">
+                    <div class="sc-metric-label">${escapeHTML(h || `Field ${i+1}`)}</div>
+                    <div class="sc-metric-val">${escapeHTML(rowCells[i] !== undefined && rowCells[i] !== "" ? rowCells[i] : "—")}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('scorecard-modal').classList.add('open');
+        };
+
+        window.closeScorecard = function() {
+            document.getElementById('scorecard-modal').classList.remove('open');
+        };
+
+        // 1-Click Canvas Scorecard PNG Generator
+        window.downloadScorecardPNG = function() {
+            if (!activeScorecardData) return;
+            const { eventName, headers, rowCells } = activeScorecardData;
+            const canvas = document.createElement('canvas');
+            canvas.width = 900;
+            canvas.height = 560;
+            const ctx = canvas.getContext('2d');
+
+            const grad = ctx.createLinearGradient(0, 0, 900, 560);
+            grad.addColorStop(0, '#09131c');
+            grad.addColorStop(1, '#152a38');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 900, 560);
+
+            ctx.strokeStyle = '#d4af37';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(20, 20, 860, 520);
+
+            ctx.fillStyle = '#d4af37';
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillText('OFFICIAL MUN DELEGATE SCORECARD', 55, 70);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 38px serif';
+            ctx.fillText(String(rowCells[0] || 'Delegate').slice(0, 36), 55, 125);
+
+            ctx.fillStyle = '#d4af37';
+            ctx.font = '600 22px sans-serif';
+            ctx.fillText(String(eventName), 55, 162);
+
+            const cols = 3;
+            const boxW = 248, boxH = 92, startX = 55, startY = 195, gapX = 22, gapY = 18;
+            headers.slice(0, 9).forEach((h, idx) => {
+                const r = Math.floor(idx / cols);
+                const c = idx % cols;
+                const x = startX + c * (boxW + gapX);
+                const y = startY + r * (boxH + gapY);
+
+                ctx.fillStyle = 'rgba(0,0,0,0.45)';
+                ctx.fillRect(x, y, boxW, boxH);
+                ctx.strokeStyle = 'rgba(212,175,55,0.45)';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(x, y, boxW, boxH);
+
+                ctx.fillStyle = '#9ab0bf';
+                ctx.font = '14px sans-serif';
+                ctx.fillText(String(h || '').toUpperCase().slice(0, 26), x + 14, y + 30);
+
+                ctx.fillStyle = '#d4af37';
+                ctx.font = 'bold 22px sans-serif';
+                ctx.fillText(String(rowCells[idx] ?? '—').slice(0, 20), x + 14, y + 66);
             });
-            if (publicEventsCount === 0) container.innerHTML = "<p style='text-align:center;'>No finalized marksheets available yet.</p>";
+
+            ctx.fillStyle = '#8fa3b0';
+            ctx.font = '15px sans-serif';
+            ctx.fillText('Verified Secretariat Record • yash-jangid.web.app', 55, 512);
+
+            const link = document.createElement('a');
+            link.download = `Scorecard_${String(rowCells[0] || 'Delegate').replace(/[^a-z0-9]/gi, '_')}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        };
+
+        function renderTabsAndTable() {
+            const tabsBox = document.getElementById('event-tabs-container');
+            const displayArea = document.getElementById('results-display-area');
+            const q = document.getElementById('global-delegate-search').value.trim().toLowerCase();
+
+            tabsBox.innerHTML = publishedEvents.map(ev => `
+                <button class="event-tab-btn ${ (!q && ev.id === activeEventId) ? 'active' : '' }" onclick="window.selectEventTab('${ev.id}')">
+                    ${escapeHTML(ev.displayName)}
+                </button>
+            `).join('');
+
+            if (publishedEvents.length === 0) {
+                displayArea.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">No published marksheets available right now.</div>`;
+                return;
+            }
+
+            // GLOBAL CROSS-EVENT SEARCH MODE
+            if (q) {
+                let globalMatches = [];
+                publishedEvents.forEach(ev => {
+                    if (!Array.isArray(ev.excelData) || ev.excelData.length < 2) return;
+                    const headers = ev.excelData[0].rowData || [];
+                    ev.excelData.slice(1).forEach((rowObj) => {
+                        const cells = rowObj.rowData || [];
+                        if (cells.some(c => String(c).toLowerCase().includes(q)) || ev.displayName.toLowerCase().includes(q)) {
+                            globalMatches.push({ ev, headers, cells });
+                        }
+                    });
+                });
+
+                if (globalMatches.length === 0) {
+                    displayArea.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">No matching delegate records found across any MUN conference for "<strong>${escapeHTML(q)}</strong>".</div>`;
+                    return;
+                }
+
+                displayArea.innerHTML = `
+                    <p style="color:var(--accent-gold); margin-bottom:12px; font-weight:600;">Showing ${globalMatches.length} matching delegate record(s) across all conferences (Click any row for Digital Scorecard):</p>
+                    <div class="results-table-wrap">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Conference</th>
+                                    <th>Primary Identifier</th>
+                                    <th>Details & Scores</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${globalMatches.map((m, idx) => {
+                                    const summary = m.headers.map((h, i) => `${escapeHTML(h)}: <strong style="color:var(--accent-gold);">${escapeHTML(m.cells[i] || '-')}</strong>`).slice(1).join(' &nbsp;•&nbsp; ');
+                                    const payloadId = `gm-${idx}`;
+                                    window[payloadId] = () => window.openScorecard(m.ev.displayName, m.headers, m.cells);
+                                    return `<tr onclick="window['${payloadId}']()">
+                                        <td style="font-weight:700; color:var(--accent-gold); white-space:nowrap;">${escapeHTML(m.ev.displayName)}</td>
+                                        <td style="font-weight:600;">${escapeHTML(m.cells[0] || 'Delegate')}</td>
+                                        <td>${summary}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                return;
+            }
+
+            // SINGLE EVENT TABLE MODE
+            const currentEv = publishedEvents.find(e => e.id === activeEventId) || publishedEvents[0];
+            if (!currentEv || !Array.isArray(currentEv.excelData) || currentEv.excelData.length === 0) {
+                displayArea.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">Spreadsheet data not uploaded for this conference yet.</div>`;
+                return;
+            }
+
+            const headers = currentEv.excelData[0].rowData || [];
+            const rows = currentEv.excelData.slice(1);
+            const highlights = currentEv.highlights || [];
+
+            const colColors = {};
+            const rowColors = {};
+            highlights.forEach(h => {
+                if (h.type === 'column') colColors[String(h.target).trim().toLowerCase()] = h.color;
+                if (h.type === 'row') rowColors[String(h.target).trim()] = h.color;
+            });
+
+            displayArea.innerHTML = `
+                <div class="results-table-wrap">
+                    <table class="results-table">
+                        <thead>
+                            <tr>${headers.map(h => `<th>${escapeHTML(h)}</th>`).join('')}</tr>
+                        </thead>
+                        <tbody>
+                            ${rows.map((r, rIdx) => {
+                                const cells = r.rowData || [];
+                                const rColor = rowColors[String(rIdx + 1)] || '';
+                                const rowStyle = rColor ? `style="background:${escapeHTML(rColor)}33; border-left:4px solid ${escapeHTML(rColor)};"` : '';
+                                const fnKey = `sc_row_${rIdx}`;
+                                window[fnKey] = () => window.openScorecard(currentEv.displayName, headers, cells);
+                                return `<tr ${rowStyle} onclick="window['${fnKey}']()" title="Click to open Digital Delegate Scorecard">
+                                    ${headers.map((hName, cIdx) => {
+                                        const cColor = colColors[String(hName).trim().toLowerCase()];
+                                        const cellStyle = cColor ? `style="color:${escapeHTML(cColor)}; font-weight:700;"` : '';
+                                        return `<td ${cellStyle}>${escapeHTML(cells[cIdx] ?? '')}</td>`;
+                                    }).join('')}
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        document.getElementById('global-delegate-search').addEventListener('input', renderTabsAndTable);
+
+        onSnapshot(collection(db, "mun_events"), (snap) => {
+            publishedEvents = [];
+            snap.forEach(d => {
+                const data = d.data();
+                if (data.isPublished !== false) publishedEvents.push({ id: d.id, ...data });
+            });
+            publishedEvents.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+            if (!activeEventId && publishedEvents.length > 0) activeEventId = publishedEvents[0].id;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialQ = urlParams.get('q');
+            if (initialQ) {
+                document.getElementById('global-delegate-search').value = initialQ;
+            }
+            renderTabsAndTable();
         });
     </script>
     <script>
