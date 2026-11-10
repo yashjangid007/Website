@@ -1,0 +1,22 @@
+{
+  "name": "Yash Jangid | Official Portfolio & MUN Vault",
+  "short_name": "Yash Jangid",
+  "description": "Head Boy @ MPS Kalwar Road | Class 12 PCM | MUN Secretariat, Python Architecture & Visual Design.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#091118",
+  "theme_color": "#d4af37",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "yash.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "yash.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

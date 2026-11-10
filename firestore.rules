@@ -1,18 +1,44 @@
-rules_version='2'
-
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2026, 11, 10);
+    
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == "yashjangid.2729@gmail.com" ||
+        (request.auth.token.email != "family-vault@yashjangid.com" &&
+         exists(/databases/$(database)/documents/vault_access/$(request.auth.token.email)) &&
+         get(/databases/$(database)/documents/vault_access/$(request.auth.token.email)).data.approved == true)
+      );
+    }
+
+    // Public portfolio pages: Anyone can view, ONLY yashjangid.2729@gmail.com can edit
+    match /site_config/{doc} { allow read: if true; allow write: if isAdmin(); }
+    match /site_content/{doc} { allow read: if true; allow write: if isAdmin(); }
+    match /graphics/{doc} { allow read: if true; allow write: if isAdmin(); }
+    match /lors/{doc} { allow read: if true; allow write: if isAdmin(); }
+    match /mun_events/{doc} { allow read: if true; allow write: if isAdmin(); }
+    match /music/{doc} { allow read: if true; allow write: if isAdmin(); }
+    
+    // Contact form: Anyone can send a message, ONLY Admin can read/update/delete
+    match /inbox_messages/{doc} { allow create: if true; allow read, update, delete: if isAdmin(); }
+    
+    // Family Album: Viewable when 272930 is entered (or by Admin), editable ONLY by Admin
+    match /family/{doc} { 
+      allow read: if request.auth != null; 
+      allow write: if isAdmin(); 
+    }
+    
+    // System Audit Logs
+    match /vault_logs/{doc} { 
+      allow create: if true; 
+      allow read, update, delete: if isAdmin(); 
+    }
+    
+    // Vault Clearance Requests
+    match /vault_access/{email} { 
+      allow read: if true; 
+      allow create: if request.resource.data.approved == false; 
+      allow update, delete: if isAdmin(); 
     }
   }
 }
