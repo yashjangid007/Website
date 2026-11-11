@@ -6,11 +6,13 @@
     <title>Official MUN Results | Yash Jangid</title>
     <link rel="icon" type="image/jpeg" href="yash.jpg">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css?v=4.2">
+    <link rel="stylesheet" href="style.css?v=4.3">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <style>
         .master-search-box {
             max-width: 720px;
-            margin: 0 auto 30px auto;
+            margin: 0 auto 25px auto;
             position: relative;
         }
         .master-search-input {
@@ -23,7 +25,7 @@
             color: #fff !important;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(212,175,55,0.15) !important;
         }
-        .event-tabs { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px; }
+        .event-tabs { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; }
         .event-tab-btn {
             background: rgba(255,255,255,0.05);
             color: var(--text-muted);
@@ -40,12 +42,36 @@
             font-weight: 700;
             border-color: var(--accent-gold);
         }
+        .export-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 14px;
+            padding: 10px 16px;
+            background: rgba(10, 20, 28, 0.72);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 10px;
+        }
         .results-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid rgba(212,175,55,0.3); background: rgba(8, 16, 24, 0.85); }
         table.results-table { width: 100%; border-collapse: collapse; text-align: left; }
         table.results-table th { background: rgba(212,175,55,0.18); color: var(--accent-gold); padding: 14px 16px; font-weight: 700; border-bottom: 1px solid rgba(212,175,55,0.35); white-space: nowrap; }
         table.results-table td { padding: 13px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); color: var(--text-main); font-size: 0.93rem; }
-        table.results-table tbody tr { cursor: pointer; transition: background 0.15s ease; }
-        table.results-table tbody tr:hover { background: rgba(212, 175, 55, 0.15) !important; }
+        table.results-table tbody tr { cursor: pointer; transition: background 0.15s ease, transform 0.1s ease; }
+        table.results-table tbody tr:hover { filter: brightness(1.2); }
+
+        .winner-pill-inline {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 9px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            vertical-align: middle;
+        }
 
         /* Digital Delegate Scorecard Modal */
         .scorecard-overlay {
@@ -53,37 +79,70 @@
             position: fixed;
             inset: 0;
             z-index: 99999;
-            background: rgba(4, 9, 14, 0.86);
+            background: rgba(4, 9, 14, 0.88);
             backdrop-filter: blur(10px);
             justify-content: center;
             align-items: center;
             padding: 20px;
+            overflow-y: auto;
         }
         .scorecard-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
         .scorecard-box {
             width: 100%;
-            max-width: 540px;
+            max-width: 580px;
+            max-height: 92vh;
+            overflow-y: auto;
             background: linear-gradient(155deg, #0b1721 0%, #132736 100%);
             border: 2px solid var(--accent-gold);
             border-radius: 18px;
-            padding: 32px 28px;
+            padding: 28px 26px;
             box-shadow: 0 25px 70px rgba(0,0,0,0.9), 0 0 35px rgba(212,175,55,0.28);
             position: relative;
         }
+        .sc-winner-banner {
+            display: none;
+            margin: 14px 0 6px 0;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.92rem;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+        }
         .sc-metric-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
-            gap: 12px;
-            margin: 20px 0;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 18px 0;
+        }
+        @media (max-width: 520px) {
+            .sc-metric-grid { grid-template-columns: repeat(2, 1fr); }
         }
         .sc-metric {
-            background: rgba(0,0,0,0.38);
+            background: rgba(0,0,0,0.42);
             border: 1px solid rgba(212,175,55,0.28);
             border-radius: 10px;
-            padding: 12px;
+            padding: 11px 12px;
         }
-        .sc-metric-label { font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .sc-metric-val { font-size: 1.08rem; font-weight: 700; color: var(--accent-gold); margin-top: 4px; word-break: break-word; }
+        .sc-metric.total-highlight {
+            background: rgba(212, 175, 55, 0.16);
+            border: 1.5px solid var(--accent-gold);
+        }
+        .sc-metric-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.25; }
+        .sc-metric-val { font-size: 1.08rem; font-weight: 700; color: var(--accent-gold); margin-top: 5px; word-break: break-word; }
+
+        /* Print-Ready Official PDF Styles */
+        @media print {
+            body { background: #fff !important; color: #000 !important; }
+            #bg-canvas-particles, .navbar, .master-search-box, .event-tabs, .export-toolbar, #scorecard-modal, #cmd-palette-overlay { display: none !important; }
+            .content-section { margin: 0 !important; padding: 10px !important; max-width: 100% !important; }
+            .results-table-wrap { border: 1px solid #000 !important; background: #fff !important; overflow: visible !important; }
+            table.results-table th { background: #f0e6c8 !important; color: #000 !important; border: 1px solid #444 !important; }
+            table.results-table td { color: #000 !important; border: 1px solid #ccc !important; }
+        }
     </style>
 </head>
 <body>
@@ -91,22 +150,34 @@
 
     <!-- CLICKABLE DELEGATE SCORECARD MODAL -->
     <div id="scorecard-modal" class="scorecard-overlay" onclick="window.closeScorecard()">
-        <div class="scorecard-box" onclick="event.stopPropagation()">
+        <div id="scorecard-box-el" class="scorecard-box" onclick="event.stopPropagation()">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <span style="background:rgba(212,175,55,0.18); color:var(--accent-gold); border:1px solid var(--accent-gold); padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; letter-spacing:0.6px;">OFFICIAL DELEGATE SCORECARD</span>
+                <span id="sc-top-pill" style="background:rgba(212,175,55,0.18); color:var(--accent-gold); border:1px solid var(--accent-gold); padding:4px 12px; border-radius:20px; font-size:0.74rem; font-weight:700; letter-spacing:0.6px;">OFFICIAL DELEGATE SCORECARD</span>
                 <span style="cursor:pointer; font-size:1.5rem; color:var(--text-muted); line-height:1;" onclick="window.closeScorecard()">&times;</span>
             </div>
-            <h2 id="sc-title" style="margin:14px 0 4px 0; font-size:1.75rem; color:#fff;">Delegate Name</h2>
-            <p id="sc-event" style="margin:0; color:var(--accent-gold); font-weight:600; font-size:0.95rem;">Event Name</p>
+
+            <!-- EXCLUSIVE WINNER BANNER (HIDDEN FOR REGULAR DELEGATES) -->
+            <div id="sc-winner-banner" class="sc-winner-banner">
+                <span id="sc-award-text">🏆 BEST DELEGATE</span>
+                <span id="sc-rank-badge" style="padding:3px 10px; border-radius:20px; font-size:0.76rem; background:rgba(0,0,0,0.45);">1ST PLACE</span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:14px; margin-top:10px;">
+                <div>
+                    <h2 id="sc-title" style="margin:0 0 4px 0; font-size:1.85rem; color:#fff;">Delegate Name</h2>
+                    <p id="sc-event" style="margin:0; color:var(--accent-gold); font-weight:600; font-size:0.95rem;">Event Name</p>
+                </div>
+                <div id="sc-qr-preview" style="background:#fff; padding:5px; border-radius:8px; border:2px solid var(--accent-gold); flex-shrink:0;" title="Scan to Verify Official Record"></div>
+            </div>
             
             <div id="sc-metrics" class="sc-metric-grid"></div>
             
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.1); padding-top:14px; margin-top:10px; font-size:0.78rem; color:var(--text-muted);">
-                <span>Verified • yash-jangid.web.app</span>
-                <span> Secretariat Archive</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.1); padding-top:12px; margin-top:10px; font-size:0.76rem; color:var(--text-muted);">
+                <span id="sc-verify-id">Verified • yash-jangid.web.app</span>
+                <span>QR Verified Archive</span>
             </div>
-            <div style="display:flex; gap:10px; margin-top:18px; flex-wrap:wrap;">
-                <button onclick="window.downloadScorecardPNG()" style="flex:1;">📸 Download Scorecard (.PNG)</button>
+            <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+                <button onclick="window.downloadScorecardPNG()" style="flex:1;">📸 Download HD Scorecard + QR (.PNG)</button>
                 <button class="secondary-btn" onclick="window.closeScorecard()">Close</button>
             </div>
         </div>
@@ -133,19 +204,25 @@
         <div style="text-align: center; margin-bottom: 25px;">
             <h1 style="font-size: 3rem; margin-bottom: 10px;">Official MUN Marksheets</h1>
             <p style="color: var(--text-muted); font-size: 1.05rem;">
-                Search across all conferences simultaneously or click any delegate row to generate a shareable Digital Scorecard.
+                Search across all conferences simultaneously or click any delegate row to generate a QR-verified Digital Scorecard.
             </p>
         </div>
 
-        <!-- MASTER GLOBAL DELEGATE SEARCH -->
         <div class="master-search-box">
             <input type="text" id="global-delegate-search" class="master-search-input" placeholder="🔍 Global Search: Type a delegate name, country, portfolio, or award across all MUNs...">
         </div>
 
-        <!-- EVENT SELECTOR TABS -->
         <div id="event-tabs-container" class="event-tabs"></div>
 
-        <!-- RESULTS TABLE AREA -->
+        <!-- EXPORT & ACTION TOOLBAR -->
+        <div id="export-toolbar" class="export-toolbar" style="display:none;">
+            <span id="active-sheet-label" style="color:var(--accent-gold); font-weight:700; font-size:0.95rem;">Official Conference Marksheet</span>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="secondary-btn" onclick="window.exportCurrentExcel()" style="padding:7px 14px !important; font-size:0.8rem;">📊 Export Excel (.XLSX)</button>
+                <button class="secondary-btn" onclick="window.print()" style="padding:7px 14px !important; font-size:0.8rem;">📄 Export / Print PDF</button>
+            </div>
+        </div>
+
         <div id="results-display-area">
             <p style="text-align: center; color: var(--text-muted);">Synchronizing official marksheets...</p>
         </div>
@@ -167,24 +244,125 @@
             return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
         }
 
+        function computeVerifyHash(eventName, delegateName) {
+            const raw = `${eventName}|${delegateName}|YJ-SEC`;
+            let h = 2166136261;
+            for (let i = 0; i < raw.length; i++) {
+                h ^= raw.charCodeAt(i);
+                h = Math.imul(h, 16777619);
+            }
+            return 'YJ-' + (h >>> 0).toString(16).toUpperCase().padStart(8, '0');
+        }
+
+        function resolveAwardMeta(rowHighlight) {
+            if (!rowHighlight) return null;
+            const hex = String(rowHighlight.color || '#d4af37').trim();
+            
+            if (rowHighlight.award) {
+                return {
+                    award: rowHighlight.award,
+                    rank: rowHighlight.rank || "",
+                    color: hex
+                };
+            }
+
+            const cleanHex = hex.replace('#', '');
+            if (cleanHex.length === 6) {
+                const r = parseInt(cleanHex.slice(0,2), 16);
+                const g = parseInt(cleanHex.slice(2,4), 16);
+                const b = parseInt(cleanHex.slice(4,6), 16);
+
+                if (r > 150 && g < 85 && b < 85) {
+                    return { award: "🏆 BEST DELEGATE", rank: "1ST PLACE", color: "#ff2a38" };
+                }
+                if (r > 150 && g > 130 && b < 90) {
+                    return { award: "🥈 HIGH COMMENDATION", rank: "2ND PLACE", color: "#f5c400" };
+                }
+                if (b > 140 && r < 110) {
+                    return { award: "🥉 SPECIAL MENTION", rank: "3RD PLACE", color: "#00d4ff" };
+                }
+                if (Math.abs(r - g) < 35 && Math.abs(g - b) < 35 && r > 75) {
+                    return { award: "🎖️ VERBAL MENTION", rank: "COMMENDATION", color: "#a8b4c0" };
+                }
+            }
+            return null;
+        }
+
         window.selectEventTab = function(evId) {
             activeEventId = evId;
             document.getElementById('global-delegate-search').value = '';
             renderTabsAndTable();
         };
 
-        window.openScorecard = function(eventName, headers, rowCells) {
-            activeScorecardData = { eventName, headers, rowCells };
-            document.getElementById('sc-title').innerText = rowCells[0] || "Delegate Record";
+        // 1-Click Export Marksheet as Excel (.xlsx)
+        window.exportCurrentExcel = function() {
+            const currentEv = publishedEvents.find(e => e.id === activeEventId) || publishedEvents[0];
+            if (!currentEv || !Array.isArray(currentEv.excelData) || !window.XLSX) return;
+            const aoa = currentEv.excelData.map(r => r.rowData || []);
+            const ws = window.XLSX.utils.aoa_to_sheet(aoa);
+            const wb = window.XLSX.utils.book_new();
+            window.XLSX.utils.book_append_sheet(wb, ws, "Official_Results");
+            const safeName = String(currentEv.displayName || 'MUN_Results').replace(/[^a-z0-9]/gi, '_');
+            window.XLSX.writeFile(wb, `${safeName}_Marksheet.xlsx`);
+        };
+
+        window.openScorecard = function(eventName, headers, rowCells, awardMeta) {
+            const delName = rowCells[0] || "Delegate";
+            const verifyHash = computeVerifyHash(eventName, delName);
+            const verifyUrl = `https://yash-jangid.web.app/results.html?q=${encodeURIComponent(delName)}`;
+
+            activeScorecardData = { eventName, headers, rowCells, awardMeta, verifyHash, verifyUrl };
+            document.getElementById('sc-title').innerText = delName;
             document.getElementById('sc-event').innerText = eventName;
+            document.getElementById('sc-verify-id').innerText = `ID: ${verifyHash} • yash-jangid.web.app`;
+
+            // Render QR preview in Modal
+            const qrBox = document.getElementById('sc-qr-preview');
+            if (window.qrcode) {
+                const qr = window.qrcode(0, 'M');
+                qr.addData(verifyUrl);
+                qr.make();
+                qrBox.innerHTML = qr.createSvgTag(2, 0);
+                qrBox.style.display = 'block';
+            } else {
+                qrBox.style.display = 'none';
+            }
+
+            const boxEl = document.getElementById('scorecard-box-el');
+            const bannerEl = document.getElementById('sc-winner-banner');
+            const awardTextEl = document.getElementById('sc-award-text');
+            const rankBadgeEl = document.getElementById('sc-rank-badge');
+
+            if (awardMeta && awardMeta.award) {
+                bannerEl.style.display = 'flex';
+                bannerEl.style.background = `${awardMeta.color}28`;
+                bannerEl.style.border = `1.5px solid ${awardMeta.color}`;
+                bannerEl.style.color = awardMeta.color;
+                boxEl.style.borderColor = awardMeta.color;
+                awardTextEl.innerText = awardMeta.award;
+                if (awardMeta.rank) {
+                    rankBadgeEl.style.display = 'inline-block';
+                    rankBadgeEl.innerText = awardMeta.rank;
+                    rankBadgeEl.style.color = '#fff';
+                    rankBadgeEl.style.border = `1px solid ${awardMeta.color}`;
+                } else {
+                    rankBadgeEl.style.display = 'none';
+                }
+            } else {
+                bannerEl.style.display = 'none';
+                boxEl.style.borderColor = 'var(--accent-gold)';
+            }
 
             const metricsEl = document.getElementById('sc-metrics');
-            metricsEl.innerHTML = headers.map((h, i) => `
-                <div class="sc-metric">
-                    <div class="sc-metric-label">${escapeHTML(h || `Field ${i+1}`)}</div>
-                    <div class="sc-metric-val">${escapeHTML(rowCells[i] !== undefined && rowCells[i] !== "" ? rowCells[i] : "—")}</div>
-                </div>
-            `).join('');
+            metricsEl.innerHTML = headers.map((h, i) => {
+                const isTotal = String(h).trim().toLowerCase().includes('total');
+                return `
+                    <div class="sc-metric ${isTotal ? 'total-highlight' : ''}">
+                        <div class="sc-metric-label">${escapeHTML(h || `Field ${i+1}`)}</div>
+                        <div class="sc-metric-val">${escapeHTML(rowCells[i] !== undefined && rowCells[i] !== "" ? rowCells[i] : "—")}</div>
+                    </div>
+                `;
+            }).join('');
 
             document.getElementById('scorecard-modal').classList.add('open');
         };
@@ -193,63 +371,177 @@
             document.getElementById('scorecard-modal').classList.remove('open');
         };
 
-        // 1-Click Canvas Scorecard PNG Generator
+        function drawRoundedRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        // 2x Retina Dynamic-Height Scorecard PNG Generator with Vector QR Verification Code
         window.downloadScorecardPNG = function() {
             if (!activeScorecardData) return;
-            const { eventName, headers, rowCells } = activeScorecardData;
-            const canvas = document.createElement('canvas');
-            canvas.width = 900;
-            canvas.height = 560;
-            const ctx = canvas.getContext('2d');
+            const { eventName, headers, rowCells, awardMeta, verifyHash, verifyUrl } = activeScorecardData;
 
-            const grad = ctx.createLinearGradient(0, 0, 900, 560);
-            grad.addColorStop(0, '#09131c');
-            grad.addColorStop(1, '#152a38');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, 900, 560);
-
-            ctx.strokeStyle = '#d4af37';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(20, 20, 860, 520);
-
-            ctx.fillStyle = '#d4af37';
-            ctx.font = 'bold 18px sans-serif';
-            ctx.fillText('OFFICIAL MUN DELEGATE SCORECARD', 55, 70);
-
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 38px serif';
-            ctx.fillText(String(rowCells[0] || 'Delegate').slice(0, 36), 55, 125);
-
-            ctx.fillStyle = '#d4af37';
-            ctx.font = '600 22px sans-serif';
-            ctx.fillText(String(eventName), 55, 162);
-
+            const scale = 2;
+            const W = 960;
             const cols = 3;
-            const boxW = 248, boxH = 92, startX = 55, startY = 195, gapX = 22, gapY = 18;
-            headers.slice(0, 9).forEach((h, idx) => {
+            const totalRows = Math.ceil(headers.length / cols);
+            const hasWinner = Boolean(awardMeta && awardMeta.award);
+
+            const headerAreaH = hasWinner ? 250 : 190;
+            const boxH = 88;
+            const gapY = 16;
+            const gridH = totalRows * boxH + Math.max(0, totalRows - 1) * gapY;
+            const footerH = 78;
+            const H = headerAreaH + gridH + footerH;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = W * scale;
+            canvas.height = H * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(scale, scale);
+
+            // Background Gradient
+            const grad = ctx.createLinearGradient(0, 0, W, H);
+            grad.addColorStop(0, '#08121b');
+            grad.addColorStop(1, '#122636');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W, H);
+
+            const accentColor = hasWinner ? awardMeta.color : '#d4af37';
+
+            // Outer Border
+            ctx.strokeStyle = accentColor;
+            ctx.lineWidth = 3.5;
+            drawRoundedRect(ctx, 22, 22, W - 44, H - 44, 16);
+            ctx.stroke();
+
+            // Top Subtitle Pill
+            ctx.fillStyle = '#d4af37';
+            ctx.font = 'bold 15px "Segoe UI", sans-serif';
+            ctx.fillText('OFFICIAL MUN DELEGATE SCORECARD', 55, 66);
+
+            let currentY = 92;
+
+            // Exclusive Winner Ribbon
+            if (hasWinner) {
+                drawRoundedRect(ctx, 55, currentY - 12, W - 215, 48, 10);
+                ctx.fillStyle = accentColor + '26';
+                ctx.fill();
+                ctx.strokeStyle = accentColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = accentColor;
+                ctx.font = 'bold 20px "Segoe UI", sans-serif';
+                ctx.fillText(String(awardMeta.award).toUpperCase(), 75, currentY + 19);
+
+                if (awardMeta.rank) {
+                    const rankTxt = String(awardMeta.rank).toUpperCase();
+                    ctx.font = 'bold 16px "Segoe UI", sans-serif';
+                    const txtW = ctx.measureText(rankTxt).width;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(rankTxt, W - 180 - txtW, currentY + 18);
+                }
+                currentY += 64;
+            } else {
+                currentY += 10;
+            }
+
+            // Portfolio / Delegate Title
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 38px Georgia, serif';
+            ctx.fillText(String(rowCells[0] || 'Delegate').slice(0, 32), 55, currentY + 22);
+
+            // Event Subtitle
+            ctx.fillStyle = '#d4af37';
+            ctx.font = '600 20px "Segoe UI", sans-serif';
+            ctx.fillText(String(eventName), 55, currentY + 54);
+
+            // Draw Scannable QR Code in Top-Right Header Corner
+            if (window.qrcode) {
+                try {
+                    const qr = window.qrcode(0, 'M');
+                    qr.addData(verifyUrl);
+                    qr.make();
+                    const count = qr.getModuleCount();
+                    const qrBoxSize = 104;
+                    const qrX = W - 55 - qrBoxSize;
+                    const qrY = 52;
+
+                    drawRoundedRect(ctx, qrX - 6, qrY - 6, qrBoxSize + 12, qrBoxSize + 12, 8);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                    ctx.strokeStyle = accentColor;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    const cellS = qrBoxSize / count;
+                    ctx.fillStyle = '#08121b';
+                    for (let r = 0; r < count; r++) {
+                        for (let c = 0; c < count; c++) {
+                            if (qr.isDark(r, c)) {
+                                ctx.fillRect(qrX + c * cellS, qrY + r * cellS, Math.ceil(cellS), Math.ceil(cellS));
+                            }
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            // Metrics Grid (Draws ALL columns dynamically)
+            const startX = 55;
+            const startY = headerAreaH;
+            const gapX = 18;
+            const boxW = (W - 110 - gapX * (cols - 1)) / cols;
+
+            headers.forEach((h, idx) => {
                 const r = Math.floor(idx / cols);
                 const c = idx % cols;
                 const x = startX + c * (boxW + gapX);
                 const y = startY + r * (boxH + gapY);
+                const isTotal = String(h).trim().toLowerCase().includes('total');
 
-                ctx.fillStyle = 'rgba(0,0,0,0.45)';
-                ctx.fillRect(x, y, boxW, boxH);
-                ctx.strokeStyle = 'rgba(212,175,55,0.45)';
-                ctx.lineWidth = 1.5;
-                ctx.strokeRect(x, y, boxW, boxH);
+                drawRoundedRect(ctx, x, y, boxW, boxH, 10);
+                ctx.fillStyle = isTotal ? 'rgba(212, 175, 55, 0.18)' : 'rgba(0, 0, 0, 0.45)';
+                ctx.fill();
+                ctx.strokeStyle = isTotal ? '#d4af37' : 'rgba(212, 175, 55, 0.35)';
+                ctx.lineWidth = isTotal ? 2.2 : 1.3;
+                ctx.stroke();
 
-                ctx.fillStyle = '#9ab0bf';
-                ctx.font = '14px sans-serif';
-                ctx.fillText(String(h || '').toUpperCase().slice(0, 26), x + 14, y + 30);
+                ctx.fillStyle = isTotal ? '#f5d76e' : '#9ab0bf';
+                ctx.font = 'bold 13px "Segoe UI", sans-serif';
+                ctx.fillText(String(h || '').toUpperCase().slice(0, 28), x + 16, y + 30);
 
-                ctx.fillStyle = '#d4af37';
-                ctx.font = 'bold 22px sans-serif';
-                ctx.fillText(String(rowCells[idx] ?? '—').slice(0, 20), x + 14, y + 66);
+                ctx.fillStyle = isTotal ? '#ffffff' : '#d4af37';
+                ctx.font = 'bold 24px "Segoe UI", sans-serif';
+                const valStr = rowCells[idx] !== undefined && rowCells[idx] !== "" ? String(rowCells[idx]) : '—';
+                ctx.fillText(valStr.slice(0, 22), x + 16, y + 66);
             });
 
+            // Footer Bar
+            const footerY = H - 42;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(55, footerY - 22);
+            ctx.lineTo(W - 55, footerY - 22);
+            ctx.stroke();
+
             ctx.fillStyle = '#8fa3b0';
-            ctx.font = '15px sans-serif';
-            ctx.fillText('Verified Secretariat Record • yash-jangid.web.app', 55, 512);
+            ctx.font = '15px "Segoe UI", sans-serif';
+            ctx.fillText(`Verification ID: ${verifyHash} • yash-jangid.web.app`, 55, footerY);
+
+            const rightFoot = 'Scan QR to Verify Official Marksheet';
+            const rfW = ctx.measureText(rightFoot).width;
+            ctx.fillText(rightFoot, W - 55 - rfW, footerY);
 
             const link = document.createElement('a');
             link.download = `Scorecard_${String(rowCells[0] || 'Delegate').replace(/[^a-z0-9]/gi, '_')}.png`;
@@ -260,6 +552,8 @@
         function renderTabsAndTable() {
             const tabsBox = document.getElementById('event-tabs-container');
             const displayArea = document.getElementById('results-display-area');
+            const exportBar = document.getElementById('export-toolbar');
+            const sheetLabel = document.getElementById('active-sheet-label');
             const q = document.getElementById('global-delegate-search').value.trim().toLowerCase();
 
             tabsBox.innerHTML = publishedEvents.map(ev => `
@@ -269,20 +563,28 @@
             `).join('');
 
             if (publishedEvents.length === 0) {
+                exportBar.style.display = 'none';
                 displayArea.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">No published marksheets available right now.</div>`;
                 return;
             }
 
             // GLOBAL CROSS-EVENT SEARCH MODE
             if (q) {
+                exportBar.style.display = 'none';
                 let globalMatches = [];
                 publishedEvents.forEach(ev => {
                     if (!Array.isArray(ev.excelData) || ev.excelData.length < 2) return;
                     const headers = ev.excelData[0].rowData || [];
-                    ev.excelData.slice(1).forEach((rowObj) => {
+                    const rowMap = {};
+                    (ev.highlights || []).forEach(h => {
+                        if (h.type === 'row') rowMap[String(h.target).trim()] = h;
+                    });
+                    ev.excelData.slice(1).forEach((rowObj, rIdx) => {
                         const cells = rowObj.rowData || [];
-                        if (cells.some(c => String(c).toLowerCase().includes(q)) || ev.displayName.toLowerCase().includes(q)) {
-                            globalMatches.push({ ev, headers, cells });
+                        const awardMeta = resolveAwardMeta(rowMap[String(rIdx + 1)]);
+                        const awardStr = awardMeta ? `${awardMeta.award} ${awardMeta.rank}` : '';
+                        if (cells.some(c => String(c).toLowerCase().includes(q)) || ev.displayName.toLowerCase().includes(q) || awardStr.toLowerCase().includes(q)) {
+                            globalMatches.push({ ev, headers, cells, awardMeta });
                         }
                     });
                 });
@@ -293,24 +595,23 @@
                 }
 
                 displayArea.innerHTML = `
-                    <p style="color:var(--accent-gold); margin-bottom:12px; font-weight:600;">Showing ${globalMatches.length} matching delegate record(s) across all conferences (Click any row for Digital Scorecard):</p>
+                    <p style="color:var(--accent-gold); margin-bottom:12px; font-weight:600;">Showing ${globalMatches.length} matching delegate record(s) across all conferences (Click any row for QR Scorecard):</p>
                     <div class="results-table-wrap">
                         <table class="results-table">
                             <thead>
                                 <tr>
                                     <th>Conference</th>
-                                    <th>Primary Identifier</th>
+                                    <th>Portfolio / Delegate</th>
                                     <th>Details & Scores</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${globalMatches.map((m, idx) => {
                                     const summary = m.headers.map((h, i) => `${escapeHTML(h)}: <strong style="color:var(--accent-gold);">${escapeHTML(m.cells[i] || '-')}</strong>`).slice(1).join(' &nbsp;•&nbsp; ');
-                                    const payloadId = `gm-${idx}`;
-                                    window[payloadId] = () => window.openScorecard(m.ev.displayName, m.headers, m.cells);
-                                    return `<tr onclick="window['${payloadId}']()">
+                                    const badgeHTML = m.awardMeta ? `<span class="winner-pill-inline" style="background:${m.awardMeta.color}33; color:${m.awardMeta.color}; border:1px solid ${m.awardMeta.color};">${escapeHTML(m.awardMeta.rank ? m.awardMeta.rank + ' • ' + m.awardMeta.award : m.awardMeta.award)}</span>` : '';
+                                    return `<tr data-gidx="${idx}" class="global-match-row">
                                         <td style="font-weight:700; color:var(--accent-gold); white-space:nowrap;">${escapeHTML(m.ev.displayName)}</td>
-                                        <td style="font-weight:600;">${escapeHTML(m.cells[0] || 'Delegate')}</td>
+                                        <td style="font-weight:600;">${escapeHTML(m.cells[0] || 'Delegate')} ${badgeHTML}</td>
                                         <td>${summary}</td>
                                     </tr>`;
                                 }).join('')}
@@ -318,25 +619,36 @@
                         </table>
                     </div>
                 `;
+
+                displayArea.querySelectorAll('.global-match-row').forEach(tr => {
+                    tr.addEventListener('click', () => {
+                        const m = globalMatches[parseInt(tr.dataset.gidx, 10)];
+                        if (m) window.openScorecard(m.ev.displayName, m.headers, m.cells, m.awardMeta);
+                    });
+                });
                 return;
             }
 
             // SINGLE EVENT TABLE MODE
             const currentEv = publishedEvents.find(e => e.id === activeEventId) || publishedEvents[0];
             if (!currentEv || !Array.isArray(currentEv.excelData) || currentEv.excelData.length === 0) {
+                exportBar.style.display = 'none';
                 displayArea.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">Spreadsheet data not uploaded for this conference yet.</div>`;
                 return;
             }
+
+            exportBar.style.display = 'flex';
+            sheetLabel.innerText = `📋 ${currentEv.displayName} — Official Marksheet (${currentEv.excelData.length - 1} Portfolios)`;
 
             const headers = currentEv.excelData[0].rowData || [];
             const rows = currentEv.excelData.slice(1);
             const highlights = currentEv.highlights || [];
 
             const colColors = {};
-            const rowColors = {};
+            const rowHighlights = {};
             highlights.forEach(h => {
                 if (h.type === 'column') colColors[String(h.target).trim().toLowerCase()] = h.color;
-                if (h.type === 'row') rowColors[String(h.target).trim()] = h.color;
+                if (h.type === 'row') rowHighlights[String(h.target).trim()] = h;
             });
 
             displayArea.innerHTML = `
@@ -348,15 +660,18 @@
                         <tbody>
                             ${rows.map((r, rIdx) => {
                                 const cells = r.rowData || [];
-                                const rColor = rowColors[String(rIdx + 1)] || '';
+                                const rH = rowHighlights[String(rIdx + 1)];
+                                const rColor = rH ? rH.color : '';
+                                const awardMeta = resolveAwardMeta(rH);
                                 const rowStyle = rColor ? `style="background:${escapeHTML(rColor)}33; border-left:4px solid ${escapeHTML(rColor)};"` : '';
-                                const fnKey = `sc_row_${rIdx}`;
-                                window[fnKey] = () => window.openScorecard(currentEv.displayName, headers, cells);
-                                return `<tr ${rowStyle} onclick="window['${fnKey}']()" title="Click to open Digital Delegate Scorecard">
+                                const badgeHTML = awardMeta ? `<span class="winner-pill-inline" style="background:${escapeHTML(awardMeta.color)}33; color:${escapeHTML(awardMeta.color)}; border:1px solid ${escapeHTML(awardMeta.color)};">${escapeHTML(awardMeta.rank ? awardMeta.rank + ' • ' + awardMeta.award : awardMeta.award)}</span>` : '';
+
+                                return `<tr ${rowStyle} data-ridx="${rIdx}" class="event-delegate-row" title="Click to open QR-Verified Digital Scorecard">
                                     ${headers.map((hName, cIdx) => {
                                         const cColor = colColors[String(hName).trim().toLowerCase()];
                                         const cellStyle = cColor ? `style="color:${escapeHTML(cColor)}; font-weight:700;"` : '';
-                                        return `<td ${cellStyle}>${escapeHTML(cells[cIdx] ?? '')}</td>`;
+                                        const cellContent = escapeHTML(cells[cIdx] ?? '');
+                                        return `<td ${cellStyle}>${cIdx === 0 ? (cellContent + badgeHTML) : cellContent}</td>`;
                                     }).join('')}
                                 </tr>`;
                             }).join('')}
@@ -364,6 +679,16 @@
                     </table>
                 </div>
             `;
+
+            displayArea.querySelectorAll('.event-delegate-row').forEach(tr => {
+                tr.addEventListener('click', () => {
+                    const rIdx = parseInt(tr.dataset.ridx, 10);
+                    const cells = (rows[rIdx] && rows[rIdx].rowData) || [];
+                    const rH = rowHighlights[String(rIdx + 1)];
+                    const awardMeta = resolveAwardMeta(rH);
+                    window.openScorecard(currentEv.displayName, headers, cells, awardMeta);
+                });
+            });
         }
 
         document.getElementById('global-delegate-search').addEventListener('input', renderTabsAndTable);
@@ -398,6 +723,7 @@
                 particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.55, vy: (Math.random() - 0.5) * 0.55, r: Math.random() * 1.9 + 0.9 });
             }
             function animate() {
+                if (document.hidden) return requestAnimationFrame(animate);
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 for (let i = 0; i < particles.length; i++) {
                     let p = particles[i];

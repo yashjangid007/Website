@@ -11,7 +11,10 @@ service cloud.firestore {
       );
     }
 
-    // Public portfolio pages: Anyone can view, ONLY yashjangid.2729@gmail.com can edit
+    // Private Admin-Only Configuration (Protects EmailJS Keys)
+    match /site_config/emailjs { allow read, write: if isAdmin(); }
+
+    // Public portfolio pages & public configs (github linker, graphics folders)
     match /site_config/{doc} { allow read: if true; allow write: if isAdmin(); }
     match /site_content/{doc} { allow read: if true; allow write: if isAdmin(); }
     match /graphics/{doc} { allow read: if true; allow write: if isAdmin(); }
@@ -19,7 +22,7 @@ service cloud.firestore {
     match /mun_events/{doc} { allow read: if true; allow write: if isAdmin(); }
     match /music/{doc} { allow read: if true; allow write: if isAdmin(); }
     
-    // Contact form: Anyone can send a message, ONLY Admin can read/update/delete
+    // Contact form: Anyone can submit, ONLY Admin can read/update/delete
     match /inbox_messages/{doc} { allow create: if true; allow read, update, delete: if isAdmin(); }
     
     // Family Album: Viewable when 272930 is entered (or by Admin), editable ONLY by Admin

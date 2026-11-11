@@ -6,7 +6,7 @@
     <title>Visual Arts & Graphics | Yash Jangid</title>
     <link rel="icon" type="image/jpeg" href="yash.jpg">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css?v=4.2">
+    <link rel="stylesheet" href="style.css?v=4.3">
     <style>
         .folders-grid {
             display: grid;
@@ -130,7 +130,13 @@
         }
 
         function normalizeFilename(rawUrl) {
-            return String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+            let s = String(rawUrl || '').trim().replace(/\\/g, '/');
+            if (/^https?:\/\//i.test(s)) return s;
+            const pubIdx = s.toLowerCase().lastIndexOf('/public/');
+            if (pubIdx !== -1) s = s.slice(pubIdx + 8);
+            const webIdx = s.toLowerCase().lastIndexOf('/yashwebsite/');
+            if (webIdx !== -1) s = s.slice(webIdx + 13);
+            return s.replace(/^\/+/, '');
         }
 
         function resolveOriginalURL(rawUrl) {
@@ -139,12 +145,14 @@
             return ghBase ? (ghBase + encodeURI(clean)) : encodeURI(clean);
         }
 
+        // Streams 300x300 WebP thumbnails directly from GitHub first so Firebase uses 0 media bandwidth
         function resolveThumbURL(item) {
             if (item.thumbData) return item.thumbData;
             const clean = normalizeFilename(item.url);
             if (/^https?:\/\//i.test(clean)) return clean;
             const baseName = clean.split('/').pop().replace(/\.[^/.]+$/, "");
-            return encodeURI(`thumbs/${baseName}.webp`);
+            const relThumb = encodeURI(`thumbs/${baseName}.webp`);
+            return ghBase ? (ghBase + relThumb) : relThumb;
         }
 
         window.openLightbox = function(url, type, fallback, caption, cat) {
@@ -192,11 +200,15 @@
                     <span class="folder-count">${counts.ALL}</span>
                 </div>
             ` + finalFolders.map(f => `
-                <div class="folder-box ${selectedFolder === f ? 'active' : ''}" onclick="window.selectFolder('${escapeHTML(f)}')">
+                <div class="folder-box ${selectedFolder === f ? 'active' : ''}" data-folder="${escapeHTML(f)}">
                     <span class="folder-title">📁 ${escapeHTML(f)}</span>
                     <span class="folder-count">${counts[f] || 0}</span>
                 </div>
             `).join('');
+
+            folderContainer.querySelectorAll('.folder-box[data-folder]').forEach(el => {
+                el.addEventListener('click', () => window.selectFolder(el.dataset.folder));
+            });
 
             const filtered = selectedFolder === 'ALL'
                 ? allGraphics
@@ -207,7 +219,7 @@
                 return;
             }
 
-            gallery.innerHTML = filtered.map(item => {
+            gallery.innerHTML = filtered.map((item, idx) => {
                 const isVid = item.type === 'video' || /\.(mp4|webm|mov)$/i.test(item.url || '');
                 const origUrl = escapeHTML(resolveOriginalURL(item.url));
                 const fallUrl = escapeHTML(encodeURI(normalizeFilename(item.url)));
@@ -220,7 +232,7 @@
                     : `<img loading="lazy" src="${thumbUrl}" data-gh="${origUrl}" data-fallback="${fallUrl}" onerror="if(this.src!==this.dataset.gh){this.src=this.dataset.gh;}else if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}" alt="${cap}">`;
 
                 return `
-                    <div class="gallery-item" onclick="window.openLightbox('${origUrl}', '${isVid ? 'video' : 'image'}', '${fallUrl}', '${cap.replace(/'/g, "\\'")}', '${cat.replace(/'/g, "\\'")}')">
+                    <div class="gallery-item" data-idx="${idx}">
                         ${mediaTag}
                         <div class="gallery-caption">
                             <span style="color:var(--accent-gold); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; display:block;">${cat}</span>
@@ -229,6 +241,21 @@
                     </div>
                 `;
             }).join('');
+
+            gallery.querySelectorAll('.gallery-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const item = filtered[parseInt(el.dataset.idx, 10)];
+                    if (!item) return;
+                    const isVid = item.type === 'video' || /\.(mp4|webm|mov)$/i.test(item.url || '');
+                    window.openLightbox(
+                        resolveOriginalURL(item.url),
+                        isVid ? 'video' : 'image',
+                        encodeURI(normalizeFilename(item.url)),
+                        item.caption || '',
+                        item.category || 'Placards'
+                    );
+                });
+            });
         }
 
         onSnapshot(doc(db, "site_config", "graphics_categories"), (snap) => {
@@ -258,6 +285,7 @@
                 particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.55, vy: (Math.random() - 0.5) * 0.55, r: Math.random() * 1.9 + 0.9 });
             }
             function animate() {
+                if (document.hidden) return requestAnimationFrame(animate);
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 for (let i = 0; i < particles.length; i++) {
                     let p = particles[i];

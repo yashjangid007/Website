@@ -11,7 +11,9 @@
     <meta property="og:url" content="https://yash-jangid.web.app">
     <meta property="og:type" content="website">
     <link rel="icon" type="image/jpeg" href="yash.jpg">
-    <link rel="stylesheet" href="style.css?v=4.0">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#d4af37">
+    <link rel="stylesheet" href="style.css?v=4.3">
     <style>
         .contact-form { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
         .contact-form input, .contact-form textarea { width: 100%; font-family: inherit; }
@@ -58,7 +60,7 @@
                     <ul class="competencies-list">
                         <li><strong>Leadership & Extracurriculars:</strong> Selected for an exclusive educational delegation to meet the Vice President of India; active in academic and cultural research projects.</li>
                         <li><strong>Diplomacy & Leadership:</strong> Extensive participation in MUNs, securing recognitions including Best Delegate, High Commendation, and Honorable Mention.</li>
-                        <li><strong>Organizational Impact:</strong> Key member of The Indian Summit Foundation, accredited by G20, Y20, & MNIT Jaipur.</li>
+                        <li><strong>Organizational Impact:</strong> Director General at The Indian Summit Foundation (Jaipur Edition 3.0), accredited by G20, Y20, & MNIT Jaipur.</li>
                         <li><strong>Creative Execution:</strong> Graphic designer and A/V editor with a strong eye for typography and visual branding.</li>
                         <li><strong>Musical Arts:</strong> Certified Grade 4 in Music by Trinity College, London.</li>
                         <li><strong>Technical Acumen:</strong> Certified in Data Science and Game Technology via IIT Madras C.O.D.E.</li>
@@ -81,21 +83,50 @@
     </section>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
-        const db = getFirestore(initializeApp(firebaseConfig));
+        const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const COOLDOWN_MS = 30000; // 30-second anti-spam cooldown
 
         document.getElementById('send-message-btn').addEventListener('click', async () => {
-            const n = document.getElementById('contact-name').value.trim(), e = document.getElementById('contact-email').value.trim(), m = document.getElementById('contact-message').value.trim(), s = document.getElementById('form-status');
-            if (!n || !e || !m) { s.style.color = "#e74c3c"; s.innerText = "Complete all fields."; return; }
-            s.style.color = "#f39c12"; s.innerText = "Transmitting...";
+            const n = document.getElementById('contact-name').value.trim();
+            const e = document.getElementById('contact-email').value.trim();
+            const m = document.getElementById('contact-message').value.trim();
+            const s = document.getElementById('form-status');
+
+            if (!n || !e || !m) {
+                s.style.color = "#e74c3c";
+                s.innerText = "Complete all fields.";
+                return;
+            }
+
+            const lastSent = parseInt(localStorage.getItem('last_msg_ts') || '0', 10);
+            const elapsed = Date.now() - lastSent;
+            if (elapsed < COOLDOWN_MS) {
+                const waitSec = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
+                s.style.color = "#e74c3c";
+                s.innerText = `Please wait ${waitSec}s before transmitting another message.`;
+                return;
+            }
+
+            s.style.color = "#f39c12";
+            s.innerText = "Transmitting...";
             try {
                 await addDoc(collection(db, "inbox_messages"), { name: n, email: e, message: m, timestamp: Date.now() });
-                s.style.color = "#2ecc71"; s.innerText = "Transmission successful.";
-                document.getElementById('contact-name').value = ''; document.getElementById('contact-email').value = ''; document.getElementById('contact-message').value = '';
-            } catch(err) { s.style.color = "#e74c3c"; s.innerText = "Transmission failed."; }
+                localStorage.setItem('last_msg_ts', Date.now().toString());
+                s.style.color = "#2ecc71";
+                s.innerText = "Transmission successful.";
+                document.getElementById('contact-name').value = '';
+                document.getElementById('contact-email').value = '';
+                document.getElementById('contact-message').value = '';
+            } catch(err) {
+                s.style.color = "#e74c3c";
+                s.innerText = "Transmission failed.";
+            }
         });
     </script>
     <script>
@@ -111,6 +142,7 @@
                 particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.55, vy: (Math.random() - 0.5) * 0.55, r: Math.random() * 1.9 + 0.9 });
             }
             function animate() {
+                if (document.hidden) return requestAnimationFrame(animate);
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 for (let i = 0; i < particles.length; i++) {
                     let p = particles[i];
