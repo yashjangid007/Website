@@ -6,47 +6,141 @@
     <title>Music & Audio Studio | Yash Jangid</title>
     <link rel="icon" type="image/jpeg" href="yash.jpg">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css?v=4.1">
+    <meta name="theme-color" content="#d4af37">
+    <link rel="stylesheet" href="style.css?v=4.3">
     <style>
-        .filter-nav { display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; }
-        .filter-btn { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.12); padding: 8px 20px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
-        .filter-btn:hover, .filter-btn.active { background: var(--accent-gold); color: #000; font-weight: 600; border-color: var(--accent-gold); }
-
-        .studio-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-        .now-playing-badge { display: inline-block; background: rgba(212, 175, 55, 0.15); color: var(--accent-gold); border: 1px solid rgba(212, 175, 55, 0.4); padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; }
-        
-        .transport-bar { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-top: 12px; }
-        .seek-slider { flex: 1; min-width: 180px; accent-color: var(--accent-gold); cursor: pointer; height: 6px; }
-        .volume-slider { width: 95px; accent-color: var(--accent-gold); cursor: pointer; height: 6px; }
-        .time-readout { font-family: Consolas, monospace; font-size: 0.88rem; color: var(--text-muted); min-width: 95px; text-align: right; }
-
-        #studio-video-stage {
-            display: none;
+        .studio-deck {
+            max-width: 860px;
+            margin: 0 auto 35px auto;
+            background: linear-gradient(145deg, rgba(10, 20, 28, 0.92), rgba(16, 32, 44, 0.92));
+            border: 1px solid rgba(212, 175, 55, 0.45);
+            border-top: 4px solid var(--accent-gold);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 25px rgba(212, 175, 55, 0.12);
+        }
+        .deck-status-pill {
+            display: inline-block;
+            background: rgba(212, 175, 55, 0.14);
+            color: var(--accent-gold);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .visualizer-box {
             width: 100%;
-            max-height: 440px;
-            border-radius: 12px;
-            border: 1px solid var(--accent-gold);
-            background: #000;
+            height: 95px;
+            background: rgba(5, 11, 16, 0.75);
+            border: 1px solid rgba(212, 175, 55, 0.22);
+            border-radius: 10px;
             margin: 18px 0;
-            box-shadow: 0 10px 35px rgba(0,0,0,0.8);
+            overflow: hidden;
         }
-
-        .track-meta { display: flex; align-items: center; gap: 16px; }
-        .track-icon {
-            width: 46px; height: 46px; border-radius: 50%;
-            background: rgba(212, 175, 55, 0.14); border: 1px solid var(--accent-gold);
-            display: flex; align-items: center; justify-content: center;
-            color: var(--accent-gold); font-size: 1.1rem; flex-shrink: 0;
+        #waveform-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
-        .track-card.playing .track-icon { background: var(--accent-gold); color: #000; box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); }
-        .track-cat-pill {
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(212,175,55,0.3);
-            color: var(--accent-gold); padding: 4px 12px; border-radius: 14px; font-size: 0.76rem; font-weight: 600;
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .seek-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+        .seek-slider {
+            flex: 1;
+            accent-color: var(--accent-gold);
+            cursor: pointer;
+            height: 6px;
+        }
+        .time-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+            min-width: 40px;
+        }
+        .track-filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            transition: 0.25s;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--accent-gold);
+            color: #000;
+            font-weight: 700;
+            border-color: var(--accent-gold);
+        }
+        .tracks-grid {
+            max-width: 860px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .track-card {
+            background: rgba(10, 20, 28, 0.78);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-left: 4px solid rgba(212, 175, 55, 0.45);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+        .track-card:hover, .track-card.playing {
+            transform: translateX(4px);
+            background: rgba(212, 175, 55, 0.14);
+            border-color: var(--accent-gold);
+            border-left: 4px solid var(--accent-gold);
+        }
+        .track-title {
+            font-size: 1.08rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+        .track-meta {
+            font-size: 0.8rem;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
 <body>
     <canvas id="bg-canvas-particles"></canvas>
+
+    <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+        <span class="lightbox-close" onclick="closeLightbox(event)">&times;</span>
+        <div id="lightbox-content-container"></div>
+    </div>
 
     <nav class="navbar">
         <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')">☰</button>
@@ -66,65 +160,57 @@
     </nav>
 
     <section class="content-section">
-        <div style="text-align: center;">
+        <div style="text-align: center; margin-bottom: 35px;">
             <h1 style="font-size: 3rem; margin-bottom: 10px;">Music & Audio Studio</h1>
-            <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 35px; font-weight: 500;">
-                Trinity College London Grade 4 Electric Keyboard Performances, Event Soundtracks & Live Mixes.
+            <p style="color: var(--text-muted); font-size: 1.05rem;">
+                Trinity College London Grade 4 Electric Keyboard Performances, Vocal Covers & Event Mixes
             </p>
         </div>
 
-        <!-- MASTER GOLD WAVEFORM DECK -->
-        <div class="music-deck">
-            <div class="studio-header">
-                <div>
-                    <span class="now-playing-badge" id="deck-badge">Standby • Gold Acoustic Engine</span>
-                    <h2 id="deck-title" style="font-size: 1.7rem; margin: 0;">Select a track below to begin playback</h2>
-                    <p id="deck-sub" style="color: var(--text-muted); font-size: 0.92rem; margin-top: 4px;">Trinity Grade 4 Electric Keyboard & Production Archive</p>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <button class="secondary-btn" onclick="prevTrack()" style="padding: 10px 16px !important;" title="Previous Track">⏮</button>
-                    <button id="play-pause-btn" onclick="togglePlay()" style="padding: 12px 26px !important; min-width: 120px;">▶ Play</button>
-                    <button class="secondary-btn" onclick="nextTrack()" style="padding: 10px 16px !important;" title="Next Track">⏭</button>
-                </div>
+        <!-- MASTER AUDIO DECK -->
+        <div class="studio-deck">
+            <span id="deck-status" class="deck-status-pill">STANDBY • GOLD ACOUSTIC ENGINE</span>
+            <h2 id="now-playing-title" style="margin: 0 0 5px 0; font-size: 1.65rem;">Select a track below to begin playback</h2>
+            <p id="now-playing-cat" style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Trinity Grade 4 Electric Keyboard & Production Archive</p>
+
+            <div class="visualizer-box">
+                <canvas id="waveform-canvas"></canvas>
             </div>
 
-            <!-- Live Gold Waveform Canvas (For Audio) -->
-            <canvas id="waveform-canvas" width="900" height="130"></canvas>
+            <div class="player-controls">
+                <button class="secondary-btn" onclick="window.prevTrack()" style="padding: 8px 14px !important;">⏮</button>
+                <button id="play-pause-btn" onclick="window.togglePlay()" style="min-width: 110px;">▶ PLAY</button>
+                <button class="secondary-btn" onclick="window.nextTrack()" style="padding: 8px 14px !important;">⏭</button>
 
-            <!-- Video Stage (Auto-switches when a Video Performance is selected) -->
-            <video id="studio-video-stage" controls playsinline></video>
-
-            <!-- Hidden Audio Element -->
-            <audio id="studio-audio" crossorigin="anonymous" preload="metadata"></audio>
-
-            <div class="transport-bar">
-                <span id="cur-time" class="time-readout" style="min-width: 45px; text-align: left;">0:00</span>
-                <input type="range" id="seek-bar" class="seek-slider" min="0" max="100" value="0" step="0.1">
-                <span id="dur-time" class="time-readout" style="min-width: 45px;">0:00</span>
-                
-                <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
-                    <span style="font-size: 0.85rem; color: var(--accent-gold);">🔊</span>
-                    <input type="range" id="vol-bar" class="volume-slider" min="0" max="1" step="0.02" value="0.9">
-                    <select id="speed-select" onchange="changeSpeed(this.value)" style="padding: 6px 10px !important; font-size: 0.8rem !important;">
-                        <option value="1">1.0x</option>
+                <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">🔊</span>
+                    <input type="range" id="vol-slider" min="0" max="1" step="0.02" value="1" style="width: 90px; accent-color: var(--accent-gold); cursor: pointer;">
+                    <select id="speed-select" style="padding: 5px 10px !important; font-size: 0.8rem; width: auto;">
+                        <option value="0.75">0.75x</option>
+                        <option value="1" selected>1.0x</option>
                         <option value="1.25">1.25x</option>
                         <option value="1.5">1.5x</option>
-                        <option value="0.85">0.85x</option>
                     </select>
                 </div>
             </div>
+
+            <div class="seek-row">
+                <span id="curr-time" class="time-label">0:00</span>
+                <input type="range" id="seek-slider" class="seek-slider" min="0" max="100" value="0">
+                <span id="dur-time" class="time-label">0:00</span>
+            </div>
         </div>
 
-        <!-- CATEGORY FILTER PILLS -->
-        <div class="filter-nav">
-            <div class="filter-btn active" onclick="filterTracks('all', this)">All Performances</div>
-            <div class="filter-btn" onclick="filterTracks('Keyboard & Trinity', this)">Keyboard & Trinity</div>
-            <div class="filter-btn" onclick="filterTracks('Event Mixes', this)">Event Audio Mixes</div>
-            <div class="filter-btn" onclick="filterTracks('Video Performance', this)">Video Performances</div>
+        <!-- CATEGORY FILTERS -->
+        <div class="track-filters">
+            <button class="filter-btn active" onclick="window.filterTracks('ALL', this)">All Tracks</button>
+            <button class="filter-btn" onclick="window.filterTracks('Keyboard & Trinity', this)">Keyboard & Trinity</button>
+            <button class="filter-btn" onclick="window.filterTracks('Event Mixes', this)">Event Mixes</button>
+            <button class="filter-btn" onclick="window.filterTracks('Video Performance', this)">Video Performances</button>
         </div>
 
-        <!-- TRACKLIST CONTAINER -->
-        <div id="tracks-container">
+        <!-- TRACKLIST -->
+        <div id="tracks-container" class="tracks-grid">
             <p style="text-align: center; color: var(--text-muted);">Synchronizing studio archive...</p>
         </div>
     </section>
@@ -138,6 +224,20 @@
         const db = getFirestore(app);
 
         let ghBase = "";
+        let allTracks = [];
+        let filteredTracks = [];
+        let currentIdx = -1;
+        let activeCategory = "ALL";
+
+        // Audio & Web Audio API Visualizer
+        const audio = new Audio();
+        audio.crossOrigin = "anonymous";
+        let audioCtx = null;
+        let analyser = null;
+        let dataArray = null;
+        let candidateQueue = [];
+        let candidateIndex = 0;
+
         try {
             const cfg = await getDoc(doc(db, "site_config", "github"));
             if (cfg.exists() && cfg.data().enabled && cfg.data().user && cfg.data().repo) {
@@ -150,270 +250,258 @@
         function escapeHTML(str) {
             return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
         }
-        function resolveOriginalURL(rawUrl) {
-            const clean = String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
-            if (/^https?:\/\//i.test(clean)) return clean;
-            return ghBase ? (ghBase + encodeURI(clean)) : encodeURI(clean);
-        }
-        function localFallbackURL(rawUrl) {
-            const clean = String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
-            return encodeURI(clean);
+
+        function normalizeFilename(rawUrl) {
+            let s = String(rawUrl || '').trim().replace(/\\/g, '/');
+            if (/^https?:\/\//i.test(s)) return s;
+            const pubIdx = s.toLowerCase().lastIndexOf('/public/');
+            if (pubIdx !== -1) s = s.slice(pubIdx + 8);
+            const webIdx = s.toLowerCase().lastIndexOf('/yashwebsite/');
+            if (webIdx !== -1) s = s.slice(webIdx + 13);
+            return s.replace(/^\/+/, '');
         }
 
-        const audioEl = document.getElementById('studio-audio');
-        const videoEl = document.getElementById('studio-video-stage');
+        // Builds an ordered list of URLs to try (checks both Audios/ subfolder and root folder on GitHub + Local)
+        function buildCandidateURLs(rawUrl) {
+            const clean = normalizeFilename(rawUrl);
+            if (/^https?:\/\//i.test(clean)) return [clean];
+
+            const hasAudiosPrefix = /^audios\//i.test(clean);
+            const baseFile = hasAudiosPrefix ? clean.replace(/^audios\//i, '') : clean;
+            const withAudios = `Audios/${baseFile}`;
+
+            const list = [];
+            if (ghBase) {
+                list.push(ghBase + encodeURI(withAudios));
+                list.push(ghBase + encodeURI(baseFile));
+            }
+            list.push(encodeURI(withAudios));
+            list.push(encodeURI(baseFile));
+            return [...new Set(list)];
+        }
+
+        // Automatic fallback: if URL #1 404s (e.g., not in Audios/ or vice-versa), immediately try the next candidate!
+        audio.addEventListener('error', () => {
+            if (candidateIndex + 1 < candidateQueue.length) {
+                candidateIndex++;
+                audio.src = candidateQueue[candidateIndex];
+                audio.play().catch(() => {});
+            } else {
+                document.getElementById('deck-status').innerText = "STREAM ERROR • FILE NOT FOUND";
+                document.getElementById('play-pause-btn').innerText = "▶ PLAY";
+            }
+        });
+
+        function initAudioGraph() {
+            if (audioCtx) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                const source = audioCtx.createMediaElementSource(audio);
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 128;
+                source.connect(analyser);
+                analyser.connect(audioCtx.destination);
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+            } catch (e) {}
+        }
+
+        // Visualizer Canvas Loop
         const waveCanvas = document.getElementById('waveform-canvas');
         const wCtx = waveCanvas.getContext('2d');
-        const playBtn = document.getElementById('play-pause-btn');
-        const seekBar = document.getElementById('seek-bar');
-        const volBar = document.getElementById('vol-bar');
-        const curTimeEl = document.getElementById('cur-time');
-        const durTimeEl = document.getElementById('dur-time');
+        function drawVisualizer() {
+            requestAnimationFrame(drawVisualizer);
+            if (document.hidden) return;
+            waveCanvas.width = waveCanvas.clientWidth;
+            waveCanvas.height = waveCanvas.clientHeight;
+            const W = waveCanvas.width, H = waveCanvas.height;
+            wCtx.clearRect(0, 0, W, H);
 
-        let allTracks = [];
-        let filteredTracks = [];
-        let currentIdx = -1;
-        let activeMediaEl = audioEl;
-        let audioCtx = null;
-        let analyser = null;
-        let dataArray = null;
-        let corsSafe = true;
-        let phaseTick = 0;
+            const bars = 48;
+            const barW = (W / bars) - 3;
+            if (analyser && !audio.paused && dataArray) {
+                analyser.getByteFrequencyData(dataArray);
+                for (let i = 0; i < bars; i++) {
+                    const val = dataArray[i] || 8;
+                    const h = Math.max(6, (val / 255) * (H - 14));
+                    const x = i * (barW + 3);
+                    const y = (H - h) / 2;
+                    wCtx.fillStyle = '#d4af37';
+                    wCtx.fillRect(x, y, barW, h);
+                }
+            } else {
+                for (let i = 0; i < bars; i++) {
+                    const h = 6 + Math.sin(i * 0.35) * 4;
+                    const x = i * (barW + 3);
+                    const y = (H - h) / 2;
+                    wCtx.fillStyle = 'rgba(212, 175, 55, 0.32)';
+                    wCtx.fillRect(x, y, barW, h);
+                }
+            }
+        }
+        drawVisualizer();
 
         function formatTime(sec) {
-            if (!sec || isNaN(sec)) return "0:00";
+            if (!isFinite(sec) || sec < 0) return "0:00";
             const m = Math.floor(sec / 60);
             const s = Math.floor(sec % 60);
             return `${m}:${s < 10 ? '0' : ''}${s}`;
         }
 
-        function initWebAudio() {
-            if (audioCtx) return;
-            try {
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioContextClass();
-                analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 128;
-                const source = audioCtx.createMediaElementSource(audioEl);
-                source.connect(analyser);
-                analyser.connect(audioCtx.destination);
-                dataArray = new Uint8Array(analyser.frequencyBinCount);
-            } catch (e) {
-                corsSafe = false;
-            }
-        }
+        window.playTrackByIndex = function(idx) {
+            const track = filteredTracks[idx];
+            if (!track) return;
 
-        function drawWaveform() {
-            requestAnimationFrame(drawWaveform);
-            const W = waveCanvas.width;
-            const H = waveCanvas.height;
-            wCtx.clearRect(0, 0, W, H);
-
-            const isPlaying = !activeMediaEl.paused && !activeMediaEl.ended;
-            phaseTick += isPlaying ? 0.08 : 0.015;
-
-            const barCount = 56;
-            const gap = 5;
-            const barWidth = (W - gap * (barCount + 1)) / barCount;
-
-            if (analyser && corsSafe && activeMediaEl === audioEl && isPlaying) {
-                analyser.getByteFrequencyData(dataArray);
-            }
-
-            for (let i = 0; i < barCount; i++) {
-                let val = 0.12;
-                if (isPlaying) {
-                    if (analyser && corsSafe && activeMediaEl === audioEl && dataArray) {
-                        val = Math.max(0.1, dataArray[i % dataArray.length] / 255);
-                    } else {
-                        val = 0.25 + 0.55 * Math.abs(Math.sin(phaseTick + i * 0.28) * Math.cos(phaseTick * 0.6 - i * 0.15));
-                    }
-                } else {
-                    val = 0.08 + 0.05 * Math.sin(phaseTick + i * 0.25);
-                }
-
-                const barH = Math.max(6, val * (H - 24));
-                const x = gap + i * (barWidth + gap);
-                const y = (H - barH) / 2;
-
-                const grad = wCtx.createLinearGradient(0, y, 0, y + barH);
-                grad.addColorStop(0, '#f3c623');
-                grad.addColorStop(0.5, '#d4af37');
-                grad.addColorStop(1, '#8a6f1d');
-
-                wCtx.fillStyle = grad;
-                wCtx.beginPath();
-                wCtx.roundRect(x, y, barWidth, barH, 3);
-                wCtx.fill();
-            }
-        }
-        drawWaveform();
-
-        function isVideoTrack(item) {
-            const clean = String(item.url || '').split('?')[0];
-            return item.type === 'video' || /\.(mp4|webm|mov)$/i.test(clean);
-        }
-
-        window.selectTrack = function(idx) {
-            if (idx < 0 || idx >= filteredTracks.length) return;
-            currentIdx = idx;
-            const item = filteredTracks[idx];
-            const primary = resolveOriginalURL(item.url);
-            const fallback = localFallbackURL(item.url);
-            const isVid = isVideoTrack(item);
-
-            audioEl.pause();
-            videoEl.pause();
-
-            document.getElementById('deck-badge').innerText = `${item.category || (isVid ? 'Video Performance' : 'Keyboard & Trinity')} • Now Active`;
-            document.getElementById('deck-title').innerText = item.caption || item.title || item.url;
-            document.getElementById('deck-sub').innerText = `Source: ${item.url}`;
+            const isVid = track.type === 'video' || /\.(mp4|webm|mov)$/i.test(track.url || '');
+            const candidates = buildCandidateURLs(track.url);
 
             if (isVid) {
-                waveCanvas.style.display = 'none';
-                videoEl.style.display = 'block';
-                activeMediaEl = videoEl;
-                videoEl.onerror = () => { if (videoEl.src !== fallback) videoEl.src = fallback; };
-                videoEl.src = primary;
-                videoEl.volume = parseFloat(volBar.value);
-                videoEl.playbackRate = parseFloat(document.getElementById('speed-select').value);
-                videoEl.play().catch(() => {});
-            } else {
-                videoEl.style.display = 'none';
-                waveCanvas.style.display = 'block';
-                activeMediaEl = audioEl;
-                initWebAudio();
-                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                audioEl.onerror = () => {
-                    if (audioEl.crossOrigin) {
-                        corsSafe = false;
-                        audioEl.removeAttribute('crossorigin');
-                        audioEl.src = primary;
-                        audioEl.play().catch(() => {});
-                    } else if (audioEl.src !== fallback) {
-                        audioEl.src = fallback;
-                        audioEl.play().catch(() => {});
-                    }
-                };
-                audioEl.src = primary;
-                audioEl.volume = parseFloat(volBar.value);
-                audioEl.playbackRate = parseFloat(document.getElementById('speed-select').value);
-                audioEl.play().catch(() => {});
+                audio.pause();
+                document.getElementById('play-pause-btn').innerText = "▶ PLAY";
+                const container = document.getElementById('lightbox-content-container');
+                const c0 = escapeHTML(candidates[0] || '');
+                const c1 = escapeHTML(candidates[1] || c0);
+                container.innerHTML = `<video src="${c0}" onerror="if(this.src!=='${c1}')this.src='${c1}';" controls autoplay style="max-width:90vw; max-height:85vh; border-radius:10px; border:2px solid var(--accent-gold);"></video>`;
+                document.getElementById('lightbox').style.display = 'flex';
+                return;
             }
 
-            highlightActiveCard();
+            initAudioGraph();
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+            currentIdx = idx;
+            candidateQueue = candidates;
+            candidateIndex = 0;
+
+            document.getElementById('now-playing-title').innerText = track.title || track.caption || track.url;
+            document.getElementById('now-playing-cat').innerText = track.category || "Trinity Grade 4 & Studio Archive";
+            document.getElementById('deck-status').innerText = "STREAMING • GOLD ACOUSTIC ENGINE";
+
+            audio.src = candidateQueue[0];
+            audio.playbackRate = parseFloat(document.getElementById('speed-select').value || '1');
+            audio.play().then(() => {
+                document.getElementById('play-pause-btn').innerText = "⏸ PAUSE";
+            }).catch(() => {});
+
+            renderTracks();
         };
 
         window.togglePlay = function() {
             if (currentIdx === -1 && filteredTracks.length > 0) {
-                window.selectTrack(0);
+                window.playTrackByIndex(0);
                 return;
             }
-            if (!activeMediaEl.src) return;
-            if (activeMediaEl === audioEl) {
-                initWebAudio();
+            if (audio.paused) {
                 if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                audio.play();
+                document.getElementById('play-pause-btn').innerText = "⏸ PAUSE";
+                document.getElementById('deck-status').innerText = "STREAMING • GOLD ACOUSTIC ENGINE";
+            } else {
+                audio.pause();
+                document.getElementById('play-pause-btn').innerText = "▶ PLAY";
+                document.getElementById('deck-status').innerText = "PAUSED • GOLD ACOUSTIC ENGINE";
             }
-            if (activeMediaEl.paused) activeMediaEl.play();
-            else activeMediaEl.pause();
         };
 
         window.prevTrack = function() {
             if (filteredTracks.length === 0) return;
-            const next = currentIdx <= 0 ? filteredTracks.length - 1 : currentIdx - 1;
-            window.selectTrack(next);
+            const nextIdx = currentIdx > 0 ? currentIdx - 1 : filteredTracks.length - 1;
+            window.playTrackByIndex(nextIdx);
         };
 
         window.nextTrack = function() {
             if (filteredTracks.length === 0) return;
-            const next = (currentIdx + 1) % filteredTracks.length;
-            window.selectTrack(next);
+            const nextIdx = (currentIdx + 1) % filteredTracks.length;
+            window.playTrackByIndex(nextIdx);
         };
 
-        window.changeSpeed = function(val) {
-            const spd = parseFloat(val) || 1;
-            audioEl.playbackRate = spd;
-            videoEl.playbackRate = spd;
-        };
-
-        [audioEl, videoEl].forEach(el => {
-            el.addEventListener('play', () => { playBtn.innerText = '⏸ Pause'; highlightActiveCard(); });
-            el.addEventListener('pause', () => { playBtn.innerText = '▶ Play'; highlightActiveCard(); });
-            el.addEventListener('timeupdate', () => {
-                if (el !== activeMediaEl) return;
-                curTimeEl.innerText = formatTime(el.currentTime);
-                durTimeEl.innerText = formatTime(el.duration);
-                if (el.duration) seekBar.value = (el.currentTime / el.duration) * 100;
-            });
-            el.addEventListener('ended', () => window.nextTrack());
-        });
-
-        seekBar.addEventListener('input', () => {
-            if (activeMediaEl && activeMediaEl.duration) {
-                activeMediaEl.currentTime = (seekBar.value / 100) * activeMediaEl.duration;
+        audio.addEventListener('timeupdate', () => {
+            document.getElementById('curr-time').innerText = formatTime(audio.currentTime);
+            document.getElementById('dur-time').innerText = formatTime(audio.duration);
+            if (audio.duration) {
+                document.getElementById('seek-slider').value = (audio.currentTime / audio.duration) * 100;
             }
         });
 
-        volBar.addEventListener('input', () => {
-            audioEl.volume = parseFloat(volBar.value);
-            videoEl.volume = parseFloat(volBar.value);
+        audio.addEventListener('ended', () => window.nextTrack());
+
+        document.getElementById('seek-slider').addEventListener('input', (e) => {
+            if (audio.duration) {
+                audio.currentTime = (e.target.value / 100) * audio.duration;
+            }
         });
 
-        function highlightActiveCard() {
-            document.querySelectorAll('.track-card').forEach((card, i) => {
-                const isCurrent = i === currentIdx;
-                card.classList.toggle('playing', isCurrent);
-                const icon = card.querySelector('.track-icon');
-                if (icon) icon.innerText = (isCurrent && !activeMediaEl.paused) ? '⏸' : '▶';
-            });
-        }
+        document.getElementById('vol-slider').addEventListener('input', (e) => {
+            audio.volume = parseFloat(e.target.value);
+        });
+
+        document.getElementById('speed-select').addEventListener('change', (e) => {
+            audio.playbackRate = parseFloat(e.target.value);
+        });
+
+        window.closeLightbox = function(e) {
+            if (e && e.target && e.target.tagName === 'VIDEO') return;
+            document.getElementById('lightbox-content-container').innerHTML = '';
+            document.getElementById('lightbox').style.display = 'none';
+        };
 
         window.filterTracks = function(cat, btnEl) {
+            activeCategory = cat;
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             if (btnEl) btnEl.classList.add('active');
-            if (cat === 'all') {
-                filteredTracks = [...allTracks];
-            } else if (cat === 'Video Performance') {
-                filteredTracks = allTracks.filter(t => isVideoTrack(t) || t.category === 'Video Performance');
-            } else {
-                filteredTracks = allTracks.filter(t => (t.category || 'Keyboard & Trinity') === cat);
-            }
             currentIdx = -1;
-            renderTrackList();
+            renderTracks();
         };
 
-        function renderTrackList() {
-            const container = document.getElementById('tracks-container');
+        function renderTracks() {
+            const box = document.getElementById('tracks-container');
+            filteredTracks = activeCategory === 'ALL'
+                ? allTracks
+                : allTracks.filter(t => (t.category || 'Keyboard & Trinity') === activeCategory);
+
             if (filteredTracks.length === 0) {
-                container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">No tracks in this category yet. Upload audio (.mp3/.wav) or video (.mp4) tracks from the <strong>Secret Vault → Media Coordinator</strong>.</div>`;
+                box.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">No tracks in this category yet.</div>`;
                 return;
             }
-            container.innerHTML = filteredTracks.map((t, idx) => {
-                const isVid = isVideoTrack(t);
-                const catLabel = escapeHTML(t.category || (isVid ? 'Video Performance' : 'Keyboard & Trinity'));
-                const title = escapeHTML(t.caption || t.title || 'Untitled Track');
-                const fileLabel = escapeHTML(t.url || '');
+
+            box.innerHTML = filteredTracks.map((t, idx) => {
+                const isPlaying = idx === currentIdx && !audio.paused;
+                const isVid = t.type === 'video' || /\.(mp4|webm|mov)$/i.test(t.url || '');
+                const title = escapeHTML(t.title || t.caption || t.url || 'Untitled Track');
+                const cat = escapeHTML(t.category || 'Keyboard & Trinity');
+
                 return `
-                    <div class="track-card" onclick="window.selectTrack(${idx})">
-                        <div class="track-meta">
-                            <div class="track-icon">▶</div>
+                    <div class="track-card ${idx === currentIdx ? 'playing' : ''}" data-idx="${idx}">
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <div style="width:42px; height:42px; border-radius:50%; background:rgba(212,175,55,0.16); border:1px solid var(--accent-gold); display:flex; align-items:center; justify-content:center; color:var(--accent-gold); font-weight:bold; flex-shrink:0;">
+                                ${isVid ? '🎬' : (isPlaying ? '⏸' : '▶')}
+                            </div>
                             <div>
-                                <div style="font-weight: 600; font-size: 1.05rem; color: var(--text-main);">${title}</div>
-                                <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">${isVid ? '🎬 Video Stream' : '🎹 Gold Waveform Audio'} • ${fileLabel}</div>
+                                <div class="track-title">${title}</div>
+                                <div class="track-meta">${cat}</div>
                             </div>
                         </div>
-                        <span class="track-cat-pill">${catLabel}</span>
+                        <span style="font-size:0.82rem; color:var(--accent-gold); font-weight:600;">
+                            ${isVid ? 'Watch Video ↗' : (idx === currentIdx ? 'Active Track' : 'Play Track')}
+                        </span>
                     </div>
                 `;
             }).join('');
+
+            box.querySelectorAll('.track-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const idx = parseInt(card.dataset.idx, 10);
+                    if (idx === currentIdx) window.togglePlay();
+                    else window.playTrackByIndex(idx);
+                });
+            });
         }
 
         onSnapshot(collection(db, "music"), (snap) => {
             allTracks = [];
             snap.forEach(d => allTracks.push({ id: d.id, ...d.data() }));
             allTracks.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
-            filteredTracks = [...allTracks];
-            renderTrackList();
+            renderTracks();
         });
     </script>
     <script>
@@ -429,6 +517,7 @@
                 particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.55, vy: (Math.random() - 0.5) * 0.55, r: Math.random() * 1.9 + 0.9 });
             }
             function animate() {
+                if (document.hidden) return requestAnimationFrame(animate);
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 for (let i = 0; i < particles.length; i++) {
                     let p = particles[i];
