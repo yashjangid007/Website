@@ -6,7 +6,7 @@
     <title>My Real Family | Yash Jangid</title>
     <link rel="icon" type="image/jpeg" href="yash.jpg">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css?v=4.3">
+    <link rel="stylesheet" href="style.css?v=4.4">
     <style>
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { min-width: 250px; padding: 15px 20px; background-color: #162a33; color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); font-size: 0.95rem; animation: slideIn 0.4s ease forwards; opacity: 0; transform: translateX(100%); }
@@ -169,7 +169,7 @@
     </div>
 
     <section class="content-section">
-        <!-- 6-DIGIT PASSCODE LOCK (BACKED BY FIREBASE AUTH) -->
+        <!-- 6-DIGIT PASSCODE LOCK -->
         <div id="login-screen" class="card" style="max-width: 400px; margin: 0 auto; text-align: center;">
             <h2 style="font-size: 2rem;">Family Vault</h2>
             <p style="color: var(--text-muted); margin-bottom: 25px;">Enter 6-digit access code.</p>
@@ -204,24 +204,52 @@
     <script type="module">
         import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, setPersistence, browserSessionPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
         const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
+        // Enforce session-only persistence immediately so browser/tab close wipes auth
+        setPersistence(auth, browserSessionPersistence).catch(() => {});
+
         let globalMediaData = [];
         let customPrograms = [];
         let ghBase = "";
         let dataLoaded = false;
+        let navigatingToSpecial = false;
 
-        // Default 3 options (additional programs added in Secret Vault append dynamically)
         const DEFAULT_PROGRAMS = [
             { title: "2nd Month Anniversary Program", subtitle: "Interactive music, letter & memories", url: "Special/anniversary_2nd.html" },
             { title: "Small Gifts", subtitle: "Monthly anniversary pamphlets, images & videos", url: "Special/small_gifts.html" },
             { title: "11:11:11:11 Special", subtitle: "Upcoming special program", url: "Special/1111_special.html" }
         ];
+
+        async function lockVaultNow(reloadPage = true) {
+            sessionStorage.removeItem('sp_unlocked');
+            sessionStorage.removeItem('fam_unlocked');
+            dataLoaded = false;
+            try { await signOut(auth); } catch (e) {}
+            if (reloadPage) {
+                window.location.replace('family.html');
+            }
+        }
+
+        // AUTO-LOCK: When switching tabs, minimizing browser, or leaving the page (except into Special/)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && !navigatingToSpecial && dataLoaded) {
+                lockVaultNow(true);
+            }
+        });
+
+        window.addEventListener('pagehide', () => {
+            if (!navigatingToSpecial) {
+                sessionStorage.removeItem('sp_unlocked');
+                sessionStorage.removeItem('fam_unlocked');
+                signOut(auth).catch(() => {});
+            }
+        });
 
         async function loadGitHubConfig() {
             try {
@@ -289,7 +317,6 @@
             return key.every((v, i) => (pin.charCodeAt(i) ^ 42) === v);
         }
 
-        // Obfuscated 4-digit passcode verifier
         function verifySpecialPin(pin) {
             const k = [123, 126, 121, 124];
             if (!pin || pin.length !== 4) return false;
@@ -302,7 +329,6 @@
             container.appendChild(t); setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
         }
 
-        // ───────── STEALTH TRIGGER & SECRET HUB LOGIC ─────────
         function renderSecretHub() {
             const listEl = document.getElementById('sp-hub-list');
             const combined = [...DEFAULT_PROGRAMS];
@@ -321,6 +347,13 @@
                     <span style="color:var(--accent-gold); font-size:1.1rem; font-weight:bold;">→</span>
                 </a>
             `).join('');
+
+            // Mark intentional navigation to Special/ pages so pagehide doesn't lock it
+            listEl.querySelectorAll('.hub-card').forEach(link => {
+                link.addEventListener('click', () => {
+                    navigatingToSpecial = true;
+                });
+            });
         }
 
         window.openSpHub = function() {
@@ -360,36 +393,46 @@
             if (e.key === 'Enter') submitSpecialPin();
         });
 
-        // ───────── FAMILY VAULT AUTH & DATA ─────────
-        async function unlockSuccess() {
+        async function unlockSuccess(openHubAfter = false) {
             if (dataLoaded) return;
             dataLoaded = true;
+            sessionStorage.setItem('fam_unlocked', '1');
             await loadGitHubConfig();
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('family-content').style.display = 'block';
             loadFamilyData();
 
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('hub') === '1' && sessionStorage.getItem('sp_unlocked') === '1') {
+            if (openHubAfter && sessionStorage.getItem('sp_unlocked') === '1') {
                 window.openSpHub();
             }
         }
 
-        onAuthStateChanged(auth, (user) => {
-            if (user && !dataLoaded) {
-                unlockSuccess();
-            }
-        });
+        // Only restore session if returning via "← Back" from Special/ (?hub=1); otherwise force fresh lock!
+        const urlParams = new URLSearchParams(window.location.search);
+        const isReturningFromHub = urlParams.get('hub') === '1' && sessionStorage.getItem('fam_unlocked') === '1';
+
+        if (!isReturningFromHub) {
+            sessionStorage.removeItem('sp_unlocked');
+            sessionStorage.removeItem('fam_unlocked');
+            signOut(auth).catch(() => {});
+        } else {
+            onAuthStateChanged(auth, (user) => {
+                if (user && !dataLoaded) {
+                    unlockSuccess(true);
+                }
+            });
+        }
 
         async function attemptUnlock() {
             const code = document.getElementById('family-passcode').value.trim();
             if (!code) return showErrorToast("Enter 6-digit access code");
             try {
+                await setPersistence(auth, browserSessionPersistence);
                 await signInWithEmailAndPassword(auth, "family-vault@yashjangid.com", code);
-                await unlockSuccess();
+                await unlockSuccess(false);
             } catch (err) {
                 if (verifyAccessCodeFallback(code)) {
-                    await unlockSuccess();
+                    await unlockSuccess(false);
                 } else {
                     showErrorToast("Invalid Passcode");
                 }
@@ -400,11 +443,7 @@
         document.getElementById('family-passcode').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') attemptUnlock();
         });
-        document.getElementById('lock-album-btn').addEventListener('click', async () => {
-            sessionStorage.removeItem('sp_unlocked');
-            try { await signOut(auth); } catch(e) {}
-            window.location.href = 'family.html';
-        });
+        document.getElementById('lock-album-btn').addEventListener('click', () => lockVaultNow(true));
 
         function isVideo(url) {
             const cleanUrl = (url || "").split('?')[0];
