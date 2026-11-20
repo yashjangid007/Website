@@ -11,10 +11,10 @@ service cloud.firestore {
       );
     }
 
-    // Private Admin-Only Configuration (Protects EmailJS Keys)
+    // Lock EmailJS credentials to Admin ONLY (must stay above site_config/{doc})
     match /site_config/emailjs { allow read, write: if isAdmin(); }
 
-    // Public portfolio pages & public configs (github linker, graphics folders)
+    // Public portfolio configuration & pages
     match /site_config/{doc} { allow read: if true; allow write: if isAdmin(); }
     match /site_content/{doc} { allow read: if true; allow write: if isAdmin(); }
     match /graphics/{doc} { allow read: if true; allow write: if isAdmin(); }
@@ -22,22 +22,28 @@ service cloud.firestore {
     match /mun_events/{doc} { allow read: if true; allow write: if isAdmin(); }
     match /music/{doc} { allow read: if true; allow write: if isAdmin(); }
     
-    // Contact form: Anyone can submit, ONLY Admin can read/update/delete
+    // Public Contact Form (write-only for visitors, read/manage for Admin)
     match /inbox_messages/{doc} { allow create: if true; allow read, update, delete: if isAdmin(); }
     
-    // Family Album: Viewable when 272930 is entered (or by Admin), editable ONLY by Admin
+    // Private Family Vault & Hidden Secret Hub Collections (Requires Sign-In)
     match /family/{doc} { 
       allow read: if request.auth != null; 
       allow write: if isAdmin(); 
     }
+    match /special_gifts/{doc} { 
+      allow read: if request.auth != null; 
+      allow write: if isAdmin(); 
+    }
+    match /special_programs/{doc} { 
+      allow read: if request.auth != null; 
+      allow write: if isAdmin(); 
+    }
     
-    // System Audit Logs
+    // System Audit Logs & Personnel Clearance
     match /vault_logs/{doc} { 
       allow create: if true; 
       allow read, update, delete: if isAdmin(); 
     }
-    
-    // Vault Clearance Requests
     match /vault_access/{email} { 
       allow read: if true; 
       allow create: if request.resource.data.approved == false; 

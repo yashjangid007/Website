@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To Tanvi... My Love... Meri Jaaneman... Cutie Pie...</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #ffe6f0;
+            font-family: Helvetica, Arial, sans-serif;
+            user-select: none;
+        }
+
+        /* Background Vector Double-Outline Hearts Canvas */
+        #heart-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        #app-layer {
+            position: relative;
+            z-index: 2;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Glowing Title matching exact Tkinter look */
+        .title-row {
+            position: absolute;
+            top: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            width: 96%;
+            white-space: nowrap;
+        }
+        .title-text {
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(2.4rem, 5.4vw, 4.9rem);
+            font-weight: 400;
+            color: #cc0066;
+            text-shadow:
+                -2px 0 0 #ff99cc,
+                 2px 0 0 #ff99cc,
+                 0 -2px 0 #ff99cc,
+                 0  2px 0 #ff99cc;
+            line-height: 1.1;
+        }
+        .title-heart-svg {
+            width: clamp(36px, 4.2vw, 60px);
+            height: clamp(36px, 4.2vw, 60px);
+            flex-shrink: 0;
+            filter: drop-shadow(0 0 1px #ff99cc);
+        }
+
+        /* Subtitle with crisp dark plum monochrome music notes */
+        .subtitle-row {
+            position: absolute;
+            top: 126px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 94%;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: clamp(1rem, 2.05vw, 1.85rem);
+            font-style: italic;
+            color: #660033;
+        }
+        .note-svg {
+            width: clamp(18px, 1.9vw, 26px);
+            height: clamp(18px, 1.9vw, 26px);
+            flex-shrink: 0;
+        }
+
+        .song-text {
+            position: absolute;
+            top: 174px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 94%;
+            text-align: center;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: clamp(0.95rem, 1.65vw, 1.45rem);
+            font-weight: bold;
+            color: #660033;
+            min-height: 26px;
+        }
+
+        /* Classic Tkinter Sunken Text Widget */
+        #letter-box {
+            position: absolute;
+            left: 5%;
+            top: 27%;
+            width: 90%;
+            height: 42%;
+            background-color: #fff0f5;
+            color: #660033;
+            font-family: "Comic Sans MS", "Comic Sans", cursive;
+            font-size: clamp(1rem, 1.48vw, 1.35rem);
+            line-height: 1.55;
+            padding: 25px;
+            border-top: 1px solid #8a8a8a;
+            border-left: 1px solid #8a8a8a;
+            border-right: 1px solid #ffffff;
+            border-bottom: 1px solid #ffffff;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            user-select: text;
+        }
+
+        /* Classic ttk.Progressbar */
+        .progress-track {
+            position: absolute;
+            left: 10%;
+            top: 72%;
+            width: 80%;
+            height: 20px;
+            background-color: #e4e4e4;
+            border: 1px solid #bcbcbc;
+            border-radius: 0;
+            overflow: hidden;
+        }
+        #progress-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #06b025;
+            transition: width 0.1s linear;
+        }
+
+        /* Timer Label */
+        #timer-lbl {
+            position: absolute;
+            left: 47.2%;
+            top: 75.3%;
+            transform: translateX(-50%);
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: clamp(0.95rem, 1.35vw, 1.28rem);
+            color: #660033;
+            background-color: #ffe6f0;
+            padding: 1px 6px;
+        }
+
+        /* Classic Windows tk.Scale Volume Box */
+        .tk-scale-box {
+            position: absolute;
+            left: 10%;
+            top: 78.2%;
+            width: 25%;
+            background-color: #ffe6f0;
+            border: 1px solid #ffffff;
+            padding: 4px 4px 5px 4px;
+            font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+        }
+        .tk-scale-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            color: #000;
+            margin-bottom: 4px;
+            padding-left: 2px;
+        }
+        .tk-scale-track-area {
+            position: relative;
+            padding-top: 17px;
+        }
+        #vol-float-val {
+            position: absolute;
+            top: 0;
+            left: 70%;
+            transform: translateX(-50%);
+            font-size: 0.82rem;
+            color: #000;
+            pointer-events: none;
+        }
+        #volume-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 14px;
+            background: #cfcfcf;
+            border-top: 1px solid #8a8a8a;
+            border-left: 1px solid #8a8a8a;
+            border-right: 1px solid #ffffff;
+            border-bottom: 1px solid #ffffff;
+            outline: none;
+            cursor: pointer;
+            display: block;
+        }
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 26px;
+            height: 14px;
+            background: linear-gradient(to right,
+                #f0f0f0 0%, #f0f0f0 46%,
+                #808080 46%, #808080 54%,
+                #f0f0f0 54%, #f0f0f0 100%);
+            border-top: 1px solid #ffffff;
+            border-left: 1px solid #ffffff;
+            border-right: 1px solid #555555;
+            border-bottom: 1px solid #555555;
+            cursor: pointer;
+        }
+        #volume-slider::-moz-range-thumb {
+            width: 26px;
+            height: 14px;
+            border-radius: 0;
+            background: linear-gradient(to right,
+                #f0f0f0 0%, #f0f0f0 46%,
+                #808080 46%, #808080 54%,
+                #f0f0f0 54%, #f0f0f0 100%);
+            border-top: 1px solid #ffffff;
+            border-left: 1px solid #ffffff;
+            border-right: 1px solid #555555;
+            border-bottom: 1px solid #555555;
+            cursor: pointer;
+        }
+
+        /* Classic Windows tk.Button for Pause */
+        #pause-btn {
+            position: absolute;
+            left: 37%;
+            top: 79.2%;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+            font-size: 0.88rem;
+            background-color: #f0f0f0;
+            color: #000;
+            border-top: 1px solid #ffffff;
+            border-left: 1px solid #ffffff;
+            border-right: 1px solid #696969;
+            border-bottom: 1px solid #696969;
+            outline: 1px solid #c0c0c0;
+            border-radius: 0;
+            cursor: pointer;
+        }
+        #pause-btn:hover { background-color: #e6e6e6; }
+        #pause-btn:active {
+            border-top: 1px solid #696969;
+            border-left: 1px solid #696969;
+            border-right: 1px solid #ffffff;
+            border-bottom: 1px solid #ffffff;
+        }
+
+        /* Classic Windows tk.Button for Reveal My Secret */
+        #reveal-btn {
+            position: absolute;
+            left: 55%;
+            top: 78.2%;
+            width: 25%;
+            padding: 11px 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: clamp(1rem, 1.65vw, 1.55rem);
+            font-weight: bold;
+            background-color: #ff99cc;
+            color: #ffffff;
+            border-top: 1px solid #ffcce6;
+            border-left: 1px solid #ffcce6;
+            border-right: 2px solid #2b2b2b;
+            border-bottom: 2px solid #2b2b2b;
+            border-radius: 0;
+            cursor: pointer;
+        }
+        #reveal-btn:hover { background-color: #ff88c2; }
+        #reveal-btn:active {
+            border-top: 2px solid #2b2b2b;
+            border-left: 2px solid #2b2b2b;
+            border-right: 1px solid #ffcce6;
+            border-bottom: 1px solid #ffcce6;
+        }
+
+        /* Kept Back & Fullscreen Buttons */
+        .corner-btn {
+            position: fixed;
+            top: 12px;
+            z-index: 20;
+            background: rgba(255, 240, 245, 0.88);
+            color: #660033;
+            border: 1px solid #ff99cc;
+            border-radius: 16px;
+            padding: 5px 12px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+        .corner-btn:hover { background: #ff99cc; color: #fff; }
+        #back-btn { left: 12px; }
+        #fs-btn { right: 12px; }
+
+        /* Classic Tkinter Popup Window */
+        .tk-popup {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            min-width: 310px;
+            max-width: 360px;
+            background-color: #ffe6f0;
+            border: 1px solid #8a8a8a;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.26);
+            border-radius: 0;
+            overflow: hidden;
+            animation: popIn 0.14s ease-out;
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+            to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        .tk-popup-titlebar {
+            background: #ffffff;
+            border-bottom: 1px solid #d4d4d4;
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #cc0066;
+        }
+        .tk-popup-close {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            color: #333;
+            padding: 0 4px;
+        }
+        .tk-popup-body {
+            padding: 20px;
+            text-align: center;
+        }
+        .tk-popup-msg {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 1.35rem;
+            font-style: italic;
+            color: #660033;
+            max-width: 280px;
+            margin: 0 auto 18px auto;
+            line-height: 1.4;
+        }
+        .tk-popup-ok {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 1.05rem;
+            font-weight: bold;
+            padding: 7px 16px;
+            background-color: #f0f0f0;
+            color: #000;
+            border-top: 1px solid #ffffff;
+            border-left: 1px solid #ffffff;
+            border-right: 1px solid #696969;
+            border-bottom: 1px solid #696969;
+            cursor: pointer;
+        }
+        .tk-popup-ok:hover { background-color: #e4e4e4; }
+
+        /* Mobile Layout */
+        @media (max-width: 760px) {
+            .title-row { top: 46px; gap: 8px; }
+            .subtitle-row { top: 108px; }
+            .song-text { top: 144px; }
+            #letter-box { top: 24%; height: 43%; padding: 15px; }
+            .progress-track { top: 70%; }
+            #timer-lbl { left: 50%; top: 73.8%; }
+            .tk-scale-box { left: 5%; top: 78%; width: 52%; }
+            #pause-btn { left: 61%; top: 80.5%; width: 34%; justify-content: center; }
+            #reveal-btn { left: 5%; top: 88.5%; width: 90%; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="heart-canvas"></canvas>
+
+    <a href="../family.html?hub=1" id="back-btn" class="corner-btn">← Back</a>
+    <button id="fs-btn" class="corner-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+
+    <div id="app-layer">
+        <!-- Title with crisp outline sparkling hearts matching PC .exe -->
+        <div class="title-row">
+            <svg class="title-heart-svg" viewBox="0 0 64 64" fill="none" stroke="#cc0066" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M32 54 C32 54 9 39 9 22 C9 13.5 15.5 8 22.8 8 C27.4 8 30.8 10.6 32 14 C33.2 10.6 36.6 8 41.2 8 C48.5 8 55 13.5 55 22 C55 39 32 54 32 54 Z"/>
+                <path d="M12 31 L14.2 35.8 L19 38 L14.2 40.2 L12 45 L9.8 40.2 L5 38 L9.8 35.8 Z" fill="#ffe6f0" stroke="#cc0066" stroke-width="2.4"/>
+                <path d="M51 11 L52.5 14.5 L56 16 L52.5 17.5 L51 21 L49.5 17.5 L46 16 L49.5 14.5 Z" fill="#ffe6f0" stroke="#cc0066" stroke-width="2.2"/>
+            </svg>
+            <div class="title-text">A Secret For You</div>
+            <svg class="title-heart-svg" viewBox="0 0 64 64" fill="none" stroke="#cc0066" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M32 54 C32 54 9 39 9 22 C9 13.5 15.5 8 22.8 8 C27.4 8 30.8 10.6 32 14 C33.2 10.6 36.6 8 41.2 8 C48.5 8 55 13.5 55 22 C55 39 32 54 32 54 Z"/>
+                <path d="M12 31 L14.2 35.8 L19 38 L14.2 40.2 L12 45 L9.8 40.2 L5 38 L9.8 35.8 Z" fill="#ffe6f0" stroke="#cc0066" stroke-width="2.4"/>
+                <path d="M51 11 L52.5 14.5 L56 16 L52.5 17.5 L51 21 L49.5 17.5 L46 16 L49.5 14.5 Z" fill="#ffe6f0" stroke="#cc0066" stroke-width="2.2"/>
+            </svg>
+        </div>
+
+        <!-- Subtitle with monochrome dark plum music notes -->
+        <div class="subtitle-row">
+            <svg class="note-svg" viewBox="0 0 24 24" fill="#660033">
+                <path d="M9 17a3 3 0 1 1-2-2.83V6l12-2v9.17A3 3 0 1 1 17 16V7.5L9 8.83V17z"/>
+            </svg>
+            <span>Let these songs carry my heart to you</span>
+            <svg class="note-svg" viewBox="0 0 24 24" fill="#660033">
+                <path d="M9 17a3 3 0 1 1-2-2.83V6l12-2v9.17A3 3 0 1 1 17 16V7.5L9 8.83V17z"/>
+            </svg>
+        </div>
+
+        <div id="song-text" class="song-text"></div>
+
+        <div id="letter-box"></div>
+
+        <div class="progress-track">
+            <div id="progress-fill"></div>
+        </div>
+
+        <div id="timer-lbl">00:00 / 00:00</div>
+
+        <!-- Classic Windows tk.Scale Volume Widget -->
+        <div class="tk-scale-box">
+            <div class="tk-scale-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2">
+                    <path d="M11 5L6 9H2v6h4l5 4V5z" fill="#000"/>
+                    <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>
+                </svg>
+                <span>Volume</span>
+            </div>
+            <div class="tk-scale-track-area">
+                <span id="vol-float-val">70</span>
+                <input type="range" id="volume-slider" min="0" max="100" value="70">
+            </div>
+        </div>
+
+        <!-- Classic Windows tk.Button Pause -->
+        <button id="pause-btn">
+            <svg id="pause-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#000" stroke-width="1.4">
+                <rect x="1.5" y="1.5" width="13" height="13" rx="1"/>
+                <rect x="5" y="4.5" width="2" height="7" fill="#000"/>
+                <rect x="9" y="4.5" width="2" height="7" fill="#000"/>
+            </svg>
+            <span id="pause-text">Pause</span>
+        </button>
+
+        <!-- Classic Pink Reveal My Secret Button with white outline envelopes -->
+        <button id="reveal-btn">
+            <svg width="20" height="14" viewBox="0 0 24 16" fill="none" stroke="#ffffff" stroke-width="1.8">
+                <rect x="1" y="1" width="22" height="14"/>
+                <path d="M1 1 L12 9 L23 1"/>
+            </svg>
+            <span>Reveal My Secret</span>
+            <svg width="20" height="14" viewBox="0 0 24 16" fill="none" stroke="#ffffff" stroke-width="1.8">
+                <rect x="1" y="1" width="22" height="14"/>
+                <path d="M1 1 L12 9 L23 1"/>
+            </svg>
+        </button>
+    </div>
+
+    <script type="module">
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // ───────────────── CONFIG ─────────────────
+        const TYPE_DELAY = 90;
+        const POPUP_INTERVAL = 9000;
+
+        const FILES = [
+            { title: "Aa Chal Ke Tujhe", file: "Aa Chal Ke Tujhe.wav" },
+            { title: "Special Medley", file: "Special Medley.wav" }
+        ];
+
+        const LETTER = `To Tanvi,
+
+My heart has been writing this letter from a VERY LONG time... & today,
+I finally found the courage to speak it aloud....
+You are the sunrise that paints my ordinary days in gold,
+the quiet song that steadies my breath,
+the gentle hand that turns my chaos into calm.
+
+Every moment with you feels like a promise kept,
+a secret the world whispered only to us.
+
+When you laugh, the world rearranges itself into something kinder.
+When you look at me, I remember every reason,...
+I chose to love — and discover new ones.
+I want to build a thousand small mornings with you:
+coffee steam, shared umbrellas, sleepy smiles,
+and the kind of ordinary magic that becomes our story.
+
+I vow to listen to your silences, to celebrate your triumphs,
+and to hold you steady when storms come.
+I promise to be the shoulder you lean on,
+the voice that cheers you on, and the arms that come home to you.
+If love is a journey, then with you I have found my favorite direction.
+
+Forever yours, with all that I am and all I will be,
+
+Regards....
+Your dear darling...
+Yash 🥰🥰
+
+😘😘😘😘😘😘😘😘
+💗💗💗💗💗💗💗💗
+💝💝💝💝💝💝💝💝
+`;
+
+        const POPUPS = [
+            "You are my favorite thought 💖",
+            "You feel like home 🏡",
+            "Forever feels right with you 💞",
+            "You are my calm 💗",
+            "I choose you, every single day 💍",
+            "My heart knows your name 💓",
+            "With you, silence is beautiful 🤍",
+            "I’d find you in every lifetime ♾️",
+            "You are my safe place 🫶",
+            "My favorite future includes you ✨",
+            "If love had a sound, it would be you 🎶",
+            "You make time feel softer ⏳",
+            "Every road led me to you 💫",
+            "My today is better because of you 🌸"
+        ];
+
+        // ───────────────── GITHUB AUTO-LINKER (CHECKS BOTH Special/ & special/) ─────────────────
+        let ghBase = "";
+        try {
+            const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
+            const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            const cfg = await getDoc(doc(db, "site_config", "github"));
+            if (cfg.exists() && cfg.data().enabled && cfg.data().user && cfg.data().repo) {
+                const d = cfg.data();
+                const folder = d.folder ? d.folder.replace(/^\/+|\/+$/g, '') + '/' : '';
+                ghBase = `https://raw.githubusercontent.com/${d.user}/${d.repo}/${d.branch || 'main'}/${folder}`;
+            }
+        } catch (e) {}
+
+        function buildAudioCandidates(filename) {
+            const list = [];
+            if (ghBase) {
+                list.push(ghBase + encodeURI(`Special/Assets/${filename}`));
+                list.push(ghBase + encodeURI(`special/Assets/${filename}`));
+            }
+            list.push(encodeURI(`Assets/${filename}`));
+            return list;
+        }
+
+        function fmt(ms) {
+            const s = Math.max(0, Math.floor(ms / 1000));
+            return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+        }
+
+        window.toggleFullscreen = function() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        };
+
+        // ───────────────── VECTOR DOUBLE-OUTLINE HEARTS (EXACT PC .EXE LOOK) ─────────────────
+        const canvas = document.getElementById('heart-canvas');
+        const ctx = canvas.getContext('2d');
+        const hearts = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function drawDoubleHeart(cx, cy, s) {
+            const drawPath = (scale) => {
+                const r = s * scale;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy + r * 0.45);
+                ctx.bezierCurveTo(cx - r * 0.85, cy - r * 0.05, cx - r * 0.72, cy - r * 0.82, cx, cy - r * 0.28);
+                ctx.bezierCurveTo(cx + r * 0.72, cy - r * 0.82, cx + r * 0.85, cy - r * 0.05, cx, cy + r * 0.45);
+                ctx.closePath();
+                ctx.stroke();
+            };
+            ctx.strokeStyle = "#e62e8a";
+            ctx.lineWidth = Math.max(1.25, s * 0.075);
+            drawPath(1.0);
+            ctx.lineWidth = Math.max(1.0, s * 0.06);
+            drawPath(0.62);
+        }
+
+        setInterval(() => {
+            if (document.hidden) return;
+            const w = canvas.width;
+            const h = canvas.height;
+
+            if (Math.random() < 0.35) {
+                hearts.push({
+                    x: Math.random() * w,
+                    y: h + 50 + Math.random() * 250,
+                    size: 16 + Math.random() * 14,
+                    speed: 2.5 + Math.random() * 1.7,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+
+            ctx.clearRect(0, 0, w, h);
+            for (let i = hearts.length - 1; i >= 0; i--) {
+                const heart = hearts[i];
+                heart.y -= heart.speed;
+                heart.x += Math.sin(heart.phase) * 1.5;
+                heart.phase += 0.12;
+
+                if (heart.y < -50) {
+                    hearts.splice(i, 1);
+                    continue;
+                }
+                drawDoubleHeart(heart.x, heart.y, heart.size);
+            }
+        }, 30);
+
+        // ───────────────── VOLUME THUMB FLOATING LABEL ─────────────────
+        const volSliderEl = document.getElementById('volume-slider');
+        const volFloatEl = document.getElementById('vol-float-val');
+
+        function syncVolumeLabel() {
+            const v = Number(volSliderEl.value);
+            volFloatEl.textContent = v;
+            const pct = v / 100;
+            const thumbW = 26;
+            volFloatEl.style.left = `calc(${pct * 100}% + ${(0.5 - pct) * thumbW}px)`;
+        }
+        syncVolumeLabel();
+
+        // ───────────────── AUDIO & TIMER ENGINE ─────────────────
+        const songTextEl = document.getElementById('song-text');
+        const letterBoxEl = document.getElementById('letter-box');
+        const progressFillEl = document.getElementById('progress-fill');
+        const timerLblEl = document.getElementById('timer-lbl');
+        const pauseBtnEl = document.getElementById('pause-btn');
+        const pauseTextEl = document.getElementById('pause-text');
+        const revealBtnEl = document.getElementById('reveal-btn');
+
+        const songDurations = [0, 0];
+        let totalDuration = 0;
+        let started = false;
+        let currentSong = 0;
+        let completedTime = 0;
+        let typingIndex = 0;
+
+        const player = new Audio();
+        player.volume = 0.7;
+        let activeCandidates = [];
+        let candidateIdx = 0;
+
+        FILES.forEach((item, idx) => {
+            const probe = new Audio();
+            probe.preload = 'metadata';
+            const cands = buildAudioCandidates(item.file);
+            let pIdx = 0;
+            probe.addEventListener('loadedmetadata', () => {
+                if (isFinite(probe.duration)) {
+                    songDurations[idx] = Math.floor(probe.duration * 1000);
+                    totalDuration = songDurations.reduce((a, b) => a + b, 0);
+                    if (!started) timerLblEl.textContent = `00:00 / ${fmt(totalDuration)}`;
+                }
+            });
+            probe.addEventListener('error', () => {
+                if (pIdx + 1 < cands.length) {
+                    pIdx++;
+                    probe.src = cands[pIdx];
+                }
+            });
+            probe.src = cands[0];
+        });
+
+        player.addEventListener('error', () => {
+            if (candidateIdx + 1 < activeCandidates.length) {
+                candidateIdx++;
+                player.src = activeCandidates[candidateIdx];
+                player.play().catch(() => {});
+            }
+        });
+
+        player.addEventListener('ended', () => {
+            const curDur = songDurations[currentSong] || Math.floor((player.duration || 0) * 1000);
+            completedTime += curDur;
+            if (currentSong + 1 < FILES.length) playSong(currentSong + 1);
+        });
+
+        function playSong(idx) {
+            if (idx >= FILES.length) return;
+            currentSong = idx;
+            const song = FILES[idx];
+            songTextEl.textContent = `💖 Now Playing: ${song.title} 🎶`;
+            activeCandidates = buildAudioCandidates(song.file);
+            candidateIdx = 0;
+            player.src = activeCandidates[0];
+            player.volume = Number(volSliderEl.value) / 100;
+            player.play().catch(() => {});
+            pauseTextEl.textContent = "Pause";
+        }
+
+        volSliderEl.addEventListener('input', () => {
+            syncVolumeLabel();
+            player.volume = Number(volSliderEl.value) / 100;
+        });
+
+        pauseBtnEl.addEventListener('click', () => {
+            if (!started) return;
+            if (!player.paused) {
+                player.pause();
+                pauseTextEl.textContent = "Resume";
+            } else {
+                player.play().catch(() => {});
+                pauseTextEl.textContent = "Pause";
+            }
+        });
+
+        function typeLetter() {
+            if (typingIndex < LETTER.length) {
+                letterBoxEl.textContent += LETTER[typingIndex];
+                letterBoxEl.scrollTop = letterBoxEl.scrollHeight;
+                typingIndex++;
+                setTimeout(typeLetter, TYPE_DELAY);
+            }
+        }
+
+        function updateTimerLoop() {
+            if (!started) return;
+            const elapsedCurrent = Math.floor((player.currentTime || 0) * 1000);
+            const totalElapsed = completedTime + elapsedCurrent;
+            const denom = totalDuration || Math.max(totalElapsed, 1);
+            progressFillEl.style.width = `${Math.min(100, (totalElapsed / denom) * 100)}%`;
+            timerLblEl.textContent = `${fmt(totalElapsed)} / ${fmt(totalDuration)}`;
+            setTimeout(updateTimerLoop, 100);
+        }
+
+        let popupOffset = 0;
+        function showPopup() {
+            const msg = POPUPS[Math.floor(Math.random() * POPUPS.length)];
+            const popup = document.createElement('div');
+            popup.className = 'tk-popup';
+            const shift = (popupOffset % 5) * 14;
+            popupOffset++;
+            popup.style.marginLeft = `${shift}px`;
+            popup.style.marginTop = `${shift}px`;
+
+            popup.innerHTML = `
+                <div class="tk-popup-titlebar">
+                    <span>💖</span>
+                    <button class="tk-popup-close" aria-label="Close">✕</button>
+                </div>
+                <div class="tk-popup-body">
+                    <div class="tk-popup-msg">${msg}</div>
+                    <button class="tk-popup-ok">Haayyyeeee!!!!! 😘💗💝</button>
+                </div>
+            `;
+            const closeFn = () => popup.remove();
+            popup.querySelector('.tk-popup-close').addEventListener('click', closeFn);
+            popup.querySelector('.tk-popup-ok').addEventListener('click', closeFn);
+            document.body.appendChild(popup);
+        }
+
+        function schedulePopup() {
+            showPopup();
+            setTimeout(schedulePopup, POPUP_INTERVAL);
+        }
+
+        revealBtnEl.addEventListener('click', () => {
+            if (started) return;
+            started = true;
+            letterBoxEl.textContent = "";
+            playSong(0);
+            typeLetter();
+            updateTimerLoop();
+            setTimeout(schedulePopup, 5000);
+        });
+    </script>
+</body>
+</html>

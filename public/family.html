@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Real Family | Yash Jangid</title>
     <link rel="icon" type="image/jpeg" href="yash.jpg">
-    <link rel="stylesheet" href="style.css?v=4.0">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css?v=4.3">
     <style>
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { min-width: 250px; padding: 15px 20px; background-color: #162a33; color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); font-size: 0.95rem; animation: slideIn 0.4s ease forwards; opacity: 0; transform: translateX(100%); }
@@ -18,6 +19,101 @@
         
         .graphic-card video { width: 100%; height: 250px; object-fit: cover; border-bottom: 2px solid var(--accent-gold); cursor: zoom-in; display: block; }
         .video-indicator { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.75); color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 4px 10px; border-radius: 5px; font-size: 0.8rem; pointer-events: none; font-weight: 600; }
+
+        /* Stealth heading — completely normal pointer on PC hover */
+        #family-heading-trigger {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: inline-block;
+            cursor: default !important;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Discreet, plain 4-digit passcode popup */
+        .discreet-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99990;
+            background: rgba(5, 10, 15, 0.72);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .discreet-overlay.open { display: flex; }
+        .discreet-box {
+            width: 100%;
+            max-width: 290px;
+            background: #101c24;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.65);
+        }
+        .discreet-box h4 {
+            margin: 0 0 12px 0;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #c8d3dc;
+        }
+        #sp-pin-input {
+            width: 100%;
+            text-align: center;
+            letter-spacing: 10px;
+            font-size: 1.25rem;
+            padding: 9px 10px;
+            margin-bottom: 14px;
+            background: #0a1218;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 6px;
+            outline: none;
+        }
+        #sp-pin-input:focus { border-color: rgba(212, 175, 55, 0.6); }
+
+        /* Unlocked Secret Hub Modal */
+        .hub-box {
+            width: 100%;
+            max-width: 620px;
+            max-height: 88vh;
+            overflow-y: auto;
+            background: linear-gradient(150deg, #0b161f 0%, #142634 100%);
+            border: 1px solid rgba(212, 175, 55, 0.45);
+            border-top: 3px solid var(--accent-gold);
+            border-radius: 14px;
+            padding: 26px;
+            box-shadow: 0 22px 60px rgba(0,0,0,0.85);
+        }
+        .hub-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .hub-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            background: rgba(0, 0, 0, 0.34);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent-gold);
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+        .hub-card:hover {
+            transform: translateX(4px);
+            background: rgba(212, 175, 55, 0.12);
+            border-color: var(--accent-gold);
+        }
+        .hub-card-title { font-size: 1.08rem; font-weight: 600; color: #fff; margin-bottom: 3px; }
+        .hub-card-sub { font-size: 0.84rem; color: var(--text-muted); }
     </style>
 </head>
 <body>
@@ -46,8 +142,33 @@
         <div id="lightbox-content-container"></div>
     </div>
 
+    <!-- DISCREET 4-DIGIT PASSCODE POPUP -->
+    <div id="sp-pin-modal" class="discreet-overlay" onclick="window.closeSpPin()">
+        <div class="discreet-box" onclick="event.stopPropagation()">
+            <h4>Enter Code</h4>
+            <input type="password" id="sp-pin-input" maxlength="4" inputmode="numeric" placeholder="••••" autocomplete="off">
+            <div style="display:flex; gap:8px;">
+                <button class="secondary-btn" onclick="window.closeSpPin()" style="flex:1; padding:7px 10px !important; font-size:0.85rem;">Cancel</button>
+                <button id="sp-pin-submit" style="flex:1; padding:7px 10px !important; font-size:0.85rem;">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXPANDABLE SECRET HUB -->
+    <div id="sp-hub-modal" class="discreet-overlay" onclick="window.closeSpHub()">
+        <div class="hub-box" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
+                <div>
+                    <h2 style="margin:0; font-size:1.45rem; color:var(--accent-gold);">Private Archive</h2>
+                    <p style="margin:4px 0 0 0; font-size:0.84rem; color:var(--text-muted);">Select an item below to open.</p>
+                </div>
+                <span onclick="window.closeSpHub()" style="cursor:pointer; font-size:1.5rem; color:var(--text-muted); padding:0 6px;">&times;</span>
+            </div>
+            <div id="sp-hub-list" class="hub-grid"></div>
+        </div>
+    </div>
+
     <section class="content-section">
-        
         <!-- 6-DIGIT PASSCODE LOCK (BACKED BY FIREBASE AUTH) -->
         <div id="login-screen" class="card" style="max-width: 400px; margin: 0 auto; text-align: center;">
             <h2 style="font-size: 2rem;">Family Vault</h2>
@@ -58,7 +179,7 @@
 
         <div id="family-content" style="display: none;">
             <div style="text-align: center;">
-                <h1 style="font-size: 3rem; margin-bottom: 10px;">My Real Family</h1>
+                <h1 id="family-heading-trigger">My Real Family</h1>
                 <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; font-weight: 500;">
                     The people and moments that matter most.
                 </p>
@@ -81,17 +202,26 @@
     </section>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
-        const app = initializeApp(firebaseConfig);
+        const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
         let globalMediaData = [];
+        let customPrograms = [];
         let ghBase = "";
+        let dataLoaded = false;
+
+        // Default 3 options (additional programs added in Secret Vault append dynamically)
+        const DEFAULT_PROGRAMS = [
+            { title: "2nd Month Anniversary Program", subtitle: "Interactive music, letter & memories", url: "Special/anniversary_2nd.html" },
+            { title: "Small Gifts", subtitle: "Monthly anniversary pamphlets, images & videos", url: "Special/small_gifts.html" },
+            { title: "11:11:11:11 Special", subtitle: "Upcoming special program", url: "Special/1111_special.html" }
+        ];
 
         async function loadGitHubConfig() {
             try {
@@ -107,14 +237,24 @@
         function escapeHTML(str) {
             return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
         }
+        function normalizeFilename(rawUrl) {
+            return String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+        }
         function resolveOriginalURL(rawUrl) {
-            const clean = String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+            const clean = normalizeFilename(rawUrl);
             if (/^https?:\/\//i.test(clean)) return clean;
             return ghBase ? (ghBase + encodeURI(clean)) : encodeURI(clean);
         }
+        function resolveThumbURL(item) {
+            if (item.thumbData) return item.thumbData;
+            const clean = normalizeFilename(item.url);
+            if (/^https?:\/\//i.test(clean)) return clean;
+            const baseName = clean.split('/').pop().replace(/\.[^/.]+$/, "");
+            const relThumb = encodeURI(`thumbs/${baseName}.webp`);
+            return ghBase ? (ghBase + relThumb) : relThumb;
+        }
         function localFallbackURL(rawUrl) {
-            const clean = String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
-            return encodeURI(clean);
+            return encodeURI(normalizeFilename(rawUrl));
         }
 
         window.openLightbox = function(url, type, fallback) { 
@@ -135,12 +275,25 @@
             document.getElementById('lightbox').style.display = 'none'; 
         };
 
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeLightbox(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.closeLightbox();
+                window.closeSpPin();
+                window.closeSpHub();
+            }
+        });
 
         function verifyAccessCodeFallback(pin) {
             const key = [24, 29, 24, 19, 25, 26];
             if (!pin || pin.length !== 6) return false;
             return key.every((v, i) => (pin.charCodeAt(i) ^ 42) === v);
+        }
+
+        // Obfuscated 4-digit passcode verifier
+        function verifySpecialPin(pin) {
+            const k = [123, 126, 121, 124];
+            if (!pin || pin.length !== 4) return false;
+            return k.every((v, i) => (pin.charCodeAt(i) ^ 73) === v);
         }
 
         function showErrorToast(msg) {
@@ -149,12 +302,84 @@
             container.appendChild(t); setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
         }
 
+        // ───────── STEALTH TRIGGER & SECRET HUB LOGIC ─────────
+        function renderSecretHub() {
+            const listEl = document.getElementById('sp-hub-list');
+            const combined = [...DEFAULT_PROGRAMS];
+            customPrograms.forEach(p => {
+                if (!combined.some(d => d.url === p.url && d.title === p.title)) {
+                    combined.push(p);
+                }
+            });
+
+            listEl.innerHTML = combined.map((item, idx) => `
+                <a class="hub-card" href="${escapeHTML(item.url)}">
+                    <div>
+                        <div class="hub-card-title">${idx + 1}. ${escapeHTML(item.title)}</div>
+                        ${item.subtitle ? `<div class="hub-card-sub">${escapeHTML(item.subtitle)}</div>` : ''}
+                    </div>
+                    <span style="color:var(--accent-gold); font-size:1.1rem; font-weight:bold;">→</span>
+                </a>
+            `).join('');
+        }
+
+        window.openSpHub = function() {
+            renderSecretHub();
+            document.getElementById('sp-hub-modal').classList.add('open');
+        };
+        window.closeSpHub = function() {
+            document.getElementById('sp-hub-modal').classList.remove('open');
+        };
+        window.closeSpPin = function() {
+            document.getElementById('sp-pin-modal').classList.remove('open');
+            document.getElementById('sp-pin-input').value = '';
+        };
+
+        document.getElementById('family-heading-trigger').addEventListener('click', () => {
+            if (sessionStorage.getItem('sp_unlocked') === '1') {
+                window.openSpHub();
+                return;
+            }
+            document.getElementById('sp-pin-modal').classList.add('open');
+            setTimeout(() => document.getElementById('sp-pin-input').focus(), 40);
+        });
+
+        function submitSpecialPin() {
+            const val = document.getElementById('sp-pin-input').value.trim();
+            if (verifySpecialPin(val)) {
+                sessionStorage.setItem('sp_unlocked', '1');
+                window.closeSpPin();
+                window.openSpHub();
+            } else {
+                document.getElementById('sp-pin-input').value = '';
+                showErrorToast("Incorrect code");
+            }
+        }
+        document.getElementById('sp-pin-submit').addEventListener('click', submitSpecialPin);
+        document.getElementById('sp-pin-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') submitSpecialPin();
+        });
+
+        // ───────── FAMILY VAULT AUTH & DATA ─────────
         async function unlockSuccess() {
+            if (dataLoaded) return;
+            dataLoaded = true;
             await loadGitHubConfig();
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('family-content').style.display = 'block';
             loadFamilyData();
+
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('hub') === '1' && sessionStorage.getItem('sp_unlocked') === '1') {
+                window.openSpHub();
+            }
         }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user && !dataLoaded) {
+                unlockSuccess();
+            }
+        });
 
         async function attemptUnlock() {
             const code = document.getElementById('family-passcode').value.trim();
@@ -176,8 +401,9 @@
             if (e.key === 'Enter') attemptUnlock();
         });
         document.getElementById('lock-album-btn').addEventListener('click', async () => {
+            sessionStorage.removeItem('sp_unlocked');
             try { await signOut(auth); } catch(e) {}
-            location.reload();
+            window.location.href = 'family.html';
         });
 
         function isVideo(url) {
@@ -209,6 +435,7 @@
             filteredData.forEach((img) => { 
                 const mediaType = (img.type === 'video' || isVideo(img.url)) ? 'video' : 'image';
                 const primaryUrl = escapeHTML(resolveOriginalURL(img.url));
+                const thumbUrl = escapeHTML(resolveThumbURL(img));
                 const fallbackUrl = escapeHTML(localFallbackURL(img.url));
                 const sCap = escapeHTML(img.caption || '');
                 let mediaHTML = "";
@@ -220,7 +447,7 @@
                             <div class="video-indicator">▶ Video</div>
                         </div>`;
                 } else {
-                    mediaHTML = `<img loading="lazy" src="${primaryUrl}" data-fallback="${fallbackUrl}" onerror="if(this.src!==this.dataset.fallback)this.src=this.dataset.fallback;" alt="${sCap || 'Memory'}" onclick="window.openLightbox(this.src, 'image', this.dataset.fallback)">`;
+                    mediaHTML = `<img loading="lazy" src="${thumbUrl}" data-gh="${primaryUrl}" data-fallback="${fallbackUrl}" onerror="if(this.src!==this.dataset.gh){this.src=this.dataset.gh;}else if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}" alt="${sCap || 'Memory'}" onclick="window.openLightbox('${primaryUrl}', 'image', '${fallbackUrl}')">`;
                 }
 
                 container.innerHTML += `
@@ -235,10 +462,19 @@
         function loadFamilyData() {
             onSnapshot(collection(db, "family"), (snapshot) => {
                 globalMediaData = []; 
-                snapshot.forEach((doc) => { globalMediaData.push({ id: doc.id, ...doc.data() }); }); 
+                snapshot.forEach((d) => { globalMediaData.push({ id: d.id, ...d.data() }); }); 
                 globalMediaData.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
                 renderGallery('all');
             });
+
+            onSnapshot(collection(db, "special_programs"), (snapshot) => {
+                customPrograms = [];
+                snapshot.forEach((d) => { customPrograms.push({ id: d.id, ...d.data() }); });
+                customPrograms.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+                if (document.getElementById('sp-hub-modal').classList.contains('open')) {
+                    renderSecretHub();
+                }
+            }, () => {});
         }
     </script>
     <script>
@@ -254,6 +490,7 @@
                 particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.55, vy: (Math.random() - 0.5) * 0.55, r: Math.random() * 1.9 + 0.9 });
             }
             function animate() {
+                if (document.hidden) return requestAnimationFrame(animate);
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 for (let i = 0; i < particles.length; i++) {
                     let p = particles[i];
