@@ -11,7 +11,7 @@ service cloud.firestore {
       );
     }
 
-    // Lock EmailJS credentials to Admin ONLY (must stay above site_config/{doc})
+    // Lock EmailJS credentials to Admin ONLY
     match /site_config/emailjs { allow read, write: if isAdmin(); }
 
     // Public portfolio configuration & pages
@@ -22,32 +22,28 @@ service cloud.firestore {
     match /mun_events/{doc} { allow read: if true; allow write: if isAdmin(); }
     match /music/{doc} { allow read: if true; allow write: if isAdmin(); }
     
-    // Public Contact Form (write-only for visitors, read/manage for Admin)
+    // Public Contact Form & Private Pings / 11:11 Wishes
     match /inbox_messages/{doc} { allow create: if true; allow read, update, delete: if isAdmin(); }
     
-    // Private Family Vault & Hidden Secret Hub Collections (Requires Sign-In)
-    match /family/{doc} { 
-      allow read: if request.auth != null; 
-      allow write: if isAdmin(); 
-    }
-    match /special_gifts/{doc} { 
-      allow read: if request.auth != null; 
-      allow write: if isAdmin(); 
-    }
-    match /special_programs/{doc} { 
-      allow read: if request.auth != null; 
-      allow write: if isAdmin(); 
-    }
+    // Private Family Vault & Hidden Secret Hub Collections
+    match /family/{doc} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /special_gifts/{doc} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /special_programs/{doc} { allow read: if request.auth != null; allow write: if isAdmin(); }
+
+    // 11:11 Sanctuary Collections
+    match /special_config/next_date { allow read, write: if request.auth != null; }
+    match /special_config/{doc} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /special_dates/{doc} { allow read, create: if request.auth != null; allow update, delete: if isAdmin(); }
+    match /special_stars/{doc} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /special_open_when/{doc} { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /special_1111/{doc} { allow read: if request.auth != null; allow write: if isAdmin(); }
     
     // System Audit Logs & Personnel Clearance
-    match /vault_logs/{doc} { 
-      allow create: if true; 
-      allow read, update, delete: if isAdmin(); 
-    }
-    match /vault_access/{email} { 
-      allow read: if true; 
-      allow create: if request.resource.data.approved == false; 
-      allow update, delete: if isAdmin(); 
+    match /vault_logs/{doc} { allow create: if true; allow read, update, delete: if isAdmin(); }
+    match /vault_access/{email} {
+      allow read: if true;
+      allow create: if request.resource.data.approved == false;
+      allow update, delete: if isAdmin();
     }
   }
 }

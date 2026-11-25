@@ -6,11 +6,12 @@
     <title>My Real Family | Yash Jangid</title>
     <link rel="icon" type="image/jpeg" href="yash.jpg">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css?v=4.4">
+    <link rel="stylesheet" href="style.css?v=4.5">
     <style>
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 100000; display: flex; flex-direction: column; gap: 10px; }
         .toast { min-width: 250px; padding: 15px 20px; background-color: #162a33; color: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); font-size: 0.95rem; animation: slideIn 0.4s ease forwards; opacity: 0; transform: translateX(100%); }
         .toast.error { border-left: 5px solid #e74c3c; }
+        .toast.success { border-left: 5px solid #2ecc71; }
         @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
         
         .filter-nav { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
@@ -77,8 +78,8 @@
         /* Unlocked Secret Hub Modal */
         .hub-box {
             width: 100%;
-            max-width: 620px;
-            max-height: 88vh;
+            max-width: 640px;
+            max-height: 90vh;
             overflow-y: auto;
             background: linear-gradient(150deg, #0b161f 0%, #142634 100%);
             border: 1px solid rgba(212, 175, 55, 0.45);
@@ -91,7 +92,7 @@
             display: grid;
             grid-template-columns: 1fr;
             gap: 12px;
-            margin-top: 18px;
+            margin-top: 16px;
         }
         .hub-card {
             display: flex;
@@ -114,6 +115,60 @@
         }
         .hub-card-title { font-size: 1.08rem; font-weight: 600; color: #fff; margin-bottom: 3px; }
         .hub-card-sub { font-size: 0.84rem; color: var(--text-muted); }
+
+        /* Hub Quick Action Bar & Inline Drawers */
+        .hub-nextdate-strip {
+            margin-top: 14px;
+            padding: 12px 15px;
+            background: rgba(212, 175, 55, 0.08);
+            border: 1px solid rgba(212, 175, 55, 0.32);
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .hub-actions-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .hub-drawer {
+            display: none;
+            margin-top: 14px;
+            padding: 16px;
+            background: rgba(4, 10, 16, 0.72);
+            border: 1px solid rgba(212, 175, 55, 0.35);
+            border-radius: 10px;
+        }
+        .hub-drawer.open { display: block; }
+        .hub-quick-chip {
+            background: rgba(212, 175, 55, 0.14);
+            color: var(--accent-gold);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 16px;
+            padding: 5px 11px;
+            font-size: 0.78rem;
+            cursor: pointer;
+        }
+        .hub-quick-chip:hover { background: var(--accent-gold); color: #000; }
+        .hub-input {
+            width: 100%;
+            background: #0a1218;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 6px;
+            padding: 9px 11px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            margin-bottom: 10px;
+            outline: none;
+        }
+        .hub-input:focus { border-color: var(--accent-gold); }
     </style>
 </head>
 <body>
@@ -160,11 +215,55 @@
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
                 <div>
                     <h2 style="margin:0; font-size:1.45rem; color:var(--accent-gold);">Private Archive</h2>
-                    <p style="margin:4px 0 0 0; font-size:0.84rem; color:var(--text-muted);">Select an item below to open.</p>
+                    <p style="margin:4px 0 0 0; font-size:0.84rem; color:var(--text-muted);">Select an item below, ping Yash directly, or set our next date.</p>
                 </div>
                 <span onclick="window.closeSpHub()" style="cursor:pointer; font-size:1.5rem; color:var(--text-muted); padding:0 6px;">&times;</span>
             </div>
+
+            <!-- LIVE "OUR NEXT DATE" STRIP -->
+            <div class="hub-nextdate-strip">
+                <div>
+                    <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1.2px; color:var(--accent-gold); font-weight:700;">Our Next Date</div>
+                    <div id="hub-nd-summary" style="font-size:0.95rem; color:#fff; font-weight:600; margin-top:2px;">Planning our next date soon...</div>
+                </div>
+                <button type="button" class="secondary-btn" onclick="window.toggleHubDrawer('hub-date-drawer')" style="padding:6px 12px !important; font-size:0.78rem;">📅 Set Date</button>
+            </div>
+
+            <!-- PROGRAMS LIST -->
             <div id="sp-hub-list" class="hub-grid"></div>
+
+            <!-- DIRECT PING & DATE ACTION BUTTONS -->
+            <div class="hub-actions-row">
+                <button type="button" onclick="window.toggleHubDrawer('hub-ping-drawer')" style="flex:1; min-width:190px; padding:10px 16px !important; font-size:0.88rem;">💗 Send a Ping to Yash</button>
+                <button type="button" class="secondary-btn" onclick="window.toggleHubDrawer('hub-date-drawer')" style="flex:1; min-width:170px; padding:10px 16px !important; font-size:0.88rem;">📅 Update Next Date</button>
+            </div>
+
+            <!-- INLINE CUSTOM NTFY.SH PING DRAWER -->
+            <div id="hub-ping-drawer" class="hub-drawer">
+                <h4 style="margin:0 0 8px 0; color:var(--accent-gold); font-size:0.95rem;">Send Instant Notification to Yash</h4>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+                    <button type="button" class="hub-quick-chip" onclick="window.setHubPing('Missing you right now 💗')">Missing you 💗</button>
+                    <button type="button" class="hub-quick-chip" onclick="window.setHubPing('Call me whenever you get free 📞')">Call when free 📞</button>
+                    <button type="button" class="hub-quick-chip" onclick="window.setHubPing('Just checking in — I love you 🤍')">Love you 🤍</button>
+                </div>
+                <textarea id="hub-ping-msg" rows="2" class="hub-input" placeholder="Type any custom message for Yash's phone..."></textarea>
+                <button type="button" id="hub-ping-send-btn" onclick="window.sendHubPing()" style="width:100%; padding:9px 14px !important; font-size:0.86rem;">💗 Send Notification Now</button>
+            </div>
+
+            <!-- INLINE SET "OUR NEXT DATE" DRAWER -->
+            <div id="hub-date-drawer" class="hub-drawer">
+                <h4 style="margin:0 0 10px 0; color:var(--accent-gold); font-size:0.95rem;">Set / Update Our Next Date</h4>
+                <input type="text" id="hub-nd-title" class="hub-input" placeholder="Date Title / Place (e.g. Regular Cafe near MNIT)">
+                <input type="datetime-local" id="hub-nd-datetime" class="hub-input">
+                <textarea id="hub-nd-note" rows="2" class="hub-input" placeholder="Short note (Optional)..."></textarea>
+                <label style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text-muted); margin-bottom:12px; cursor:pointer;">
+                    <input type="checkbox" id="hub-nd-log" checked> Also add to Our Dates Log
+                </label>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" id="hub-nd-save-btn" onclick="window.saveHubNextDate()" style="flex:1; padding:9px 14px !important; font-size:0.86rem;">Save Next Date</button>
+                    <button type="button" class="secondary-btn" onclick="window.resetHubNextDate()" style="padding:9px 14px !important; font-size:0.82rem;">Reset</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -203,7 +302,7 @@
 
     <script type="module">
         import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, setPersistence, browserSessionPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
@@ -211,19 +310,20 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Enforce session-only persistence immediately so browser/tab close wipes auth
         setPersistence(auth, browserSessionPersistence).catch(() => {});
 
         let globalMediaData = [];
         let customPrograms = [];
         let ghBase = "";
+        let ntfyTopic = "yj-tanvi-hb-270511";
+        let nextDateCache = null;
         let dataLoaded = false;
         let navigatingToSpecial = false;
 
         const DEFAULT_PROGRAMS = [
             { title: "2nd Month Anniversary Program", subtitle: "Interactive music, letter & memories", url: "Special/anniversary_2nd.html" },
             { title: "Small Gifts", subtitle: "Monthly anniversary pamphlets, images & videos", url: "Special/small_gifts.html" },
-            { title: "11:11:11:11 Special", subtitle: "Upcoming special program", url: "Special/1111_special.html" }
+            { title: "11:11:11:11 Special", subtitle: "Our midnight sanctuary, dates log & assurances", url: "Special/1111_special.html" }
         ];
 
         async function lockVaultNow(reloadPage = true) {
@@ -231,12 +331,9 @@
             sessionStorage.removeItem('fam_unlocked');
             dataLoaded = false;
             try { await signOut(auth); } catch (e) {}
-            if (reloadPage) {
-                window.location.replace('family.html');
-            }
+            if (reloadPage) window.location.replace('family.html');
         }
 
-        // AUTO-LOCK: When switching tabs, minimizing browser, or leaving the page (except into Special/)
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && !navigatingToSpecial && dataLoaded) {
                 lockVaultNow(true);
@@ -251,13 +348,17 @@
             }
         });
 
-        async function loadGitHubConfig() {
+        async function loadSiteConfigs() {
             try {
                 const cfg = await getDoc(doc(db, "site_config", "github"));
                 if (cfg.exists() && cfg.data().enabled && cfg.data().user && cfg.data().repo) {
                     const d = cfg.data();
                     const folder = d.folder ? d.folder.replace(/^\/+|\/+$/g, '') + '/' : '';
                     ghBase = `https://raw.githubusercontent.com/${d.user}/${d.repo}/${d.branch || 'main'}/${folder}`;
+                }
+                const ntfySnap = await getDoc(doc(db, "special_config", "ntfy"));
+                if (ntfySnap.exists() && ntfySnap.data().topic) {
+                    ntfyTopic = ntfySnap.data().topic;
                 }
             } catch (e) {}
         }
@@ -283,6 +384,15 @@
         }
         function localFallbackURL(rawUrl) {
             return encodeURI(normalizeFilename(rawUrl));
+        }
+
+        function showToast(msg, type = 'error') {
+            const container = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            t.innerText = msg;
+            container.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3200);
         }
 
         window.openLightbox = function(url, type, fallback) { 
@@ -323,12 +433,117 @@
             return k.every((v, i) => (pin.charCodeAt(i) ^ 73) === v);
         }
 
-        function showErrorToast(msg) {
-            const container = document.getElementById('toast-container');
-            const t = document.createElement('div'); t.className = `toast error`; t.innerText = msg;
-            container.appendChild(t); setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
+        // ───────── HUB DRAWERS, NTFY.SH PING & NEXT DATE CONTROLS ─────────
+        async function sendNtfyNotification(asciiTitle, bodyText, tags = "sparkling_heart") {
+            const topic = (ntfyTopic || "yj-tanvi-hb-270511").trim();
+            try {
+                await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
+                    method: "POST",
+                    headers: { "Title": asciiTitle, "Priority": "high", "Tags": tags },
+                    body: bodyText
+                });
+            } catch (e) {}
+            try {
+                await setDoc(doc(db, "inbox_messages", Date.now().toString()), {
+                    name: "Tanvi (Private Hub)",
+                    email: "private-hub@yash-jangid.web.app",
+                    message: `[${asciiTitle}] ${bodyText}`,
+                    timestamp: Date.now(),
+                    replied: false
+                });
+            } catch (e) {}
         }
 
+        window.toggleHubDrawer = function(drawerId) {
+            ['hub-ping-drawer', 'hub-date-drawer'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (id === drawerId) {
+                    const willOpen = !el.classList.contains('open');
+                    el.classList.toggle('open', willOpen);
+                    if (willOpen && id === 'hub-date-drawer' && nextDateCache) {
+                        document.getElementById('hub-nd-title').value = nextDateCache.title || '';
+                        document.getElementById('hub-nd-datetime').value = nextDateCache.datetime || '';
+                        document.getElementById('hub-nd-note').value = nextDateCache.note || '';
+                    }
+                } else {
+                    el.classList.remove('open');
+                }
+            });
+        };
+
+        window.setHubPing = function(txt) {
+            document.getElementById('hub-ping-msg').value = txt;
+        };
+
+        window.sendHubPing = async function() {
+            const msg = document.getElementById('hub-ping-msg').value.trim();
+            if (!msg) return showToast("Write or pick a message first.", "error");
+            const btn = document.getElementById('hub-ping-send-btn');
+            btn.disabled = true; btn.innerText = "Sending...";
+            await sendNtfyNotification("Ping from Tanvi (Private Hub)", msg, "sparkling_heart");
+            document.getElementById('hub-ping-msg').value = "";
+            btn.disabled = false; btn.innerText = "💗 Send Notification Now";
+            document.getElementById('hub-ping-drawer').classList.remove('open');
+            showToast("Notification sent to Yash's phone 💗", "success");
+        };
+
+        function updateHubNextDateLabel() {
+            const el = document.getElementById('hub-nd-summary');
+            if (!el) return;
+            if (!nextDateCache || !nextDateCache.datetime) {
+                el.textContent = "Planning our next date soon...";
+                return;
+            }
+            const tMs = new Date(nextDateCache.datetime).getTime();
+            const diff = tMs - Date.now();
+            const dateStr = new Date(tMs).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            if (diff <= 0) {
+                el.textContent = `${nextDateCache.title || 'Our Date'} — It's Date Day! ✨`;
+            } else {
+                const days = Math.floor(diff / 86400000);
+                const hrs = Math.floor((diff % 86400000) / 3600000);
+                el.textContent = `${nextDateCache.title || 'Next Date'} (${dateStr} • ${days}d ${hrs}h left)`;
+            }
+        }
+
+        window.saveHubNextDate = async function() {
+            const title = document.getElementById('hub-nd-title').value.trim();
+            const datetime = document.getElementById('hub-nd-datetime').value;
+            const note = document.getElementById('hub-nd-note').value.trim();
+            const shouldLog = document.getElementById('hub-nd-log').checked;
+            if (!title || !datetime) return showToast("Enter a title and date/time.", "error");
+
+            const btn = document.getElementById('hub-nd-save-btn');
+            btn.disabled = true; btn.innerText = "Saving...";
+            try {
+                await setDoc(doc(db, "special_config", "next_date"), { title, datetime, note, updatedAt: Date.now() }, { merge: true });
+                if (shouldLog) {
+                    const readableDate = new Date(datetime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                    await setDoc(doc(db, "special_dates", Date.now().toString()), {
+                        date: readableDate,
+                        title,
+                        note: note || "Planned together from Private Hub.",
+                        orderIndex: Date.now()
+                    });
+                }
+                await sendNtfyNotification("Our Next Date Set", `${title} on ${new Date(datetime).toLocaleString()} ${note ? '— ' + note : ''}`, "calendar,heart");
+                document.getElementById('hub-date-drawer').classList.remove('open');
+                showToast("Our Next Date saved & logged! 📅", "success");
+            } catch (e) {
+                showToast("Could not save date. Check Firestore rules.", "error");
+            } finally {
+                btn.disabled = false; btn.innerText = "Save Next Date";
+            }
+        };
+
+        window.resetHubNextDate = async function() {
+            await setDoc(doc(db, "special_config", "next_date"), { title: "", datetime: "", note: "", updatedAt: Date.now() });
+            document.getElementById('hub-date-drawer').classList.remove('open');
+            showToast("Reset to 'Planning our next date soon...'", "success");
+        };
+
+        // ───────── HUB RENDERING ─────────
         function renderSecretHub() {
             const listEl = document.getElementById('sp-hub-list');
             const combined = [...DEFAULT_PROGRAMS];
@@ -348,12 +563,10 @@
                 </a>
             `).join('');
 
-            // Mark intentional navigation to Special/ pages so pagehide doesn't lock it
             listEl.querySelectorAll('.hub-card').forEach(link => {
-                link.addEventListener('click', () => {
-                    navigatingToSpecial = true;
-                });
+                link.addEventListener('click', () => { navigatingToSpecial = true; });
             });
+            updateHubNextDateLabel();
         }
 
         window.openSpHub = function() {
@@ -362,6 +575,8 @@
         };
         window.closeSpHub = function() {
             document.getElementById('sp-hub-modal').classList.remove('open');
+            document.getElementById('hub-ping-drawer').classList.remove('open');
+            document.getElementById('hub-date-drawer').classList.remove('open');
         };
         window.closeSpPin = function() {
             document.getElementById('sp-pin-modal').classList.remove('open');
@@ -385,7 +600,7 @@
                 window.openSpHub();
             } else {
                 document.getElementById('sp-pin-input').value = '';
-                showErrorToast("Incorrect code");
+                showToast("Incorrect code", "error");
             }
         }
         document.getElementById('sp-pin-submit').addEventListener('click', submitSpecialPin);
@@ -393,11 +608,12 @@
             if (e.key === 'Enter') submitSpecialPin();
         });
 
+        // ───────── FAMILY VAULT AUTH & DATA ─────────
         async function unlockSuccess(openHubAfter = false) {
             if (dataLoaded) return;
             dataLoaded = true;
             sessionStorage.setItem('fam_unlocked', '1');
-            await loadGitHubConfig();
+            await loadSiteConfigs();
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('family-content').style.display = 'block';
             loadFamilyData();
@@ -407,7 +623,6 @@
             }
         }
 
-        // Only restore session if returning via "← Back" from Special/ (?hub=1); otherwise force fresh lock!
         const urlParams = new URLSearchParams(window.location.search);
         const isReturningFromHub = urlParams.get('hub') === '1' && sessionStorage.getItem('fam_unlocked') === '1';
 
@@ -417,15 +632,13 @@
             signOut(auth).catch(() => {});
         } else {
             onAuthStateChanged(auth, (user) => {
-                if (user && !dataLoaded) {
-                    unlockSuccess(true);
-                }
+                if (user && !dataLoaded) unlockSuccess(true);
             });
         }
 
         async function attemptUnlock() {
             const code = document.getElementById('family-passcode').value.trim();
-            if (!code) return showErrorToast("Enter 6-digit access code");
+            if (!code) return showToast("Enter 6-digit access code", "error");
             try {
                 await setPersistence(auth, browserSessionPersistence);
                 await signInWithEmailAndPassword(auth, "family-vault@yashjangid.com", code);
@@ -434,7 +647,7 @@
                 if (verifyAccessCodeFallback(code)) {
                     await unlockSuccess(false);
                 } else {
-                    showErrorToast("Invalid Passcode");
+                    showToast("Invalid Passcode", "error");
                 }
             }
         }
@@ -513,6 +726,11 @@
                 if (document.getElementById('sp-hub-modal').classList.contains('open')) {
                     renderSecretHub();
                 }
+            }, () => {});
+
+            onSnapshot(doc(db, "special_config", "next_date"), (s) => {
+                nextDateCache = s.exists() ? s.data() : null;
+                updateHubNextDateLabel();
             }, () => {});
         }
     </script>

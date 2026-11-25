@@ -3,22 +3,1644 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>11:11:11:11 Special</title>
+    <title>11:11:11:11 — Our Midnight Sanctuary</title>
     <link rel="icon" type="image/jpeg" href="../yash.jpg">
-    <link rel="stylesheet" href="../style.css?v=4.3">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #050b14;
+            --bg-card: rgba(11, 22, 36, 0.82);
+            --gold: #d9b660;
+            --gold-bright: #f6dc8f;
+            --gold-soft: rgba(217, 182, 96, 0.28);
+            --rose-soft: #e9a6b9;
+            --text-main: #eef3f8;
+            --text-muted: #98abbe;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            min-height: 100%;
+            background: radial-gradient(ellipse at top, #0d1d33 0%, #060d18 55%, #03070e 100%);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: hidden;
+        }
+
+        #sky-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Toast */
+        #toast-box {
+            position: fixed;
+            bottom: 84px;
+            right: 20px;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast {
+            background: rgba(12, 24, 38, 0.96);
+            border: 1px solid var(--gold);
+            border-left: 4px solid var(--gold);
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            animation: fadeUp 0.25s ease;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Top Utility Bar */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: rgba(5, 11, 20, 0.72);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(217, 182, 96, 0.16);
+        }
+        .pill-btn {
+            background: rgba(217, 182, 96, 0.12);
+            color: var(--gold-bright);
+            border: 1px solid rgba(217, 182, 96, 0.42);
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+        .pill-btn:hover { background: var(--gold); color: #050b14; }
+        .bg-track-chip {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+
+        /* Gate / Soft-Lock / Entry Overlays */
+        .center-screen {
+            position: relative;
+            z-index: 5;
+            min-height: calc(100vh - 60px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid var(--gold-soft);
+            border-top: 3px solid var(--gold);
+            border-radius: 18px;
+            padding: 32px 28px;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 22px 60px rgba(0, 0, 0, 0.65);
+        }
+        .softlock-card {
+            max-width: 560px;
+            width: 100%;
+            text-align: center;
+        }
+        .serif-title {
+            font-family: 'Cinzel', Georgia, serif;
+            color: var(--gold-bright);
+            letter-spacing: 2px;
+        }
+        .poetic-sub {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-style: italic;
+            font-size: 1.25rem;
+            color: var(--text-muted);
+        }
+
+        .countdown-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 24px 0;
+        }
+        .cd-box {
+            background: rgba(5, 11, 20, 0.72);
+            border: 1px solid rgba(217, 182, 96, 0.35);
+            border-radius: 12px;
+            padding: 14px 8px;
+        }
+        .cd-num {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.5rem, 4vw, 2.3rem);
+            color: #fff;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+        .cd-lbl {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--gold);
+            margin-top: 4px;
+        }
+
+        /* Main Sanctuary Container */
+        #sanctuary-app {
+            position: relative;
+            z-index: 2;
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 28px 18px 110px 18px;
+        }
+        .section-head {
+            text-align: center;
+            margin: 48px 0 22px 0;
+        }
+        .section-head h2 {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.45rem, 3vw, 2rem);
+            color: var(--gold-bright);
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
+        }
+        .section-head p {
+            color: var(--text-muted);
+            font-size: 0.94rem;
+        }
+
+        /* Zone 1: Dual Clocks */
+        .hero-box {
+            text-align: center;
+            padding: 34px 24px;
+            border-radius: 20px;
+            background: linear-gradient(160deg, rgba(13, 27, 46, 0.85), rgba(7, 15, 27, 0.9));
+            border: 1px solid rgba(217, 182, 96, 0.35);
+            box-shadow: 0 24px 65px rgba(0, 0, 0, 0.65);
+        }
+        .together-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            max-width: 680px;
+            margin: 22px auto 24px auto;
+        }
+        @media (max-width: 560px) {
+            .together-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        .t-unit {
+            background: rgba(4, 9, 17, 0.75);
+            border: 1px solid rgba(217, 182, 96, 0.3);
+            border-radius: 12px;
+            padding: 12px 6px;
+        }
+        .t-val {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.35rem, 3.2vw, 2rem);
+            font-weight: 700;
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+        }
+        .t-lbl {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gold);
+            margin-top: 3px;
+        }
+
+        .daily-1111-bar {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 14px 26px;
+            border-radius: 14px;
+            background: rgba(217, 182, 96, 0.08);
+            border: 1px solid rgba(217, 182, 96, 0.38);
+            user-select: none;
+            cursor: default;
+        }
+        .daily-1111-bar.active-minute {
+            background: rgba(217, 182, 96, 0.24);
+            border-color: var(--gold-bright);
+            box-shadow: 0 0 28px rgba(217, 182, 96, 0.45);
+            cursor: pointer;
+            animation: pulseGlow 1.8s infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 18px rgba(217, 182, 96, 0.35); }
+            50% { box-shadow: 0 0 36px rgba(246, 220, 143, 0.7); }
+        }
+        #daily-1111-clock {
+            font-family: 'Cinzel', serif;
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: var(--gold-bright);
+            letter-spacing: 2px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Zone 1B: Our Next Date + Previous Dates Log */
+        .dates-split {
+            display: grid;
+            grid-template-columns: 1fr 1.35fr;
+            gap: 18px;
+            margin-top: 22px;
+        }
+        @media (max-width: 780px) {
+            .dates-split { grid-template-columns: 1fr; }
+        }
+        .next-date-card {
+            background: var(--bg-card);
+            border: 1px solid var(--gold-soft);
+            border-left: 4px solid var(--gold);
+            border-radius: 16px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 14px;
+        }
+        .past-dates-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 22px;
+        }
+        .dates-timeline {
+            max-height: 295px;
+            overflow-y: auto;
+            padding-right: 6px;
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .dates-timeline::-webkit-scrollbar { width: 5px; }
+        .dates-timeline::-webkit-scrollbar-thumb { background: rgba(217,182,96,0.4); border-radius: 4px; }
+        .date-entry {
+            background: rgba(4, 10, 18, 0.65);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-left: 3px solid var(--gold);
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+        .date-entry-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+        }
+        .date-entry-title { font-weight: 600; font-size: 0.94rem; color: #fff; }
+        .date-entry-when { font-size: 0.75rem; color: var(--gold); font-weight: 600; }
+        .date-entry-note { font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; }
+
+        /* Zone 2: 11-Star Constellation */
+        .constellation-wrap {
+            background: radial-gradient(circle at center, rgba(17, 36, 61, 0.72), rgba(5, 11, 20, 0.88));
+            border: 1px solid var(--gold-soft);
+            border-radius: 18px;
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+        #constellation-svg {
+            width: 100%;
+            height: 290px;
+            display: block;
+        }
+        .star-node { cursor: pointer; transition: transform 0.2s ease; }
+        .star-node:hover circle.star-core { r: 9; fill: #fff; }
+        .star-label {
+            fill: #c8d6e5;
+            font-size: 11px;
+            font-family: 'Inter', sans-serif;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+        .star-reader {
+            margin-top: 14px;
+            padding: 18px 20px;
+            border-radius: 12px;
+            background: rgba(4, 9, 17, 0.8);
+            border: 1px solid rgba(217, 182, 96, 0.35);
+            min-height: 92px;
+        }
+
+        /* Zone 3: Open When Assurance Capsules */
+        .capsules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .capsule-card {
+            background: linear-gradient(155deg, rgba(13, 25, 42, 0.88), rgba(8, 16, 28, 0.9));
+            border: 1px solid rgba(217, 182, 96, 0.24);
+            border-radius: 14px;
+            padding: 20px;
+            cursor: pointer;
+            transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .capsule-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--gold);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), 0 0 18px rgba(217, 182, 96, 0.16);
+        }
+        .capsule-icon-box {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(217, 182, 96, 0.12);
+            border: 1px solid rgba(217, 182, 96, 0.32);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .capsule-title { font-size: 1rem; font-weight: 600; color: #fff; line-height: 1.35; }
+        .capsule-teaser { font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; }
+
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(3, 7, 14, 0.86);
+            backdrop-filter: blur(10px);
+            justify-content: center;
+            align-items: center;
+            padding: 18px;
+            overflow-y: auto;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            width: 100%;
+            max-width: 660px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: linear-gradient(160deg, #0b1727 0%, #112238 100%);
+            border: 1px solid var(--gold);
+            border-top: 4px solid var(--gold);
+            border-radius: 18px;
+            padding: 28px 26px;
+            box-shadow: 0 28px 80px rgba(0,0,0,0.85);
+            position: relative;
+        }
+        .capsule-letter-body {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 1.26rem;
+            line-height: 1.72;
+            color: #f0f4f8;
+            white-space: pre-wrap;
+            margin: 18px 0;
+        }
+        .capsule-audio-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: rgba(4, 10, 18, 0.78);
+            border: 1px solid rgba(217, 182, 96, 0.35);
+            border-radius: 12px;
+            padding: 12px 15px;
+            margin-top: 14px;
+        }
+
+        /* Floating Heartbeat / Ping Button */
+        #heartbeat-fab {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            z-index: 80;
+            background: linear-gradient(135deg, #c9973b, #e7c976);
+            color: #08111c;
+            border: none;
+            border-radius: 30px;
+            padding: 13px 22px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(217, 182, 96, 0.38);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s ease;
+        }
+        #heartbeat-fab:hover { transform: scale(1.04); }
+
+        /* Form controls inside modals */
+        .dark-input {
+            width: 100%;
+            background: rgba(4, 9, 17, 0.85);
+            color: #fff;
+            border: 1px solid rgba(217, 182, 96, 0.35);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-family: inherit;
+            font-size: 0.92rem;
+            outline: none;
+            margin-bottom: 10px;
+        }
+        .dark-input:focus { border-color: var(--gold-bright); }
+        .primary-gold-btn {
+            background: linear-gradient(135deg, #c89b3c, #ecd080);
+            color: #060d18;
+            border: none;
+            border-radius: 10px;
+            padding: 11px 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .primary-gold-btn:hover { filter: brightness(1.08); }
+        .quick-chip {
+            background: rgba(217, 182, 96, 0.12);
+            color: var(--gold-bright);
+            border: 1px solid rgba(217, 182, 96, 0.35);
+            border-radius: 18px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .quick-chip:hover { background: var(--gold); color: #050b14; }
+
+        /* Shooting Star Effect */
+        .shooting-star {
+            position: fixed;
+            top: 14%;
+            left: -180px;
+            width: 180px;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(255,255,255,0), #f6dc8f, #ffffff);
+            z-index: 9998;
+            transform: rotate(16deg);
+            box-shadow: 0 0 14px #f6dc8f;
+            animation: shootAcross 1.3s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes shootAcross {
+            0% { transform: translate(0, 0) rotate(16deg); opacity: 1; }
+            100% { transform: translate(125vw, 35vh) rotate(16deg); opacity: 0; }
+        }
+    </style>
 </head>
 <body>
-    <section class="content-section" style="min-height: 90vh; display: flex; align-items: center; justify-content: center;">
-        <div class="card" style="max-width: 480px; width: 100%; text-align: center; border-top: 3px solid var(--accent-gold) !important;">
-            <p style="color: var(--accent-gold); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;">Coming Soon</p>
-            <h1 style="font-size: 2.4rem; margin: 0 0 12px 0;">11:11:11:11 Special</h1>
-            <p style="color: var(--text-muted); margin-bottom: 28px; line-height: 1.6;">
-                This special space is reserved and currently being prepared.
-            </p>
-            <a href="../family.html?hub=1" style="text-decoration: none;">
-                <button style="width: 100%;">← Back to Private Hub</button>
-            </a>
+    <canvas id="sky-canvas"></canvas>
+    <div id="toast-box"></div>
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+        <a href="../family.html?hub=1" class="pill-btn">← Back to Hub</a>
+        <div id="ambient-controls" style="display:none; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span class="bg-track-chip">
+                <span id="bg-track-name">Orchestra Ready</span>
+                <button id="bg-mute-btn" onclick="window.toggleBgAudio()" style="background:none; border:none; color:var(--gold-bright); cursor:pointer; font-size:0.85rem;" title="Mute / Unmute">🔊</button>
+                <button onclick="window.nextBgTrack()" style="background:none; border:none; color:var(--gold-bright); cursor:pointer; font-size:0.82rem;" title="Next Ambient Track">⏭</button>
+            </span>
         </div>
-    </section>
+    </div>
+
+    <!-- 1. AUTH RESTRICTED SCREEN -->
+    <div id="gate-blocked" class="center-screen" style="display:none;">
+        <div class="glass-card softlock-card">
+            <h2 class="serif-title" style="margin-bottom:10px;">Restricted Sanctuary</h2>
+            <p style="color:var(--text-muted); margin-bottom:22px;">Open this space from the Family Vault first.</p>
+            <a href="../family.html" style="text-decoration:none;"><button class="primary-gold-btn">Go to Family Vault</button></a>
+        </div>
+    </div>
+
+    <!-- 2. TEMPORARY SOFT-LOCK SCREEN (AUTO-UNLOCKS AT 1 DEC 2026 12:22 PM IST) -->
+    <div id="softlock-screen" class="center-screen" style="display:none;">
+        <div class="glass-card softlock-card">
+            <p style="color:var(--gold); font-size:0.78rem; letter-spacing:2.4px; text-transform:uppercase; margin-bottom:10px;">Locked Until Our Exact Moment</p>
+            <h1 id="softlock-secret-title" class="serif-title" style="font-size:clamp(2.2rem, 6vw, 3.2rem); margin-bottom:8px; user-select:none; cursor:default;">11:11:11:11</h1>
+            <p class="poetic-sub" style="margin-bottom:10px;">11 Months, 11 Days, 11 Hours &amp; 11 Minutes of Us</p>
+            <p style="color:var(--text-muted); font-size:0.88rem;">Unlocks automatically on 1 December 2026 at 12:22 PM IST</p>
+
+            <div class="countdown-grid">
+                <div class="cd-box"><div id="sl-d" class="cd-num">00</div><div class="cd-lbl">Days</div></div>
+                <div class="cd-box"><div id="sl-h" class="cd-num">00</div><div class="cd-lbl">Hours</div></div>
+                <div class="cd-box"><div id="sl-m" class="cd-num">00</div><div class="cd-lbl">Mins</div></div>
+                <div class="cd-box"><div id="sl-s" class="cd-num">00</div><div class="cd-lbl">Secs</div></div>
+            </div>
+
+            <p style="color:var(--text-muted); font-size:0.84rem; line-height:1.6;">
+                Something quiet, timeless, and built just for the two of us is waiting on the other side of this clock.
+            </p>
+        </div>
+    </div>
+
+    <!-- 3. GENTLE ENTRY SCREEN (ONE TAP TO START ORCHESTRAL SHUFFLE) -->
+    <div id="entry-screen" class="center-screen" style="display:none;">
+        <div class="glass-card softlock-card">
+            <p style="color:var(--gold); font-size:0.78rem; letter-spacing:2.4px; text-transform:uppercase; margin-bottom:10px;">For Tanvi • Since 20 Dec 2025, 1:11 AM</p>
+            <h1 class="serif-title" style="font-size:clamp(2rem, 5.5vw, 3rem); margin-bottom:10px;">11:11:11:11</h1>
+            <p class="poetic-sub" style="margin-bottom:24px;">
+                Not just hope — assurance. Whenever I can’t be on text, step in here and remember I’m right beside you.
+            </p>
+            <button id="enter-sanctuary-btn" class="primary-gold-btn" style="padding:13px 30px; font-size:0.96rem;">Step Into Our Sky ✨</button>
+        </div>
+    </div>
+
+    <!-- 4. MAIN MIDNIGHT SANCTUARY -->
+    <main id="sanctuary-app" style="display:none;">
+        <div id="preview-banner" style="display:none; text-align:center; margin-bottom:14px; padding:8px 14px; border-radius:10px; background:rgba(217,182,96,0.16); border:1px solid var(--gold); color:var(--gold-bright); font-size:0.82rem;">
+            Preview Mode Active (Public countdown remains active until 1 Dec 2026, 12:22 PM IST)
+        </div>
+
+        <!-- ZONE 1: DUAL PERMANENT CLOCKS -->
+        <section class="hero-box">
+            <p style="color:var(--gold); font-size:0.76rem; letter-spacing:2.4px; text-transform:uppercase; margin-bottom:6px;">Since 20 December 2025 • 1:11 AM</p>
+            <h1 class="serif-title" style="font-size:clamp(1.75rem, 4.5vw, 2.7rem); margin-bottom:6px;">Still Counting, Never Pausing</h1>
+            <p class="poetic-sub">Even across classrooms, cities, and busy days — every second is still ours.</p>
+
+            <div class="together-grid">
+                <div class="t-unit"><div id="up-mo" class="t-val">11</div><div class="t-lbl">Months</div></div>
+                <div class="t-unit"><div id="up-d" class="t-val">11</div><div class="t-lbl">Days</div></div>
+                <div class="t-unit"><div id="up-h" class="t-val">11</div><div class="t-lbl">Hours</div></div>
+                <div class="t-unit"><div id="up-m" class="t-val">11</div><div class="t-lbl">Mins</div></div>
+                <div class="t-unit"><div id="up-s" class="t-val">00</div><div class="t-lbl">Secs</div></div>
+            </div>
+
+            <!-- DAILY 11:11 AM & PM BACKWARD TIMER -->
+            <div id="daily-1111-bar" class="daily-1111-bar">
+                <span id="daily-1111-label" style="font-size:0.74rem; text-transform:uppercase; letter-spacing:1.4px; color:var(--text-muted);">Next 11:11 Surprise In</span>
+                <div id="daily-1111-clock">00:00:00</div>
+                <span id="daily-1111-sub" style="font-size:0.75rem; color:var(--gold);">Syncs every day at 11:11 AM &amp; 11:11 PM</span>
+            </div>
+        </section>
+
+        <!-- ZONE 1B: OUR NEXT DATE & PREVIOUS DATES LOG -->
+        <section class="dates-split">
+            <div class="next-date-card">
+                <div>
+                    <span style="font-size:0.72rem; text-transform:uppercase; letter-spacing:1.8px; color:var(--gold); font-weight:700;">Our Next Date</span>
+                    <h3 id="next-date-title" style="margin:8px 0 6px 0; font-size:1.35rem; color:#fff;">Planning our next date soon...</h3>
+                    <p id="next-date-countdown" style="font-family:'Cinzel',serif; font-size:1.25rem; color:var(--gold-bright); margin-bottom:8px;"></p>
+                    <p id="next-date-note" style="font-size:0.86rem; color:var(--text-muted); line-height:1.5;">
+                        Whenever either of us picks a day, we can lock it in right here so we always have a countdown to look forward to.
+                    </p>
+                </div>
+                <button class="pill-btn" onclick="window.openNextDateModal()" style="align-self:flex-start;">📅 Set / Update Our Next Date</button>
+            </div>
+
+            <div class="past-dates-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <div>
+                        <span style="font-size:0.72rem; text-transform:uppercase; letter-spacing:1.8px; color:var(--gold); font-weight:700;">Our Dates Log</span>
+                        <h3 style="margin:4px 0 0 0; font-size:1.15rem; color:#fff;">Every Chapter We’ve Lived So Far</h3>
+                    </div>
+                    <span id="dates-count-badge" style="font-size:0.75rem; color:var(--gold); background:rgba(217,182,96,0.14); border:1px solid var(--gold-soft); padding:3px 10px; border-radius:12px;">12 Moments</span>
+                </div>
+                <div id="past-dates-timeline" class="dates-timeline"></div>
+            </div>
+        </section>
+
+        <!-- ZONE 2: 11-STAR CONSTELLATION -->
+        <div class="section-head">
+            <h2>Our Constellation of Months</h2>
+            <p>Tap any glowing star to read that month’s memory &amp; assurance.</p>
+        </div>
+        <section class="constellation-wrap">
+            <svg id="constellation-svg" viewBox="0 0 960 290" preserveAspectRatio="xMidYMid meet"></svg>
+            <div id="star-reader" class="star-reader">
+                <span style="color:var(--gold); font-size:0.78rem; text-transform:uppercase; letter-spacing:1.4px;">Select a Star Above</span>
+                <h3 style="margin:6px 0 6px 0; color:#fff; font-size:1.2rem;">11 Months, 11 Assurances</h3>
+                <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.6;">Each star in this sky belongs to a month we’ve walked together since December 20, 2025 — and new stars will keep lighting up as our months grow.</p>
+            </div>
+        </section>
+
+        <!-- ZONE 3: OPEN WHEN ASSURANCE CAPSULES -->
+        <div class="section-head">
+            <h2>Open When You Need Me</h2>
+            <p>Pick the capsule that matches how you feel right now. Each one plays a random track from my studio archive while you read.</p>
+        </div>
+        <section id="capsules-grid" class="capsules-grid"></section>
+    </main>
+
+    <!-- FLOATING CUSTOM PING BUTTON -->
+    <button id="heartbeat-fab" style="display:none;" onclick="window.openPingModal()">
+        <span>💗</span> Send a Ping to Yash
+    </button>
+
+    <!-- MODAL 1: OPEN WHEN CAPSULE READER -->
+    <div id="capsule-modal" class="modal-overlay" onclick="window.closeCapsuleModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div id="cap-modal-icon" class="capsule-icon-box"></div>
+                    <div>
+                        <span style="font-size:0.72rem; text-transform:uppercase; letter-spacing:1.6px; color:var(--gold);">Assurance Capsule</span>
+                        <h3 id="cap-modal-title" style="margin:3px 0 0 0; font-size:1.3rem; color:#fff;"></h3>
+                    </div>
+                </div>
+                <span onclick="window.closeCapsuleModal()" style="cursor:pointer; font-size:1.6rem; color:var(--text-muted); line-height:1;">&times;</span>
+            </div>
+
+            <div id="cap-modal-media" style="margin-top:16px;"></div>
+            <div id="cap-modal-body" class="capsule-letter-body"></div>
+
+            <div class="capsule-audio-strip">
+                <div>
+                    <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--gold);">Playing For You</div>
+                    <div id="cap-audio-title" style="font-size:0.9rem; color:#fff; font-weight:600; margin-top:2px;">Loading random track...</div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button id="cap-audio-toggle" class="pill-btn" onclick="window.toggleCapsuleAudio()">⏸ Pause</button>
+                    <button class="pill-btn" onclick="window.playRandomWebsiteTrack()">🔀 Another Song</button>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:18px; flex-wrap:wrap; gap:10px;">
+                <button class="pill-btn" onclick="window.closeCapsuleModal(); window.openPingModal();">💗 Ping Yash Now</button>
+                <button class="primary-gold-btn" onclick="window.closeCapsuleModal()">Close Letter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: 11:11 AM & PM DAILY SURPRISE -->
+    <div id="surprise-modal" class="modal-overlay" onclick="window.closeSurpriseModal()">
+        <div class="modal-box" style="max-width:740px;" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <span style="background:rgba(217,182,96,0.2); border:1px solid var(--gold); color:var(--gold-bright); padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; letter-spacing:1.2px;">✨ 11:11 — OUR MINUTE ✨</span>
+                <span onclick="window.closeSurpriseModal()" style="cursor:pointer; font-size:1.6rem; color:var(--text-muted);">&times;</span>
+            </div>
+
+            <div id="surprise-media-wrap" style="text-align:center; margin-bottom:16px;"></div>
+            <p id="surprise-extra-msg" class="poetic-sub" style="text-align:center; color:#eef3f8; margin-bottom:16px; display:none;"></p>
+
+            <div style="background:rgba(4,9,17,0.75); border:1px solid var(--gold-soft); border-radius:12px; padding:16px; margin-top:14px;">
+                <h4 style="margin:0 0 8px 0; color:var(--gold-bright); font-size:0.95rem;">Make Your 11:11 Wish (Delivered Straight to Yash)</h4>
+                <textarea id="wish-1111-input" rows="2" class="dark-input" placeholder="Type your 11:11 wish or message for Yash..."></textarea>
+                <button id="send-wish-btn" class="primary-gold-btn" onclick="window.send1111Wish()" style="width:100%;">✨ Send 11:11 Wish to Yash</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: SEND CUSTOM PING VIA NTFY.SH -->
+    <div id="ping-modal" class="modal-overlay" onclick="window.closePingModal()">
+        <div class="modal-box" style="max-width:460px;" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="margin:0; color:var(--gold-bright); font-family:'Cinzel',serif;">Send a Ping to Yash</h3>
+                <span onclick="window.closePingModal()" style="cursor:pointer; font-size:1.5rem; color:var(--text-muted);">&times;</span>
+            </div>
+            <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:14px;">
+                Buzzes Yash’s phone immediately — pick a quick note or write anything custom below.
+            </p>
+            <div style="display:flex; gap:7px; flex-wrap:wrap; margin-bottom:12px;">
+                <button type="button" class="quick-chip" onclick="window.fillPing('Missing you right now 💗')">Missing you 💗</button>
+                <button type="button" class="quick-chip" onclick="window.fillPing('Call me whenever you get free 📞')">Call when free 📞</button>
+                <button type="button" class="quick-chip" onclick="window.fillPing('Just opened our sanctuary to feel close to you ✨')">Thinking of you ✨</button>
+                <button type="button" class="quick-chip" onclick="window.fillPing('I love you, stay safe & focus well 🤍')">Love you 🤍</button>
+            </div>
+            <textarea id="custom-ping-text" rows="3" class="dark-input" placeholder="Write your custom message to Yash..."></textarea>
+            <button id="send-ping-btn" class="primary-gold-btn" onclick="window.dispatchCustomPing()" style="width:100%;">💗 Send Notification to Yash</button>
+        </div>
+    </div>
+
+    <!-- MODAL 4: SET / LOG OUR NEXT DATE (BOTH TANVI & YASH) -->
+    <div id="next-date-modal" class="modal-overlay" onclick="window.closeNextDateModal()">
+        <div class="modal-box" style="max-width:460px;" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="margin:0; color:var(--gold-bright); font-family:'Cinzel',serif;">Plan Our Next Date</h3>
+                <span onclick="window.closeNextDateModal()" style="cursor:pointer; font-size:1.5rem; color:var(--text-muted);">&times;</span>
+            </div>
+            <label style="font-size:0.78rem; color:var(--gold); display:block; margin-bottom:4px;">Date Title / Place</label>
+            <input type="text" id="nd-title-in" class="dark-input" placeholder="e.g. Regular Cafe near MNIT / Movie Evening">
+            <label style="font-size:0.78rem; color:var(--gold); display:block; margin-bottom:4px;">Date &amp; Time</label>
+            <input type="datetime-local" id="nd-datetime-in" class="dark-input">
+            <label style="font-size:0.78rem; color:var(--gold); display:block; margin-bottom:4px;">Short Note (Optional)</label>
+            <textarea id="nd-note-in" rows="2" class="dark-input" placeholder="e.g. Can't wait to finally hold your hand again..."></textarea>
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--text-muted); margin-bottom:14px; cursor:pointer;">
+                <input type="checkbox" id="nd-log-check" checked> Also save this date to Our Dates Log
+            </label>
+            <div style="display:flex; gap:8px;">
+                <button class="primary-gold-btn" onclick="window.saveNextDate()" style="flex:1;">Save Our Next Date</button>
+                <button class="pill-btn" onclick="window.clearNextDate()">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyCrR6sGSwG4i8GD3yVi0S7XIVIFA5O3C-8", authDomain: "yash-jangid.firebaseapp.com", projectId: "yash-jangid", storageBucket: "yash-jangid.firebasestorage.app", messagingSenderId: "413356747209", appId: "1:413356747209:web:5b7332a06e3865f6e5a018", measurementId: "G-BR856TNGE8" };
+        const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // ───────── EXACT TIMESTAMPS (IST) ─────────
+        const START_MS = new Date("2025-12-20T01:11:00+05:30").getTime();
+        const UNLOCK_MS = new Date("2026-12-01T12:22:00+05:30").getTime();
+        const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+        let ghBase = "";
+        let ntfyTopic = "yj-tanvi-hb-270511";
+        let previewBypass = false;
+        let sanctuaryEntered = false;
+        let nextDateData = null;
+        let surpriseConfig = { image: "1111 message.png", message: "", audio: "" };
+
+        // ───────── 4 ORCHESTRAL BG TRACKS (NO-REPEAT SHUFFLE) ─────────
+        const BG_TRACKS = [
+            { title: "River Flows In You", file: "River Flows In You.m4a" },
+            { title: "River Flows in You (V2)", file: "River Flows in You - Yiruma V2y.m4a" },
+            { title: "Married Life", file: "Married Life.m4a" },
+            { title: "A Thousand Years", file: "A Thousand Years.m4a" }
+        ];
+        let bgQueue = [];
+        let bgIdx = 0;
+        let bgMuted = false;
+        const BG_TARGET_VOL = 0.22;
+        const bgAudio = new Audio();
+        bgAudio.volume = BG_TARGET_VOL;
+        let bgCands = [], bgCandIdx = 0;
+
+        // ───────── WEBSITE-WIDE RANDOM AUDIO POOL ─────────
+        const BUILTIN_SITE_AUDIOS = [
+            "Audios/10-2-26 Song.m4a",
+            "Audios/7-2-26 Song.m4a",
+            "Audios/9-2-26 Song.m4a",
+            "Audios/Aashayein sung by YASH.wav",
+            "Audios/Ae Dil Hai Mushkil.wav",
+            "Audios/Agar Tum Sath ho Vocal.m4a",
+            "Audios/Dagabaaz Harmonium VOCAL.m4a",
+            "Audios/Final-Audio_0018.wav",
+            "Audios/Gehera Hua Vocal.m4a",
+            "Audios/Gehera Hua Vr0.8 Drafr.m4a",
+            "Audios/Har Kisi Ko Nahi Milta VOCAL.m4a",
+            "Audios/Hum Tere Pyar Main.m4a",
+            "Audios/Janam Janam VOCAL.m4a",
+            "Audios/Janam Janam.m4a",
+            "Audios/Kalank.m4a",
+            "Audios/Lag Ja Gale.m4a",
+            "Audios/OP - Make My Dreams Come True Doraemon OP.wav",
+            "Audios/PVT Song Verse 1+2.m4a",
+            "Audios/Pirates of Carrebian Best Version.m4a",
+            "Audios/School Song MPS KR.wav",
+            "Audios/Sun Saathiya.m4a",
+            "Audios/Suno Na Sangemarmar.m4a",
+            "Audios/Tera Fitoor.m4a",
+            "Audios/Tu Chahiye Vocal.m4a",
+            "Audios/Yeh Fitoor Mera V3.m4a",
+            "Audios/Zara Sa Dil mein De Jagah Tu.m4a",
+            "Audios/Zindagi Kutch toh Bata V2.m4a",
+            "Fav Alarm.m4a",
+            "Special/Assets/Aa Chal Ke Tujhe.wav",
+            "Special/Assets/Special Medley.wav"
+        ];
+        let dynamicMusicPool = [];
+        const capAudio = new Audio();
+        let capCands = [], capCandIdx = 0;
+
+        // ───────── PRE-LOADED 12 REAL PREVIOUS DATES ─────────
+        const BUILTIN_PAST_DATES = [
+            { date: "21 Dec 2025", title: "Stationery Run & Two Scoops of Vanilla", note: "Literally the day after we came together. You stepped out for stationery, I came along, we held hands for the very first time, and shared two scoops of vanilla ice cream — simple, silly, and pure magic." },
+            { date: "22 Dec 2025", title: "School Carnival, Rides & Yin-Yang Promises", note: "Rode everything at your school carnival together. You gave me a single rose bouquet and the keychain that still hangs on my EV scooty key every single day; I gave you the heart-shaped Yin & Yang necklace and ring." },
+            { date: "24 Jan 2026", title: "NBC Boring Chauraha & TIS White Party (MNIT)", note: "Our first proper date — coffee and laughs at NBC Boring Chauraha right before heading into The Indian Summit Foundation White Party at MNIT Jaipur." },
+            { date: "22 Feb 2026", title: "Triton Mall — Our First Kiss", note: "Started with a soft hug when you kissed me for the first time, turning into 2–3 unforgettable hours where the rest of the world completely disappeared." },
+            { date: "8 Apr 2026", title: "JECRC Kalakriti MUN — Food & Auto Masti", note: "Grabbing food together and turning a regular auto ride on the way to JECRC Kalakriti G20+1 Symphorium into one of our favourite little dates." },
+            { date: "9 Apr 2026", title: "JECRC 5th Floor & The Orange-Sky Campus Garden", note: "Searching the quiet 5th floor of the Law Building for your lost carnival ring, stealing a close moment in the dark, and then sitting under the orange 6 PM sky and cool breeze — holding you while you cried, calming you down, and choosing to move forward together as one." },
+            { date: "18–19 Apr 2026", title: "Elegante MUN Day 2 — Quiet Evening Under a Tree", note: "Walking a kilometre to a peaceful garden and just sitting quietly under a tree. Even someone like me who can never sit still felt completely at peace beside you — followed by a warm auto ride home." },
+            { date: "1 Jul 2026", title: "EV Ghumi-Ghumi & Cafe Before Jai Club", note: "Cruising around together on my EV, warm hugs, kisses, and cafe food before rushing off for the TIS meeting at Jai Club." },
+            { date: "4 Aug 2026", title: "Burger King & Aawaaz 2.0 Planning Day", note: "Burgers, endless talking, and stealing quality time together right around our TIS Aawaaz 2.0 meeting." },
+            { date: "25 Aug 2026", title: "Aawaaz 2.0 — Caught in the Morning Rain", note: "Sudden downpour halfway to MNIT on my EV — drenched in our formals, laughing and stealing kisses in the rain, and wrapping my coat around you as soon as we arrived so you stayed warm and comfortable." },
+            { date: "26 Aug 2026", title: "Aawaaz 2.0 Day 2 — Cosy Cafe & Ride Home", note: "Unwinding at the cafe on Day 2 evening, cosy laughs after a packed conference day, and riding back home together on my EV." },
+            { date: "1 Nov 2026", title: "TIS Jaipur Edition 3.0 — Skipping the Concert for Us", note: "Skipping the Navjot Ahuja concert on Day 3 to slip away to our regular cafe near MNIT — finally exhaling and just being ourselves after months of nonstop TIS, MNIT, and school work." }
+        ];
+        let extraPastDates = [];
+
+        // ───────── PRE-LOADED 11 PERSONALIZED MONTHLY STARS ─────────
+        const BUILTIN_STARS = [
+            { month: 1, label: "Month 1", dateRange: "Dec 2025 – Jan 2026", title: "1:11 AM, Vanilla Ice Cream & A Keychain", text: "It started at 1:11 AM on December 20, and within 48 hours we had held hands over vanilla ice cream and traded roses, a Yin-Yang heart, and the keychain I still touch every single time I start my EV." },
+            { month: 2, label: "Month 2", dateRange: "Jan – Feb 2026", title: "White Party, Pink Code & Our First Kiss", text: "From NBC Boring Chauraha and the White Party to building that pink 2nd-month program for you — and that unforgettable afternoon at Triton Mall — month two proved this was never ordinary." },
+            { month: 3, label: "Month 3", dateRange: "Feb – Mar 2026", title: "Turning Ordinary Days Into Ours", text: "Even on the weeks we couldn't go out, just knowing I got to tell you about my day made every routine feel lighter. You quietly became the best part of my everyday life." },
+            { month: 4, label: "Month 4", dateRange: "Mar – Apr 2026", title: "Orange Sky at JECRC & Stillness Under a Tree", text: "April showed me who we really are. Holding you on the JECRC campus lawn under the orange sky when you lost the ring, and sitting completely still beside you under a tree at Elegante MUN — you are my calm." },
+            { month: 5, label: "Month 5", dateRange: "Apr – May 2026", title: "Understanding Without Needing Extra Words", text: "Five months in, I started catching your mood from a single pause or text. No matter how many kilometres sit between our colleges, I promise I will never stop paying that close attention to you." },
+            { month: 6, label: "Month 6", dateRange: "May – Jun 2026", title: "Half a Year, Zero Doubts", text: "Six months with you taught me that real love isn't just big anniversaries — it's showing up consistently on random busy days. Half a year in, choosing you felt as natural as breathing." },
+            { month: 7, label: "Month 7", dateRange: "Jun – Jul 2026", title: "EV Rides Between Busy Schedules", text: "Fitting in cafe food, hugs, and an EV ride right before a Jai Club meeting taught us something huge: even when life gets hectic, we always find our way back to each other." },
+            { month: 8, label: "Month 8", dateRange: "Jul – Aug 2026", title: "Rain on the Way to MNIT & My Coat Around You", text: "Burger King laughs, getting completely soaked on the EV during Aawaaz 2.0, stealing kisses in the rain, and wrapping my coat around you — protecting you and making you laugh will always be my favourite job." },
+            { month: 9, label: "Month 9", dateRange: "Aug – Sep 2026", title: "Growing Stronger Side by Side", text: "Through boards prep, MUN chaos, and long nights, you never once made me feel alone. I love the steadier, braver person I am becoming with you in my corner." },
+            { month: 10, label: "Month 10", dateRange: "Sep – Oct 2026", title: "Choosing Peace Over Crowds", text: "Heading into TIS 3.0 and thinking about the 3–4 years of college distance ahead, one thing became crystal clear: I don't just hope we survive distance — I am certain we will." },
+            { month: 11, label: "Month 11", dateRange: "Oct – Nov 2026", title: "11:11:11:11 — Skipping the Noise for You", text: "Skipping a concert just to sit peacefully with you at our regular cafe near MNIT sums up everything I want for our future. Eleven months, eleven days, eleven hours, eleven minutes later — you have my full assurance, always." }
+        ];
+        let extraStars = [];
+
+        // ───────── 10 ILLUSTRATED "OPEN WHEN..." ASSURANCE CAPSULES ─────────
+        const ICON_SVGS = {
+            clock: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6dc8f" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
+            moon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6dc8f" stroke-width="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>`,
+            wave: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6dc8f" stroke-width="1.8"><path d="M2 12h3l2-6 4 12 3-8 2 4 2-2h4"/></svg>`,
+            compass: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6dc8f" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><polygon points="16 8 14 14 8 16 10 10 16 8"/></svg>`,
+            shield: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6dc8f" stroke-width="1.8"><path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3z"/></svg>`,
+            sparkle: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6dc8f" stroke-width="1.8"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2L12 3z"/></svg>`,
+            rain: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6dc8f" stroke-width="1.8"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>`,
+            smile: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6dc8f" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2.5 4 2.5 4-2.5 4-2.5"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`,
+            calendar: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6dc8f" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>`,
+            infinity: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6dc8f" stroke-width="1.8"><path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z"/></svg>`
+        };
+
+        const BUILTIN_CAPSULES = [
+            {
+                id: "cap_1", icon: "clock",
+                title: "Open when I'm in class & haven't replied yet",
+                teaser: "A delayed text only means a lecture or lab — never distance.",
+                body: `Hey love,\n\nIf you're opening this, I'm probably stuck in a lecture, lab, or buried under assignments with my phone face-down in my pocket. I hate that I can't reply right this second, so let this note say it for me until I walk out that door:\n\nYou are still the very first person I want to talk to the minute I'm free. A few quiet hours during a busy day never change what sits between us — not by a millimetre. Hit the ping button below if you want my phone to buzz the second I pick it up.\n\nHold on a little bit, I'm right on my way back to you.`
+            },
+            {
+                id: "cap_2", icon: "moon",
+                title: "Open at 1 AM when the distance feels too heavy",
+                teaser: "For the quiet late-night hours when a screen isn't enough.",
+                body: `Meri jaan,\n\nI know nights like this are the hardest part of long distance — when everything goes quiet and you just wish I were sitting right next to you instead of living inside a phone screen.\n\nClose your eyes for ten seconds and listen to the song playing right now. Remember that evening on the JECRC lawn with the cool breeze, or sitting quietly under that tree at Elegante MUN where we didn't even need to speak. We are still under the exact same sky, and these college years are only a temporary chapter — not our whole story. You are safe, you are deeply loved, and you are never alone in this.`
+            },
+            {
+                id: "cap_3", icon: "wave",
+                title: "Open after a rough day when you need my voice",
+                teaser: "Put everything down for five minutes and let me carry the weight.",
+                body: `Take a slow breath, Tanvi.\n\nWhatever drained you today — annoying people, unfair stress, exhaustion, or just one of those heavy days — you don't have to act strong right now. If I were there, I'd pull you in, wrap my coat around you just like I did in the rain on the way to MNIT, and let you vent without interrupting once.\n\nLet my voice play in the background, drink some water, and remind yourself that bad days pass, and you still have someone in your corner who is ridiculously proud of you every single day.`
+            },
+            {
+                id: "cap_4", icon: "compass",
+                title: "Open when your mind starts overthinking",
+                teaser: "Shut down every 'what if' with the only truth that matters.",
+                body: `Hey, stop spiralling for a second and read this slowly.\n\nOverthinking loves to invent quiet fears when we're miles apart — 'what if he gets too busy?', 'what if distance changes things?' So let me give you plain, solid assurance, not vague promises:\n\nI didn't build this sanctuary, carry your keychain on my scooty key every single morning, or choose you for 11 months straight just to drift away when things take effort. Distance can stretch the space between our cities, never the space between our hearts. You don't have to wonder where you stand with me. You are my person — today, through college, and long after.`
+            },
+            {
+                id: "cap_5", icon: "shield",
+                title: "Open after we've had a small fight or quiet patch",
+                teaser: "Always us vs. the problem — never you vs. me.",
+                body: `Even when we're frustrated, stubborn, or talking a little too coldly over text, I want you to remember one unbreakable rule between us:\n\nA bad hour does not erase eleven months of love, and an argument never means I am walking away. Texting makes tone hard to read, especially when we miss each other. Let's cool down, get on a real call, hear each other's actual voice, and fix it together — because my ego will never be bigger than keeping you happy and safe with me.`
+            },
+            {
+                id: "cap_6", icon: "sparkle",
+                title: "Open when you're stressed about exams or the future",
+                teaser: "A reminder of how capable you are — and who's cheering loudest.",
+                body: `Hey superstar,\n\nI know how heavy academic pressure and future plans can feel when everything piles up at once. Take a step back and look at how much you've already handled this year without breaking.\n\nYou don't need to figure out the next five years tonight — just focus on the one small step in front of you right now. Win or stumble, tired or confident, I am cheering the loudest for you from my corner of the map. You've got this, and I've got you.`
+            },
+            {
+                id: "cap_7", icon: "rain",
+                title: "Open when you miss holding my hand",
+                teaser: "Every gap between our visits has an expiry date.",
+                body: `I miss it too — more than I probably say out loud.\n\nI miss the small stuff most: holding your hand over two scoops of vanilla ice cream, cruising on my EV with you behind me, stealing cosy cafe corners after long days, and feeling your head rest on my shoulder. Scroll back up to 'Our Next Date' whenever the gap feels endless. Every single day that passes is one day closer to the moment the screen disappears and I finally get to hug you properly again.`
+            },
+            {
+                id: "cap_8", icon: "smile",
+                title: "Open when you just want to smile for no reason",
+                teaser: "A tiny list of things about you that undo all my stress.",
+                body: `Just in case nobody reminded you today:\n\n1. Your laugh genuinely fixes my worst moods in under five seconds.\n2. The way you care about the smallest details makes me feel like the luckiest guy alive.\n3. Even a completely chaotic auto ride or getting drenched in formals turns into my favourite memory the moment you're next to me.\n4. Yes, you are still the cutest person in every room you walk into — no debate allowed.\n\nNow stop hiding that smile.`
+            },
+            {
+                id: "cap_9", icon: "calendar",
+                title: "Open the night before our next date",
+                teaser: "The countdown is finally down to hours.",
+                body: `WE MADE IT THROUGH THE WAIT!\n\nTry to actually get some sleep tonight (even though I know we'll both be way too excited). Tomorrow we don't have to stare at typing bubbles or bad network calls — we get real laughs, real hugs, and all the uninterrupted time we've been saving up.\n\nCan't wait to see your face in person tomorrow, love.`
+            },
+            {
+                id: "cap_10", icon: "infinity",
+                title: "Open on an ordinary day just to feel loved",
+                teaser: "You don't need an anniversary to be someone's whole world.",
+                body: `No crisis, no anniversary, no big occasion — just a random day reminder:\n\nI love you, Tanvi. I love the way you've become home to me since 1:11 AM on December 20, 2025. Whether we're meeting every month or counting down the weeks between semesters, my heart is completely settled on you. Take care of yourself today, eat properly, and remember you are loved far more than words on a screen can hold.\n\nForever yours,\nYash 🤍`
+            }
+        ];
+        let customCapsulesMap = {};
+        let extraCapsules = [];
+
+        // ───────── UTILS & URL RESOLVERS ─────────
+        function escapeHTML(str) {
+            return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+        }
+        function showToast(msg) {
+            const box = document.getElementById('toast-box');
+            const el = document.createElement('div');
+            el.className = 'toast';
+            el.innerText = msg;
+            box.appendChild(el);
+            setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3600);
+        }
+        function cleanPath(p) {
+            return String(p || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+        }
+        function buildAssetCandidates(rawPath, preferSubfolder = "") {
+            const clean = cleanPath(rawPath);
+            if (!clean) return [];
+            if (/^https?:\/\//i.test(clean)) return [clean];
+            const base = clean.split('/').pop();
+            const list = [];
+            if (ghBase) {
+                if (clean.includes('/')) list.push(ghBase + encodeURI(clean));
+                if (preferSubfolder) list.push(ghBase + encodeURI(`${preferSubfolder}/${base}`));
+                list.push(ghBase + encodeURI(`Special/Assets/${base}`));
+                list.push(ghBase + encodeURI(`Special/Gifts/${base}`));
+                list.push(ghBase + encodeURI(`Special/${base}`));
+                list.push(ghBase + encodeURI(`Audios/${base}`));
+                list.push(ghBase + encodeURI(base));
+            }
+            if (preferSubfolder === 'Special/Assets') list.push(encodeURI(`Assets/${base}`));
+            if (preferSubfolder === 'Special/Gifts') list.push(encodeURI(`Gifts/${base}`));
+            list.push(encodeURI(`Assets/${base}`));
+            list.push(encodeURI(`Gifts/${base}`));
+            list.push(encodeURI(base));
+            list.push(encodeURI(`../${clean}`));
+            list.push(encodeURI(`../Audios/${base}`));
+            return [...new Set(list)];
+        }
+
+        window.stepMediaFallback = function(el) {
+            const cands = JSON.parse(el.dataset.cands || "[]");
+            const next = parseInt(el.dataset.cidx || "0", 10) + 1;
+            if (next < cands.length) {
+                el.dataset.cidx = String(next);
+                el.src = cands[next];
+            }
+        };
+
+        // ───────── 4-TRACK NO-REPEAT SHUFFLE ENGINE ─────────
+        function refillBgQueue(avoidLastFile = null) {
+            const arr = [...BG_TRACKS];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            // Prevent back-to-back repeat across cycle boundary
+            if (avoidLastFile && arr.length > 1 && arr[0].file === avoidLastFile) {
+                [arr[0], arr[1]] = [arr[1], arr[0]];
+            }
+            bgQueue = arr;
+            bgIdx = 0;
+        }
+
+        function playCurrentBgTrack() {
+            if (bgQueue.length === 0) refillBgQueue();
+            const track = bgQueue[bgIdx];
+            document.getElementById('bg-track-name').textContent = `🎻 ${track.title}`;
+            bgCands = buildAssetCandidates(track.file, "Special/Assets");
+            bgCandIdx = 0;
+            bgAudio.src = bgCands[0];
+            bgAudio.volume = bgMuted ? 0 : BG_TARGET_VOL;
+            bgAudio.play().catch(() => {});
+        }
+
+        bgAudio.addEventListener('error', () => {
+            if (bgCandIdx + 1 < bgCands.length) {
+                bgCandIdx++;
+                bgAudio.src = bgCands[bgCandIdx];
+                bgAudio.play().catch(() => {});
+            } else {
+                window.nextBgTrack();
+            }
+        });
+
+        bgAudio.addEventListener('ended', () => {
+            const lastFile = bgQueue[bgIdx] ? bgQueue[bgIdx].file : null;
+            bgIdx++;
+            if (bgIdx >= bgQueue.length) {
+                refillBgQueue(lastFile);
+            }
+            playCurrentBgTrack();
+        });
+
+        window.nextBgTrack = function() {
+            const lastFile = bgQueue[bgIdx] ? bgQueue[bgIdx].file : null;
+            bgIdx++;
+            if (bgIdx >= bgQueue.length) refillBgQueue(lastFile);
+            playCurrentBgTrack();
+        };
+
+        window.toggleBgAudio = function() {
+            bgMuted = !bgMuted;
+            bgAudio.volume = bgMuted ? 0 : BG_TARGET_VOL;
+            document.getElementById('bg-mute-btn').textContent = bgMuted ? '🔇' : '🔊';
+        };
+
+        function duckBgAudio(duck) {
+            if (bgMuted) return;
+            if (duck) {
+                bgAudio.pause();
+            } else if (sanctuaryEntered) {
+                bgAudio.volume = BG_TARGET_VOL;
+                bgAudio.play().catch(() => {});
+            }
+        }
+
+        // ───────── RANDOM WEBSITE-WIDE AUDIO ENGINE (CAPSULES) ─────────
+        function getAllWebsiteAudios() {
+            const seen = new Set();
+            const merged = [];
+            const pushTrack = (title, rawUrl) => {
+                const key = cleanPath(rawUrl).toLowerCase();
+                if (!key || seen.has(key)) return;
+                if (!/\.(mp3|m4a|wav|ogg|aac|flac)$/i.test(key)) return;
+                seen.add(key);
+                merged.push({ title: title || rawUrl.split('/').pop().replace(/\.[^/.]+$/, ''), url: rawUrl });
+            };
+            dynamicMusicPool.forEach(t => pushTrack(t.title || t.caption, t.url));
+            BUILTIN_SITE_AUDIOS.forEach(p => pushTrack(p.split('/').pop().replace(/\.[^/.]+$/, ''), p));
+            return merged;
+        }
+
+        function playCapsuleAudioItem(title, rawUrl) {
+            duckBgAudio(true);
+            document.getElementById('cap-audio-title').textContent = `🎵 ${title}`;
+            capCands = buildAssetCandidates(rawUrl);
+            capCandIdx = 0;
+            capAudio.src = capCands[0];
+            capAudio.volume = 0.85;
+            capAudio.play().then(() => {
+                document.getElementById('cap-audio-toggle').textContent = "⏸ Pause";
+            }).catch(() => {
+                document.getElementById('cap-audio-toggle').textContent = "▶ Play";
+            });
+        }
+
+        capAudio.addEventListener('error', () => {
+            if (capCandIdx + 1 < capCands.length) {
+                capCandIdx++;
+                capAudio.src = capCands[capCandIdx];
+                capAudio.play().catch(() => {});
+            }
+        });
+        capAudio.addEventListener('ended', () => {
+            window.playRandomWebsiteTrack();
+        });
+
+        window.playRandomWebsiteTrack = function() {
+            const pool = getAllWebsiteAudios();
+            if (pool.length === 0) return;
+            const pick = pool[Math.floor(Math.random() * pool.length)];
+            playCapsuleAudioItem(pick.title, pick.url);
+        };
+
+        window.toggleCapsuleAudio = function() {
+            if (capAudio.paused) {
+                duckBgAudio(true);
+                capAudio.play().catch(() => {});
+                document.getElementById('cap-audio-toggle').textContent = "⏸ Pause";
+            } else {
+                capAudio.pause();
+                document.getElementById('cap-audio-toggle').textContent = "▶ Play";
+            }
+        };
+
+        // ───────── EXACT IST DUAL CLOCKS & SOFT-LOCK ─────────
+        let last1111TriggerKey = "";
+
+        function computeCalendarElapsedIST(nowMs) {
+            const s = new Date(START_MS + IST_OFFSET_MS);
+            const n = new Date(nowMs + IST_OFFSET_MS);
+            let months = (n.getUTCFullYear() - s.getUTCFullYear()) * 12 + (n.getUTCMonth() - s.getUTCMonth());
+            let days = n.getUTCDate() - s.getUTCDate();
+            let hours = n.getUTCHours() - s.getUTCHours();
+            let mins = n.getUTCMinutes() - s.getUTCMinutes();
+            let secs = n.getUTCSeconds() - s.getUTCSeconds();
+
+            if (secs < 0) { secs += 60; mins--; }
+            if (mins < 0) { mins += 60; hours--; }
+            if (hours < 0) { hours += 24; days--; }
+            if (days < 0) {
+                const prevMonthDays = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), 0)).getUTCDate();
+                days += prevMonthDays;
+                months--;
+            }
+            return { months: Math.max(0, months), days: Math.max(0, days), hours, mins, secs };
+        }
+
+        function computeNext1111IST(nowMs) {
+            const n = new Date(nowMs + IST_OFFSET_MS);
+            const h = n.getUTCHours(), m = n.getUTCMinutes(), s = n.getUTCSeconds();
+            const is1111Now = (h === 11 || h === 23) && m === 11;
+            const slotKey = `${n.getUTCFullYear()}-${n.getUTCMonth()}-${n.getUTCDate()}-${h}`;
+            if (is1111Now) return { isNow: true, remMs: (60 - s) * 1000, slotKey };
+
+            const y = n.getUTCFullYear(), mo = n.getUTCMonth(), d = n.getUTCDate();
+            const amTarget = Date.UTC(y, mo, d, 11, 11, 0) - IST_OFFSET_MS;
+            const pmTarget = Date.UTC(y, mo, d, 23, 11, 0) - IST_OFFSET_MS;
+            const nextAmTarget = Date.UTC(y, mo, d + 1, 11, 11, 0) - IST_OFFSET_MS;
+
+            let target = nextAmTarget;
+            if (nowMs < amTarget) target = amTarget;
+            else if (nowMs < pmTarget) target = pmTarget;
+            return { isNow: false, remMs: Math.max(0, target - nowMs), slotKey };
+        }
+
+        function tickAllClocks() {
+            const now = Date.now();
+
+            // 1. Soft-Lock Countdown (before Dec 1, 2026 12:22 PM IST)
+            const lockDiff = UNLOCK_MS - now;
+            if (lockDiff > 0 && !previewBypass) {
+                const d = Math.floor(lockDiff / 86400000);
+                const h = Math.floor((lockDiff % 86400000) / 3600000);
+                const m = Math.floor((lockDiff % 3600000) / 60000);
+                const s = Math.floor((lockDiff % 60000) / 1000);
+                document.getElementById('sl-d').textContent = String(d).padStart(2, '0');
+                document.getElementById('sl-h').textContent = String(h).padStart(2, '0');
+                document.getElementById('sl-m').textContent = String(m).padStart(2, '0');
+                document.getElementById('sl-s').textContent = String(s).padStart(2, '0');
+            } else if (document.getElementById('softlock-screen').style.display === 'flex') {
+                document.getElementById('softlock-screen').style.display = 'none';
+                document.getElementById('entry-screen').style.display = 'flex';
+            }
+
+            // 2. Permanent Time Together Clock
+            const up = computeCalendarElapsedIST(now);
+            document.getElementById('up-mo').textContent = String(up.months).padStart(2, '0');
+            document.getElementById('up-d').textContent = String(up.days).padStart(2, '0');
+            document.getElementById('up-h').textContent = String(up.hours).padStart(2, '0');
+            document.getElementById('up-m').textContent = String(up.mins).padStart(2, '0');
+            document.getElementById('up-s').textContent = String(up.secs).padStart(2, '0');
+
+            // 3. Daily 11:11 AM & PM Backward Countdown
+            const st = computeNext1111IST(now);
+            const bar = document.getElementById('daily-1111-bar');
+            const lbl = document.getElementById('daily-1111-label');
+            const clk = document.getElementById('daily-1111-clock');
+            const sub = document.getElementById('daily-1111-sub');
+
+            if (st.isNow) {
+                bar.classList.add('active-minute');
+                lbl.textContent = "✨ IT'S 11:11 — TAP TO OPEN OUR SURPRISE ✨";
+                clk.textContent = "11 : 11";
+                sub.textContent = `Surprise window open (${Math.ceil(st.remMs / 1000)}s left)`;
+                if (sanctuaryEntered && last1111TriggerKey !== st.slotKey) {
+                    last1111TriggerKey = st.slotKey;
+                    window.trigger1111Surprise();
+                }
+            } else {
+                bar.classList.remove('active-minute');
+                const hh = Math.floor(st.remMs / 3600000);
+                const mm = Math.floor((st.remMs % 3600000) / 60000);
+                const ss = Math.floor((st.remMs % 60000) / 1000);
+                lbl.textContent = "Next 11:11 Surprise In";
+                clk.textContent = `${String(hh).padStart(2, '0')} : ${String(mm).padStart(2, '0')} : ${String(ss).padStart(2, '0')}`;
+                sub.textContent = "Unlocks automatically at 11:11 AM & 11:11 PM IST";
+            }
+
+            // 4. Our Next Date Countdown
+            renderNextDateCountdown(now);
+        }
+
+        // ───────── HIDDEN PREVIEW BYPASS (5 TAPS ON SOFTLOCK TITLE OR ALT+Y) ─────────
+        let lockTapCount = 0, lockTapTimer = null;
+        function activatePreviewBypass() {
+            if (previewBypass) return;
+            previewBypass = true;
+            document.getElementById('softlock-screen').style.display = 'none';
+            document.getElementById('entry-screen').style.display = 'flex';
+            document.getElementById('preview-banner').style.display = 'block';
+            showToast("Preview mode unlocked ✨");
+        }
+        document.getElementById('softlock-secret-title').addEventListener('click', () => {
+            lockTapCount++;
+            clearTimeout(lockTapTimer);
+            lockTapTimer = setTimeout(() => { lockTapCount = 0; }, 1600);
+            if (lockTapCount >= 5) activatePreviewBypass();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.altKey && (e.key === 'y' || e.key === 'Y') && document.getElementById('softlock-screen').style.display === 'flex') {
+                activatePreviewBypass();
+            }
+            if (e.key === 'Escape') {
+                window.closeCapsuleModal();
+                window.closeSurpriseModal();
+                window.closePingModal();
+                window.closeNextDateModal();
+            }
+        });
+
+        // 5 taps on Daily 11:11 Box to preview/test 11:11 Surprise anytime (or 1 click during 11:11 minute)
+        let dailyTapCount = 0, dailyTapTimer = null;
+        document.getElementById('daily-1111-bar').addEventListener('click', () => {
+            if (document.getElementById('daily-1111-bar').classList.contains('active-minute')) {
+                window.trigger1111Surprise();
+                return;
+            }
+            dailyTapCount++;
+            clearTimeout(dailyTapTimer);
+            dailyTapTimer = setTimeout(() => { dailyTapCount = 0; }, 1600);
+            if (dailyTapCount >= 5) {
+                dailyTapCount = 0;
+                window.trigger1111Surprise();
+            }
+        });
+
+        // ───────── 11:11 SURPRISE TRIGGER ─────────
+        window.trigger1111Surprise = function() {
+            const star = document.createElement('div');
+            star.className = 'shooting-star';
+            document.body.appendChild(star);
+            setTimeout(() => star.remove(), 1400);
+
+            const mediaWrap = document.getElementById('surprise-media-wrap');
+            const imgFile = surpriseConfig.image || "1111 message.png";
+            const cands = buildAssetCandidates(imgFile, "Special/Assets");
+            mediaWrap.innerHTML = `<img src="${escapeHTML(cands[0])}" data-cands="${escapeHTML(JSON.stringify(cands))}" data-cidx="0" onerror="window.stepMediaFallback(this)" alt="11:11 Surprise" style="width:100%; max-height:54vh; object-fit:contain; border-radius:12px; border:1px solid var(--gold); background:#040a12;">`;
+
+            const extraMsgEl = document.getElementById('surprise-extra-msg');
+            if (surpriseConfig.message) {
+                extraMsgEl.textContent = surpriseConfig.message;
+                extraMsgEl.style.display = 'block';
+            } else {
+                extraMsgEl.style.display = 'none';
+            }
+
+            if (surpriseConfig.audio) {
+                playCapsuleAudioItem("11:11 Special Track", surpriseConfig.audio);
+            }
+            document.getElementById('surprise-modal').classList.add('open');
+        };
+
+        window.closeSurpriseModal = function() {
+            document.getElementById('surprise-modal').classList.remove('open');
+            if (surpriseConfig.audio && !capAudio.paused) {
+                capAudio.pause();
+                duckBgAudio(false);
+            }
+        };
+
+        // ───────── NTFY.SH NOTIFICATION ENGINE ─────────
+        async function fireNtfyPush(asciiTitle, bodyText, tagList = "heart,sparkles") {
+            const topic = (ntfyTopic || "yj-tanvi-hb-270511").trim();
+            try {
+                await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
+                    method: "POST",
+                    headers: {
+                        "Title": asciiTitle,
+                        "Priority": "high",
+                        "Tags": tagList
+                    },
+                    body: bodyText
+                });
+            } catch (e) {}
+            try {
+                await setDoc(doc(db, "inbox_messages", Date.now().toString()), {
+                    name: "Tanvi (11:11 Sanctuary)",
+                    email: "private-sanctuary@yash-jangid.web.app",
+                    message: `[${asciiTitle}] ${bodyText}`,
+                    timestamp: Date.now(),
+                    replied: false
+                });
+            } catch (e) {}
+        }
+
+        window.openPingModal = function() {
+            document.getElementById('ping-modal').classList.add('open');
+            setTimeout(() => document.getElementById('custom-ping-text').focus(), 40);
+        };
+        window.closePingModal = function() {
+            document.getElementById('ping-modal').classList.remove('open');
+        };
+        window.fillPing = function(txt) {
+            document.getElementById('custom-ping-text').value = txt;
+        };
+
+        window.dispatchCustomPing = async function() {
+            const msg = document.getElementById('custom-ping-text').value.trim();
+            if (!msg) return showToast("Type or pick a message first 💗");
+            const btn = document.getElementById('send-ping-btn');
+            btn.disabled = true; btn.textContent = "Sending to Yash...";
+            await fireNtfyPush("Ping from Tanvi (11:11 Sanctuary)", msg, "sparkling_heart");
+            document.getElementById('custom-ping-text').value = "";
+            btn.disabled = false; btn.textContent = "💗 Send Notification to Yash";
+            window.closePingModal();
+            showToast("Notification delivered to Yash's phone 💗");
+        };
+
+        window.send1111Wish = async function() {
+            const wish = document.getElementById('wish-1111-input').value.trim();
+            if (!wish) return showToast("Type your 11:11 wish first ✨");
+            const btn = document.getElementById('send-wish-btn');
+            btn.disabled = true; btn.textContent = "Sending 11:11 Wish...";
+            await fireNtfyPush("11:11 Wish from Tanvi", wish, "star2,heart");
+            document.getElementById('wish-1111-input').value = "";
+            btn.disabled = false; btn.textContent = "✨ Send 11:11 Wish to Yash";
+            showToast("Your 11:11 wish was sent straight to Yash ✨");
+        };
+
+        // ───────── OUR NEXT DATE + PREVIOUS DATES LOG ─────────
+        function renderNextDateCountdown(nowMs) {
+            const titleEl = document.getElementById('next-date-title');
+            const cdEl = document.getElementById('next-date-countdown');
+            const noteEl = document.getElementById('next-date-note');
+
+            if (!nextDateData || !nextDateData.datetime) {
+                titleEl.textContent = "Planning our next date soon...";
+                cdEl.textContent = "";
+                noteEl.textContent = "Whenever either of us picks a day, we can lock it in right here so we always have a countdown to look forward to.";
+                return;
+            }
+            const targetMs = new Date(nextDateData.datetime).getTime();
+            titleEl.textContent = nextDateData.title || "Our Next Date";
+            noteEl.textContent = nextDateData.note || new Date(targetMs).toLocaleString();
+            const diff = targetMs - nowMs;
+            if (diff <= 0) {
+                cdEl.textContent = "✨ It's Date Day! ✨";
+            } else {
+                const d = Math.floor(diff / 86400000);
+                const h = Math.floor((diff % 86400000) / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                cdEl.textContent = `${d}d : ${String(h).padStart(2,'0')}h : ${String(m).padStart(2,'0')}m left`;
+            }
+        }
+
+        function renderPastDates() {
+            const box = document.getElementById('past-dates-timeline');
+            const all = [...BUILTIN_PAST_DATES, ...extraPastDates];
+            document.getElementById('dates-count-badge').textContent = `${all.length} Moments`;
+            box.innerHTML = all.map(item => `
+                <div class="date-entry">
+                    <div class="date-entry-top">
+                        <span class="date-entry-title">${escapeHTML(item.title)}</span>
+                        <span class="date-entry-when">${escapeHTML(item.date)}</span>
+                    </div>
+                    <div class="date-entry-note">${escapeHTML(item.note)}</div>
+                </div>
+            `).join('');
+        }
+
+        window.openNextDateModal = function() {
+            if (nextDateData) {
+                document.getElementById('nd-title-in').value = nextDateData.title || '';
+                document.getElementById('nd-datetime-in').value = nextDateData.datetime || '';
+                document.getElementById('nd-note-in').value = nextDateData.note || '';
+            }
+            document.getElementById('next-date-modal').classList.add('open');
+        };
+        window.closeNextDateModal = function() {
+            document.getElementById('next-date-modal').classList.remove('open');
+        };
+
+        window.saveNextDate = async function() {
+            const title = document.getElementById('nd-title-in').value.trim();
+            const datetime = document.getElementById('nd-datetime-in').value;
+            const note = document.getElementById('nd-note-in').value.trim();
+            const shouldLog = document.getElementById('nd-log-check').checked;
+            if (!title || !datetime) return showToast("Enter both a title and date/time.");
+
+            await setDoc(doc(db, "special_config", "next_date"), { title, datetime, note, updatedAt: Date.now() }, { merge: true });
+            if (shouldLog) {
+                const readableDate = new Date(datetime).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                await setDoc(doc(db, "special_dates", Date.now().toString()), {
+                    date: readableDate,
+                    title,
+                    note: note || "Planned together inside our 11:11 Sanctuary.",
+                    orderIndex: Date.now()
+                });
+            }
+            await fireNtfyPush("Our Next Date Updated", `${title} on ${new Date(datetime).toLocaleString()} ${note ? '— ' + note : ''}`, "calendar,heart");
+            window.closeNextDateModal();
+            showToast("Our Next Date saved & logged! 📅");
+        };
+
+        window.clearNextDate = async function() {
+            await setDoc(doc(db, "special_config", "next_date"), { title: "", datetime: "", note: "", updatedAt: Date.now() });
+            window.closeNextDateModal();
+            showToast("Reset to 'Planning our next date soon...'");
+        };
+
+        // ───────── CONSTELLATION RENDERER (DYNAMIC FOR NEW MONTHS) ─────────
+        function renderConstellation() {
+            const svg = document.getElementById('constellation-svg');
+            const stars = [...BUILTIN_STARS, ...extraStars];
+            const n = stars.length;
+            const coords = stars.map((_, i) => {
+                const x = 60 + (i * (840 / Math.max(1, n - 1)));
+                const wave = Math.sin(i * 1.15) * 75 + (i % 2 === 0 ? -18 : 22);
+                const y = Math.max(48, Math.min(235, 145 + wave));
+                return { x: Math.round(x), y: Math.round(y) };
+            });
+
+            let linesHTML = "";
+            for (let i = 0; i < coords.length - 1; i++) {
+                linesHTML += `<line x1="${coords[i].x}" y1="${coords[i].y}" x2="${coords[i+1].x}" y2="${coords[i+1].y}" stroke="rgba(217,182,96,0.36)" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+            }
+
+            let nodesHTML = stars.map((st, i) => `
+                <g class="star-node" data-sidx="${i}">
+                    <circle cx="${coords[i].x}" cy="${coords[i].y}" r="18" fill="rgba(217,182,96,0.09)"/>
+                    <circle class="star-core" cx="${coords[i].x}" cy="${coords[i].y}" r="6.5" fill="#f6dc8f" stroke="#fff" stroke-width="1.2"/>
+                    <text x="${coords[i].x}" y="${coords[i].y + 26}" class="star-label">${escapeHTML(st.label || ('Month ' + (i + 1)))}</text>
+                </g>
+            `).join('');
+
+            svg.innerHTML = linesHTML + nodesHTML;
+            svg.querySelectorAll('.star-node').forEach(g => {
+                g.addEventListener('click', () => {
+                    const st = stars[parseInt(g.dataset.sidx, 10)];
+                    if (!st) return;
+                    document.getElementById('star-reader').innerHTML = `
+                        <span style="color:var(--gold); font-size:0.76rem; text-transform:uppercase; letter-spacing:1.4px;">${escapeHTML(st.label)} ${st.dateRange ? '• ' + escapeHTML(st.dateRange) : ''}</span>
+                        <h3 style="margin:6px 0 8px 0; color:#fff; font-size:1.25rem; font-family:'Cinzel',serif;">${escapeHTML(st.title)}</h3>
+                        <p style="color:#dbe6f0; font-family:'Cormorant Garamond',serif; font-size:1.2rem; line-height:1.65;">${escapeHTML(st.text)}</p>
+                    `;
+                });
+            });
+        }
+
+        // ───────── OPEN WHEN CAPSULES RENDERER ─────────
+        function renderCapsules() {
+            const grid = document.getElementById('capsules-grid');
+            const merged = BUILTIN_CAPSULES.map(base => {
+                const override = customCapsulesMap[base.id];
+                return override ? { ...base, ...override } : base;
+            }).concat(extraCapsules);
+
+            grid.innerHTML = merged.map((cap, idx) => `
+                <div class="capsule-card" data-cidx="${idx}">
+                    <div class="capsule-icon-box">${ICON_SVGS[cap.icon] || ICON_SVGS.sparkle}</div>
+                    <div class="capsule-title">${escapeHTML(cap.title)}</div>
+                    <div class="capsule-teaser">${escapeHTML(cap.teaser || 'Tap to open & listen')}</div>
+                </div>
+            `).join('');
+
+            grid.querySelectorAll('.capsule-card').forEach(el => {
+                el.addEventListener('click', () => {
+                    const cap = merged[parseInt(el.dataset.cidx, 10)];
+                    if (cap) openCapsuleModal(cap);
+                });
+            });
+        }
+
+        function openCapsuleModal(cap) {
+            document.getElementById('cap-modal-icon').innerHTML = ICON_SVGS[cap.icon] || ICON_SVGS.sparkle;
+            document.getElementById('cap-modal-title').textContent = cap.title;
+            document.getElementById('cap-modal-body').textContent = cap.body || '';
+
+            const mediaDiv = document.getElementById('cap-modal-media');
+            mediaDiv.innerHTML = "";
+            if (cap.mediaUrl) {
+                const cands = buildAssetCandidates(cap.mediaUrl, "Special/Gifts");
+                const isVid = cap.mediaType === 'video' || /\.(mp4|webm|mov)$/i.test(cap.mediaUrl);
+                if (isVid) {
+                    mediaDiv.innerHTML = `<video src="${escapeHTML(cands[0])}" data-cands="${escapeHTML(JSON.stringify(cands))}" data-cidx="0" onerror="window.stepMediaFallback(this)" controls style="width:100%; max-height:320px; border-radius:10px; border:1px solid var(--gold);"></video>`;
+                } else {
+                    mediaDiv.innerHTML = `<img src="${escapeHTML(cands[0])}" data-cands="${escapeHTML(JSON.stringify(cands))}" data-cidx="0" onerror="window.stepMediaFallback(this)" style="width:100%; max-height:320px; object-fit:contain; border-radius:10px; border:1px solid var(--gold); background:#040a12;">`;
+                }
+            }
+
+            if (cap.audioUrl) {
+                playCapsuleAudioItem(cap.audioTitle || cap.title, cap.audioUrl);
+            } else {
+                window.playRandomWebsiteTrack();
+            }
+            document.getElementById('capsule-modal').classList.add('open');
+        }
+
+        window.closeCapsuleModal = function() {
+            document.getElementById('capsule-modal').classList.remove('open');
+            capAudio.pause();
+            document.getElementById('cap-modal-media').innerHTML = "";
+            duckBgAudio(false);
+        };
+
+        // ───────── STEP INTO SANCTUARY BUTTON ─────────
+        document.getElementById('enter-sanctuary-btn').addEventListener('click', () => {
+            sanctuaryEntered = true;
+            document.getElementById('entry-screen').style.display = 'none';
+            document.getElementById('sanctuary-app').style.display = 'block';
+            document.getElementById('ambient-controls').style.display = 'flex';
+            document.getElementById('heartbeat-fab').style.display = 'inline-flex';
+            refillBgQueue();
+            playCurrentBgTrack();
+            renderPastDates();
+            renderConstellation();
+            renderCapsules();
+            tickAllClocks();
+        });
+
+        // ───────── AUTH & FIRESTORE SYNC ─────────
+        onAuthStateChanged(auth, async (user) => {
+            if (!user || sessionStorage.getItem('sp_unlocked') !== '1') {
+                document.getElementById('gate-blocked').style.display = 'flex';
+                return;
+            }
+
+            try {
+                const ghSnap = await getDoc(doc(db, "site_config", "github"));
+                if (ghSnap.exists() && ghSnap.data().enabled && ghSnap.data().user && ghSnap.data().repo) {
+                    const d = ghSnap.data();
+                    const folder = d.folder ? d.folder.replace(/^\/+|\/+$/g, '') + '/' : '';
+                    ghBase = `https://raw.githubusercontent.com/${d.user}/${d.repo}/${d.branch || 'main'}/${folder}`;
+                }
+                const ntfySnap = await getDoc(doc(db, "special_config", "ntfy"));
+                if (ntfySnap.exists() && ntfySnap.data().topic) ntfyTopic = ntfySnap.data().topic;
+            } catch (e) {}
+
+            // Live listeners
+            onSnapshot(doc(db, "special_config", "next_date"), (s) => {
+                nextDateData = s.exists() ? s.data() : null;
+                renderNextDateCountdown(Date.now());
+            }, () => {});
+
+            onSnapshot(doc(db, "special_1111", "daily"), (s) => {
+                if (s.exists()) surpriseConfig = { ...surpriseConfig, ...s.data() };
+            }, () => {});
+
+            onSnapshot(collection(db, "special_dates"), (snap) => {
+                extraPastDates = [];
+                snap.forEach(d => extraPastDates.push({ id: d.id, ...d.data() }));
+                extraPastDates.sort((a,b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+                renderPastDates();
+            }, () => {});
+
+            onSnapshot(collection(db, "special_stars"), (snap) => {
+                extraStars = [];
+                snap.forEach(d => extraStars.push({ id: d.id, ...d.data() }));
+                extraStars.sort((a,b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+                renderConstellation();
+            }, () => {});
+
+            onSnapshot(collection(db, "special_open_when"), (snap) => {
+                customCapsulesMap = {};
+                extraCapsules = [];
+                snap.forEach(d => {
+                    const obj = { id: d.id, ...d.data() };
+                    if (BUILTIN_CAPSULES.some(b => b.id === d.id)) customCapsulesMap[d.id] = obj;
+                    else extraCapsules.push(obj);
+                });
+                extraCapsules.sort((a,b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+                renderCapsules();
+            }, () => {});
+
+            onSnapshot(collection(db, "music"), (snap) => {
+                dynamicMusicPool = [];
+                snap.forEach(d => dynamicMusicPool.push(d.data()));
+            }, () => {});
+
+            // Decide initial screen (Soft-Lock vs Entry)
+            if (Date.now() < UNLOCK_MS) {
+                document.getElementById('softlock-screen').style.display = 'flex';
+            } else {
+                document.getElementById('entry-screen').style.display = 'flex';
+            }
+
+            tickAllClocks();
+            setInterval(tickAllClocks, 1000);
+        });
+    </script>
+    <script>
+        (function initStarfield() {
+            const canvas = document.getElementById('sky-canvas');
+            const ctx = canvas.getContext('2d');
+            let stars = [];
+            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            window.addEventListener('resize', resize); resize();
+            for (let i = 0; i < 110; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    r: Math.random() * 1.6 + 0.4,
+                    a: Math.random(),
+                    da: (Math.random() - 0.5) * 0.015
+                });
+            }
+            function draw() {
+                if (!document.hidden) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    for (const s of stars) {
+                        s.a += s.da;
+                        if (s.a < 0.15 || s.a > 0.95) s.da *= -1;
+                        ctx.beginPath();
+                        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(246, 220, 143, ${s.a})`;
+                        ctx.fill();
+                    }
+                }
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+    </script>
 </body>
 </html>
