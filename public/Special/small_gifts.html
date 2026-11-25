@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Small Gifts | Private Archive</title>
     <link rel="icon" type="image/jpeg" href="../yash.jpg">
-    <link rel="stylesheet" href="../style.css?v=4.3">
+    <link rel="stylesheet" href="../style.css?v=4.6">
     <style>
         .top-bar {
             display: flex;
@@ -18,12 +18,19 @@
         .filter-nav { display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; }
         .filter-btn { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.12); padding: 8px 20px; border-radius: 20px; cursor: pointer; transition: 0.25s; font-size: 0.9rem; }
         .filter-btn.active { background: var(--accent-gold); color: #000; font-weight: 700; border-color: var(--accent-gold); }
-        .gift-card { background: rgba(10, 20, 28, 0.8); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.25s ease, border-color 0.25s ease; }
+        .gift-card { background: rgba(10, 20, 28, 0.82); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.25s ease, border-color 0.25s ease; display: flex; flex-direction: column; }
         .gift-card:hover { transform: translateY(-4px); border-color: var(--accent-gold); }
-        .gift-card img, .gift-card video { width: 100%; height: 260px; object-fit: cover; display: block; border-bottom: 2px solid var(--accent-gold); }
+        .gift-card.audio-card { cursor: default; padding: 20px 18px; justify-content: space-between; gap: 14px; border-top: 3px solid var(--accent-gold); }
+        .gift-card img, .gift-card video { width: 100%; height: 260px; object-fit: cover; display: block; border-bottom: 2px solid var(--accent-gold); background: rgba(4, 10, 16, 0.9); }
         .gift-caption { padding: 14px 16px; color: var(--text-main); font-size: 0.95rem; line-height: 1.45; }
+        .audio-header { display: flex; align-items: center; gap: 14px; }
+        .audio-icon-circle { width: 48px; height: 48px; border-radius: 50%; background: rgba(212, 175, 55, 0.14); border: 1px solid var(--accent-gold); display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0; }
+        .audio-title { font-size: 1.02rem; font-weight: 600; color: #fff; word-break: break-word; }
+        .audio-sub { font-size: 0.78rem; color: var(--accent-gold); margin-top: 3px; word-break: break-word; }
+        .gift-audio-player { width: 100%; height: 42px; accent-color: var(--accent-gold); }
         .video-tag { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.78); color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 3px 9px; border-radius: 5px; font-size: 0.78rem; font-weight: 600; pointer-events: none; }
         .lb-note { margin-top: 12px; background: rgba(10, 20, 28, 0.92); border: 1px solid var(--accent-gold); color: #fff; padding: 10px 20px; border-radius: 8px; max-width: 82vw; text-align: center; font-size: 0.95rem; }
+        .missing-badge { padding: 28px 16px; text-align: center; color: var(--text-muted); font-size: 0.84rem; background: rgba(0,0,0,0.45); border-bottom: 1px solid rgba(255,255,255,0.08); }
     </style>
 </head>
 <body>
@@ -51,14 +58,15 @@
             <div style="text-align: center; margin-bottom: 30px;">
                 <h1 style="font-size: 2.8rem; margin-bottom: 8px;">Small Gifts</h1>
                 <p style="color: var(--text-muted); font-size: 1.05rem;">
-                    Pamphlets, creations, pictures & videos made for every monthly milestone.
+                    Pamphlets, creations, pictures, videos &amp; voice notes made for every monthly milestone.
                 </p>
             </div>
 
             <div class="filter-nav">
                 <div class="filter-btn active" onclick="window.filterGifts('all', this)">All Creations</div>
-                <div class="filter-btn" onclick="window.filterGifts('image', this)">Pamphlets & Images</div>
+                <div class="filter-btn" onclick="window.filterGifts('image', this)">Pamphlets &amp; Images</div>
                 <div class="filter-btn" onclick="window.filterGifts('video', this)">Videos</div>
+                <div class="filter-btn" onclick="window.filterGifts('audio', this)">🎵 Audio</div>
             </div>
 
             <div id="gifts-grid" class="gallery-grid">
@@ -78,6 +86,7 @@
         const auth = getAuth(app);
 
         let ghBase = "";
+        let repoRelativePaths = []; // Auto-discovered file paths inside public/ (including nested subfolders)
         let allGifts = [];
         let activeFilter = "all";
 
@@ -86,24 +95,126 @@
         }
 
         function normalizeFile(rawUrl) {
-            return String(rawUrl || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+            let s = String(rawUrl || '').trim().replace(/\\/g, '/');
+            if (/^https?:\/\//i.test(s)) return s;
+            const pubIdx = s.toLowerCase().lastIndexOf('/public/');
+            if (pubIdx !== -1) s = s.slice(pubIdx + 8);
+            return s.replace(/^\/+/, '');
         }
 
-        // Checks Special/Gifts/<file>, Special/<file>, and <file> on GitHub first, then local paths
+        function encodePath(pathStr) {
+            return String(pathStr || '').split('/').map(seg => encodeURIComponent(seg)).join('/');
+        }
+
+        function getMediaType(item) {
+            const clean = (item.url || '').split('?')[0];
+            if (item.type === 'audio' || /\.(mp3|m4a|wav|ogg|aac|flac|opus)$/i.test(clean)) return 'audio';
+            if (item.type === 'video' || /\.(mp4|webm|mov|mkv)$/i.test(clean)) return 'video';
+            return 'image';
+        }
+
+        // Auto-discovers every file inside any subfolder in your GitHub repo so nested folders always load
+        async function loadGitHubTree(user, repo, branch, folderPrefix) {
+            const cacheKey = `gh_tree_${user}_${repo}_${branch}`;
+            try {
+                const cached = sessionStorage.getItem(cacheKey);
+                if (cached) {
+                    repoRelativePaths = JSON.parse(cached);
+                    return;
+                }
+                const res = await fetch(`https://api.github.com/repos/${encodeURIComponent(user)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (!Array.isArray(data.tree)) return;
+
+                const pref = folderPrefix ? folderPrefix.replace(/^\/+|\/+$/g, '') + '/' : '';
+                const prefLower = pref.toLowerCase();
+                repoRelativePaths = data.tree
+                    .filter(node => node.type === 'blob' && (!pref || node.path.toLowerCase().startsWith(prefLower)))
+                    .map(node => pref ? node.path.slice(pref.length) : node.path);
+
+                sessionStorage.setItem(cacheKey, JSON.stringify(repoRelativePaths));
+            } catch (e) {}
+        }
+
+        function findTreeMatches(clean) {
+            if (repoRelativePaths.length === 0) return [];
+            const targetLower = clean.toLowerCase();
+            const baseLower = targetLower.split('/').pop();
+
+            const exact = [];
+            const suffix = [];
+            const byName = [];
+
+            for (const p of repoRelativePaths) {
+                const pl = p.toLowerCase();
+                if (pl === targetLower) exact.push(p);
+                else if (pl.endsWith('/' + targetLower)) suffix.push(p);
+                else if (pl.split('/').pop() === baseLower) byName.push(p);
+            }
+
+            // Prefer files inside Special/Gifts/ or Special/ first
+            const scorePath = (p) => {
+                const l = p.toLowerCase();
+                if (l.startsWith('special/gifts/')) return 0;
+                if (l.startsWith('special/small')) return 1;
+                if (l.startsWith('special/')) return 2;
+                if (l.startsWith('audios/')) return 3;
+                return 4;
+            };
+            suffix.sort((a, b) => scorePath(a) - scorePath(b));
+            byName.sort((a, b) => scorePath(a) - scorePath(b));
+
+            return [...exact, ...suffix, ...byName];
+        }
+
         function buildMediaCandidates(rawUrl) {
             const clean = normalizeFile(rawUrl);
             if (/^https?:\/\//i.test(clean)) return [clean];
+
             const base = clean.split('/').pop();
             const list = [];
+
+            // 1. Exact auto-discovered matches from any nested subfolder in GitHub repo
+            const treeHits = findTreeMatches(clean);
+            treeHits.forEach(hit => {
+                if (ghBase) list.push(ghBase + encodePath(hit));
+                list.push(`../${encodePath(hit)}`);
+            });
+
+            // 2. Preserve user-provided subfolder paths across common roots (GitHub + Local)
+            const prefixes = [
+                'Special/Gifts/',
+                'Special/gifts/',
+                'Special/Small Gifts/',
+                'Special/Assets/',
+                'Special/Audios/',
+                'Special/',
+                'Audios/',
+                ''
+            ];
+
             if (ghBase) {
-                if (clean.includes('/')) list.push(ghBase + encodeURI(clean));
-                list.push(ghBase + encodeURI(`Special/Gifts/${base}`));
-                list.push(ghBase + encodeURI(`Special/${base}`));
-                list.push(ghBase + encodeURI(base));
+                prefixes.forEach(pre => list.push(ghBase + encodePath(pre + clean)));
+                if (clean !== base) {
+                    prefixes.forEach(pre => list.push(ghBase + encodePath(pre + base)));
+                }
             }
-            list.push(encodeURI(`Gifts/${base}`));
-            list.push(encodeURI(base));
-            list.push(encodeURI(`../${clean}`));
+
+            // Local Firebase Hosting fallbacks (relative to /Special/small_gifts.html)
+            list.push(encodePath(`Gifts/${clean}`));
+            list.push(encodePath(`gifts/${clean}`));
+            list.push(encodePath(`Small Gifts/${clean}`));
+            list.push(encodePath(clean));
+            list.push(`../${encodePath(clean)}`);
+            if (clean !== base) {
+                list.push(encodePath(`Gifts/${base}`));
+                list.push(encodePath(`Assets/${base}`));
+                list.push(encodePath(base));
+                list.push(`../Audios/${encodePath(base)}`);
+                list.push(`../${encodePath(base)}`);
+            }
+
             return [...new Set(list)];
         }
 
@@ -113,6 +224,12 @@
             if (nextIdx < cands.length) {
                 el.dataset.cidx = String(nextIdx);
                 el.src = cands[nextIdx];
+            } else if (el.tagName === 'IMG' && !el.dataset.failedShown) {
+                el.dataset.failedShown = '1';
+                const notice = document.createElement('div');
+                notice.className = 'missing-badge';
+                notice.innerHTML = `⚠️ File not found on GitHub/Hosting:<br><code style="color:var(--accent-gold);">${escapeHTML(el.dataset.raw || '')}</code>`;
+                el.replaceWith(notice);
             }
         };
 
@@ -136,10 +253,6 @@
         };
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeLightbox(); });
 
-        function isVid(item) {
-            return item.type === 'video' || /\.(mp4|webm|ogg|mov)$/i.test((item.url || '').split('?')[0]);
-        }
-
         window.filterGifts = function(f, btn) {
             activeFilter = f;
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -150,39 +263,73 @@
         function renderGifts() {
             const grid = document.getElementById('gifts-grid');
             const list = allGifts.filter(item => {
-                const t = isVid(item) ? 'video' : 'image';
+                const t = getMediaType(item);
                 return activeFilter === 'all' || activeFilter === t;
             });
 
             if (list.length === 0) {
-                grid.innerHTML = `<div class="card" style="grid-column:1/-1; text-align:center; color:var(--text-muted);">No items uploaded to Small Gifts yet. Add them from the Secret Vault under "Small Gifts".</div>`;
+                grid.innerHTML = `<div class="card" style="grid-column:1/-1; text-align:center; color:var(--text-muted);">No items found in this category yet.</div>`;
                 return;
             }
 
             grid.innerHTML = list.map((item, idx) => {
-                const vid = isVid(item);
+                const mType = getMediaType(item);
                 const cands = buildMediaCandidates(item.url);
                 const enc = escapeHTML(JSON.stringify(cands));
-                const firstThumb = item.thumbData ? escapeHTML(item.thumbData) : escapeHTML(cands[0] || '');
                 const cap = escapeHTML(item.caption || '');
+                const rawName = escapeHTML(item.url || '');
 
-                const mediaEl = vid
-                    ? `<div style="position:relative;"><video src="${escapeHTML(cands[0])}" data-cands="${enc}" data-cidx="0" onerror="window.stepFallback(this)" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()"></video><span class="video-tag">▶ Video</span></div>`
-                    : `<img loading="lazy" src="${firstThumb}" data-cands="${enc}" data-cidx="${item.thumbData ? '-1' : '0'}" onerror="window.stepFallback(this)" alt="${cap || 'Gift'}">`;
+                if (mType === 'audio') {
+                    const displayTitle = cap || escapeHTML((item.url || 'Audio Gift').split('/').pop().replace(/\.[^/.]+$/, ''));
+                    return `
+                        <div class="gift-card audio-card">
+                            <div class="audio-header">
+                                <div class="audio-icon-circle">🎵</div>
+                                <div>
+                                    <div class="audio-title">${displayTitle}</div>
+                                    <div class="audio-sub">${rawName}</div>
+                                </div>
+                            </div>
+                            <audio class="gift-audio-player" controls preload="metadata" src="${escapeHTML(cands[0] || '')}" data-cands="${enc}" data-cidx="0" onerror="window.stepFallback(this)"></audio>
+                        </div>
+                    `;
+                }
 
+                if (mType === 'video') {
+                    return `
+                        <div class="gift-card openable-card" data-idx="${idx}">
+                            <div style="position:relative;">
+                                <video src="${escapeHTML(cands[0] || '')}" data-cands="${enc}" data-cidx="0" onerror="window.stepFallback(this)" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()"></video>
+                                <span class="video-tag">▶ Video</span>
+                            </div>
+                            ${cap ? `<div class="gift-caption">${cap}</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                const firstThumb = item.thumbData ? escapeHTML(item.thumbData) : escapeHTML(cands[0] || '');
                 return `
-                    <div class="gift-card" data-idx="${idx}">
-                        ${mediaEl}
+                    <div class="gift-card openable-card" data-idx="${idx}">
+                        <img loading="lazy" src="${firstThumb}" data-raw="${rawName}" data-cands="${enc}" data-cidx="${item.thumbData ? '-1' : '0'}" onerror="window.stepFallback(this)" alt="${cap || 'Gift'}">
                         ${cap ? `<div class="gift-caption">${cap}</div>` : ''}
                     </div>
                 `;
             }).join('');
 
-            grid.querySelectorAll('.gift-card').forEach(card => {
+            // Lightbox for images & videos
+            grid.querySelectorAll('.openable-card').forEach(card => {
                 card.addEventListener('click', () => {
                     const item = list[parseInt(card.dataset.idx, 10)];
                     if (!item) return;
-                    window.openLightbox(buildMediaCandidates(item.url), isVid(item) ? 'video' : 'image', item.caption || '');
+                    window.openLightbox(buildMediaCandidates(item.url), getMediaType(item), item.caption || '');
+                });
+            });
+
+            // Pause other audio players when one starts playing
+            const players = grid.querySelectorAll('audio.gift-audio-player');
+            players.forEach(p => {
+                p.addEventListener('play', () => {
+                    players.forEach(other => { if (other !== p && !other.paused) other.pause(); });
                 });
             });
         }
@@ -197,8 +344,10 @@
                 const cfg = await getDoc(doc(db, "site_config", "github"));
                 if (cfg.exists() && cfg.data().enabled && cfg.data().user && cfg.data().repo) {
                     const d = cfg.data();
+                    const branch = d.branch || 'main';
                     const folder = d.folder ? d.folder.replace(/^\/+|\/+$/g, '') + '/' : '';
-                    ghBase = `https://raw.githubusercontent.com/${d.user}/${d.repo}/${d.branch || 'main'}/${folder}`;
+                    ghBase = `https://raw.githubusercontent.com/${d.user}/${d.repo}/${branch}/${folder}`;
+                    await loadGitHubTree(d.user, d.repo, branch, d.folder || '');
                 }
             } catch (e) {}
 
